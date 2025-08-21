@@ -71,4 +71,3 @@
 	</IfModule>
 
 </IfModule>
-SetEnv FUEL_ENV development

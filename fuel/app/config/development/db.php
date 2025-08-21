@@ -1,14 +1,15 @@
 <?php
 return [
   "default" => [
-    "type" => "pdo",
+    "type" => "mysqli",
     "connection" => [
-      "dsn"      => "mysql:host=db;dbname=shiftboard;port=3306;charset=utf8mb4",
-      "username" => "app",
-      "password" => "app_pass",
+      "hostname"   => "host.docker.internal",
+      "port"       => "3306",
+      "database"   => "shiftboard",
+      "username"   => "app",
+      "password"   => "AppPass!123",
       "persistent" => false,
     ],
-    "charset"   => "utf8mb4",
-    "profiling" => true,
+    "charset" => "utf8mb4",
   ],
 ];
