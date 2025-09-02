@@ -41,13 +41,14 @@ class Controller_Api_V1_Shifts extends Controller_Rest {
         return $this->response(['error'=>'end_time must be later than start_time'], 400);
       $slot = isset($p['slot_count']) ? max(1, (int)$p['slot_count']) : 1;
 
-      list($id,) = DB::insert('shifts')->set([
+      $result = DB::insert('shifts')->set([
         'shift_date'=>$p['shift_date'],
         'start_time'=>$p['start_time'],
         'end_time'  =>$p['end_time'],
         'note'      =>isset($p['note'])?mb_substr($p['note'],0,500):null,
         'slot_count'=>$slot,
       ])->execute();
+      $id = $result[0];
 
       return $this->response(['data'=>['id'=>$id]], 201);
     } catch (\Throwable $e) {
@@ -118,3 +119,4 @@ class Controller_Api_V1_Shifts extends Controller_Rest {
   
     return $this->response(['ok'=>true], 200);
   }
+}

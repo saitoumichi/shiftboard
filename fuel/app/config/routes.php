@@ -11,9 +11,11 @@ return [
 
   // API (JSON)
   'api/shifts'                    => 'api/shifts/index',     // GET一覧 / POST作成
-  'api/shifts/(:num)'             => 'api/shifts/show/$1',   // GET/PUT/DELETE
+  'api/shifts/(:num)'             => 'api/shifts/show/$1',   // GET詳細
   'api/shifts/(:num)/update'      => 'api/shifts/update/$1',
   'api/shifts/(:num)/delete'      => 'api/shifts/delete/$1',
+  'api/shifts/(:num)/join'        => 'api/shifts/join/$1',   // 参加
+  'api/shifts/(:num)/cancel'      => 'api/shifts/cancel/$1', // 取消
   
   'api/user-shifts'               => 'api/user_shifts/index',
   'api/user-shifts/(:num)'        => 'api/user_shifts/show/$1',

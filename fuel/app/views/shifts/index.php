@@ -13,181 +13,348 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f5f5f5;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             min-height: 100vh;
         }
-        .container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            padding: 40px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: transform 0.2s;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-        .btn-danger {
-            background: #dc3545;
-        }
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-        .shifts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        .shift-card {
-            border: 2px solid #e1e5e9;
-            border-radius: 12px;
+            background: white;
             padding: 20px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .shift-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        .shift-date {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .shift-time {
-            color: #666;
-            margin-bottom: 10px;
-        }
-        .shift-info {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
         }
-        .slot-count {
-            background: #e9ecef;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
+        
+        .header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
         }
-        .shift-note {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-        .shift-actions {
+        
+        .view-toggle {
             display: flex;
             gap: 10px;
         }
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
+        
+        .view-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .view-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .main-content {
+            display: flex;
+            max-width: 1400px;
+            margin: 20px auto;
+            gap: 20px;
+            padding: 0 20px;
+        }
+        
+        .calendar-section {
+            flex: 2;
+            background: white;
             border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        
+        .recruitment-section {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
+        
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .nav-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .current-month {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #ddd;
+            border: 1px solid #ddd;
+        }
+        
+        .calendar-day {
+            background: white;
+            padding: 10px;
+            min-height: 80px;
+            position: relative;
+        }
+        
+        .calendar-day.weekend {
+            background: #f8f9fa;
+        }
+        
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .shift-block {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 3px;
+            padding: 2px 4px;
+            margin: 1px 0;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        
+        .shift-block.full {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+        
+        .recruitment-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .recruitment-item {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+        
+        .recruitment-date {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .recruitment-time {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .recruitment-slots {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .recruitment-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .action-btn {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .action-btn.join {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        
+        .action-btn.cancel {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+        
+        .action-btn.detail {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .footer {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .my-shifts-btn {
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
         .loading {
             text-align: center;
             padding: 20px;
             color: #666;
         }
-        .assigned-users {
-            margin-top: 10px;
-        }
-        .user-tag {
-            display: inline-block;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
             border-radius: 4px;
-            padding: 2px 6px;
-            font-size: 12px;
-            margin: 2px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>シフト一覧</h1>
-            <a href="<?php echo \Uri::create('shifts/create'); ?>" class="btn">新しいシフトを作成</a>
+    <!-- ヘッダー -->
+    <div class="header">
+        <h1 data-bind="text: screenTitle">シフト一覧</h1>
+        <div class="view-toggle">
+            <button class="view-btn active" data-bind="click: setView('month')">月</button>
+            <button class="view-btn" data-bind="click: setView('week')">週</button>
+            <button class="view-btn" data-bind="click: setView('day')">日</button>
+            <button class="view-btn" data-bind="click: setView('list')">リスト</button>
         </div>
-        
-        <!-- アラート表示 -->
-        <div data-bind="visible: alertMessage" class="alert" data-bind="css: { 'alert-success': alertType() === 'success', 'alert-error': alertType() === 'error' }">
-            <span data-bind="text: alertMessage"></span>
-        </div>
-        
-        <!-- ローディング表示 -->
-        <div data-bind="visible: loading" class="loading">
-            読み込み中...
-        </div>
-        
-        <!-- シフト一覧 -->
-        <div data-bind="visible: !loading() && shifts().length > 0" class="shifts-grid">
-            <!-- ko foreach: shifts -->
-            <div class="shift-card">
-                <div class="shift-date" data-bind="text: shift_date"></div>
-                <div class="shift-time" data-bind="text: start_time + ' - ' + end_time"></div>
-                
-                <div class="shift-info">
-                    <span class="slot-count">募集: <span data-bind="text: slot_count"></span>名</span>
-                    <span class="slot-count">空き: <span data-bind="text: available_slots"></span>名</span>
-                </div>
-                
-                <!-- ko if: note -->
-                <div class="shift-note" data-bind="text: note"></div>
-                <!-- /ko -->
-                
-                <!-- 割り当て済みユーザー -->
-                <div data-bind="visible: assigned_users.length > 0" class="assigned-users">
-                    <strong>参加者:</strong>
-                    <!-- ko foreach: assigned_users -->
-                    <span class="user-tag" data-bind="text: name + ' (' + role + ')'"></span>
-                    <!-- /ko -->
-                </div>
-                
-                <div class="shift-actions">
-                    <button class="btn btn-sm" data-bind="click: $parent.viewShift">詳細</button>
-                    <button class="btn btn-sm" data-bind="click: $parent.editShift">編集</button>
-                    <button class="btn btn-danger btn-sm" data-bind="click: $parent.deleteShift">削除</button>
+        <a href="<?php echo \Uri::create('shifts/create'); ?>" class="btn">新規シフト登録</a>
+    </div>
+    
+    <!-- アラート表示 -->
+    <div data-bind="visible: alertMessage" class="alert" data-bind="css: { 'alert-success': alertType() === 'success', 'alert-error': alertType() === 'error' }">
+        <span data-bind="text: alertMessage"></span>
+    </div>
+    
+    <!-- メインコンテンツ -->
+    <div class="main-content">
+        <!-- カレンダーセクション -->
+        <div class="calendar-section">
+            <div class="calendar-header">
+                <div class="month-nav">
+                    <button class="nav-btn" data-bind="click: previousMonth">‹</button>
+                    <span class="current-month" data-bind="text: currentMonth"></span>
+                    <button class="nav-btn" data-bind="click: nextMonth">›</button>
                 </div>
             </div>
-            <!-- /ko -->
+            
+            <!-- カレンダーグリッド -->
+            <div class="calendar-grid">
+                <!-- 曜日ヘッダー -->
+                <div class="calendar-day" style="background: #e9ecef; font-weight: bold; text-align: center;">月</div>
+                <div class="calendar-day" style="background: #e9ecef; font-weight: bold; text-align: center;">火</div>
+                <div class="calendar-day" style="background: #e9ecef; font-weight: bold; text-align: center;">水</div>
+                <div class="calendar-day" style="background: #e9ecef; font-weight: bold; text-align: center;">木</div>
+                <div class="calendar-day" style="background: #e9ecef; font-weight: bold; text-align: center;">金</div>
+                <div class="calendar-day" style="background: #e9ecef; font-weight: bold; text-align: center;">土</div>
+                <div class="calendar-day" style="background: #e9ecef; font-weight: bold; text-align: center;">日</div>
+                
+                <!-- カレンダー日付 -->
+                <!-- ko foreach: calendarDays -->
+                <div class="calendar-day" data-bind="css: { 'weekend': isWeekend }">
+                    <div class="day-number" data-bind="text: day"></div>
+                    <!-- ko foreach: shifts -->
+                    <div class="shift-block" data-bind="css: { 'full': available_slots == 0 }, click: $parent.viewShift">
+                        <div data-bind="text: start_time + '-' + end_time"></div>
+                        <div data-bind="text: assigned_count + '/' + slot_count"></div>
+                    </div>
+                    <!-- /ko -->
+                </div>
+                <!-- /ko -->
+            </div>
         </div>
         
-        <!-- シフトが無い場合 -->
-        <div data-bind="visible: !loading() && shifts().length === 0">
-            <p>シフトが登録されていません。</p>
+        <!-- 募集中のシフトセクション -->
+        <div class="recruitment-section">
+            <div class="recruitment-header">募集中のシフト</div>
+            
+            <!-- ローディング表示 -->
+            <div data-bind="visible: loading" class="loading">
+                読み込み中...
+            </div>
+            
+            <!-- 募集中のシフト一覧 -->
+            <div data-bind="visible: !loading()">
+                <!-- ko foreach: availableShifts -->
+                <div class="recruitment-item">
+                    <div class="recruitment-date" data-bind="text: shift_date"></div>
+                    <div class="recruitment-time" data-bind="text: start_time + ' - ' + end_time"></div>
+                    <div class="recruitment-slots" data-bind="text: assigned_count + '/' + slot_count"></div>
+                    
+                    <div class="recruitment-actions">
+                        <button class="action-btn join" data-bind="click: $parent.joinShift">参加</button>
+                        <button class="action-btn cancel" data-bind="click: $parent.cancelShift">取消</button>
+                        <button class="action-btn detail" data-bind="click: $parent.viewShift">詳細</button>
+                    </div>
+                </div>
+                <!-- /ko -->
+                
+                <!-- 募集中のシフトが無い場合 -->
+                <div data-bind="visible: availableShifts().length === 0">
+                    <p>募集中のシフトはありません。</p>
+                </div>
+            </div>
         </div>
+    </div>
+    
+    <!-- フッター -->
+    <div class="footer">
+        <button class="my-shifts-btn" data-bind="click: goToMyShifts">自分のシフト</button>
     </div>
     
     <script>
@@ -197,9 +364,20 @@
             
             // データ
             self.shifts = ko.observableArray([]);
+            self.availableShifts = ko.observableArray([]);
+            self.calendarDays = ko.observableArray([]);
             self.loading = ko.observable(false);
             self.alertMessage = ko.observable('');
             self.alertType = ko.observable('');
+            self.currentView = ko.observable('month');
+            self.currentDate = ko.observable(new Date());
+            self.screenTitle = ko.observable('シフト一覧');
+            
+            // 現在の月を表示
+            self.currentMonth = ko.computed(function() {
+                var date = self.currentDate();
+                return date.getFullYear() + '年' + (date.getMonth() + 1) + '月';
+            });
             
             // アラート表示
             self.showAlert = function(message, type) {
@@ -208,6 +386,70 @@
                 setTimeout(function() {
                     self.alertMessage('');
                 }, 5000);
+            };
+            
+            // 表示切り替え
+            self.setView = function(view) {
+                self.currentView(view);
+                $('.view-btn').removeClass('active');
+                event.target.classList.add('active');
+                self.generateCalendar();
+            };
+            
+            // 前の月
+            self.previousMonth = function() {
+                var date = new Date(self.currentDate());
+                date.setMonth(date.getMonth() - 1);
+                self.currentDate(date);
+                self.generateCalendar();
+            };
+            
+            // 次の月
+            self.nextMonth = function() {
+                var date = new Date(self.currentDate());
+                date.setMonth(date.getMonth() + 1);
+                self.currentDate(date);
+                self.generateCalendar();
+            };
+            
+            // カレンダー生成
+            self.generateCalendar = function() {
+                var date = new Date(self.currentDate());
+                var year = date.getFullYear();
+                var month = date.getMonth();
+                
+                // 月の最初の日
+                var firstDay = new Date(year, month, 1);
+                var lastDay = new Date(year, month + 1, 0);
+                
+                // カレンダーの開始日（前月の日付も含む）
+                var startDate = new Date(firstDay);
+                startDate.setDate(startDate.getDate() - firstDay.getDay());
+                
+                var days = [];
+                var currentDate = new Date(startDate);
+                
+                // 6週間分の日付を生成
+                for (var i = 0; i < 42; i++) {
+                    var dayShifts = self.shifts().filter(function(shift) {
+                        var shiftDate = new Date(shift.shift_date);
+                        return shiftDate.toDateString() === currentDate.toDateString();
+                    });
+                    
+                    days.push({
+                        day: currentDate.getDate(),
+                        date: new Date(currentDate),
+                        isWeekend: currentDate.getDay() === 0 || currentDate.getDay() === 6,
+                        shifts: dayShifts,
+                        viewShift: function(shift) {
+                            self.viewShift(shift);
+                        }
+                    });
+                    
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                
+                self.calendarDays(days);
             };
             
             // シフト一覧を取得
@@ -221,6 +463,10 @@
                     success: function(response) {
                         if (response.success) {
                             self.shifts(response.data);
+                            self.availableShifts(response.data.filter(function(shift) {
+                                return shift.available_slots > 0;
+                            }));
+                            self.generateCalendar();
                         } else {
                             self.showAlert('シフト一覧の取得に失敗しました: ' + response.message, 'error');
                         }
@@ -235,24 +481,10 @@
                 });
             };
             
-            // シフト詳細表示
-            self.viewShift = function(shift) {
-                window.location.href = '<?php echo \Uri::create('shifts'); ?>/' + shift.id;
-            };
-            
-            // シフト編集
-            self.editShift = function(shift) {
-                window.location.href = '<?php echo \Uri::create('shifts'); ?>/' + shift.id + '/edit';
-            };
-            
-            // シフト削除
-            self.deleteShift = function(shift) {
-                if (!confirm('このシフトを削除しますか？')) {
-                    return;
-                }
-                
+            // シフト参加
+            self.joinShift = function(shift) {
                 $.ajax({
-                    url: '<?php echo \Uri::create('api/shifts'); ?>/' + shift.id + '/delete',
+                    url: '<?php echo \Uri::create('api/shifts'); ?>/' + shift.id + '/join',
                     type: 'POST',
                     data: {
                         csrf_token: 'dummy_token' // 簡易実装
@@ -260,17 +492,55 @@
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
-                            self.showAlert('シフトが削除されました', 'success');
-                            self.loadShifts(); // 一覧を再読み込み
+                            self.showAlert('シフトに参加しました', 'success');
+                            self.loadShifts();
                         } else {
-                            self.showAlert('シフトの削除に失敗しました: ' + response.message, 'error');
+                            self.showAlert('シフトの参加に失敗しました: ' + response.message, 'error');
                         }
                     },
                     error: function(xhr, status, error) {
-                        self.showAlert('シフトの削除に失敗しました', 'error');
+                        self.showAlert('シフトの参加に失敗しました', 'error');
                         console.error('Error:', error);
                     }
                 });
+            };
+            
+            // シフト取消
+            self.cancelShift = function(shift) {
+                if (!confirm('このシフトの参加を取り消しますか？')) {
+                    return;
+                }
+                
+                $.ajax({
+                    url: '<?php echo \Uri::create('api/shifts'); ?>/' + shift.id + '/cancel',
+                    type: 'POST',
+                    data: {
+                        csrf_token: 'dummy_token' // 簡易実装
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            self.showAlert('シフトの参加を取り消しました', 'success');
+                            self.loadShifts();
+                        } else {
+                            self.showAlert('シフトの取消に失敗しました: ' + response.message, 'error');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        self.showAlert('シフトの取消に失敗しました', 'error');
+                        console.error('Error:', error);
+                    }
+                });
+            };
+            
+            // シフト詳細表示
+            self.viewShift = function(shift) {
+                window.location.href = '<?php echo \Uri::create('shifts'); ?>/' + shift.id;
+            };
+            
+            // 自分のシフト画面へ
+            self.goToMyShifts = function() {
+                window.location.href = '<?php echo \Uri::create('my/shifts'); ?>';
             };
             
             // 初期化
