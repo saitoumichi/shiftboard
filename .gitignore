@@ -26,3 +26,4 @@ docker/**/mysql-data/
 
 # ビルド/生成物（必要なら）
 public/docs/
+fuelapp/
