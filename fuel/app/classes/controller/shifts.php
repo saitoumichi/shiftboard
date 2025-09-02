@@ -1,24 +1,50 @@
 <?php
 
-class Controller_Shifts extends Controller_Template
+/**
+ * Shifts Controller
+ * 
+ * シフト管理用のコントローラー
+ */
+class Controller_Shifts extends Controller
 {
-    public $template = "template";
-
+    /**
+     * シフト一覧表示
+     */
     public function action_index()
     {
-        $rows = \DB::select("*")->from("shifts")
-            ->order_by("shift_date","asc")->order_by("start_time","asc")
-            ->execute()->as_array();
-
-        $this->template->title   = "シフト一覧";
-        $this->template->content = View::forge("shifts/index", ["shifts" => $rows]);
+        $data = array(
+            'title' => 'シフト一覧'
+        );
+        
+        return Response::forge(View::forge('shifts/index', $data));
     }
 
+    /**
+     * シフト作成ページ表示
+     */
     public function action_create()
     {
-        $this->template->title   = "シフト作成";
-        $this->template->content = View::forge("shifts/create", [
-            "csrf" => \Security::fetch_token(),
-        ]);
+        $data = array(
+            'title' => 'シフト作成'
+        );
+        
+        return Response::forge(View::forge('shifts/create', $data));
+    }
+
+    /**
+     * シフト詳細表示
+     */
+    public function action_view($id = null)
+    {
+        if (!$id) {
+            throw new HttpNotFoundException();
+        }
+        
+        $data = array(
+            'title' => 'シフト詳細',
+            'shift_id' => $id
+        );
+        
+        return Response::forge(View::forge('shifts/view', $data));
     }
 }

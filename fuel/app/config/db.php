@@ -1,15 +1,18 @@
 <?php
 return [
   'default' => [
-    'type' => 'pdo',
+    'type' => 'mysqli',
     'connection' => [
-      'dsn'      => 'mysql:host=db;dbname=shiftboard;port=3306;charset=utf8mb4',
-      'username' => 'app',
-      'password' => 'app_pass',
+      'hostname'   => '127.0.0.1',
+      'port'       => '13306',
+      'database'   => 'shiftboard',
+      'username'   => 'app',
+      'password'   => 'app_pass',
       'persistent' => false,
     ],
     'charset'      => 'utf8mb4',
     'profiling'    => true,
     'enable_cache' => false,
+    'table_prefix' => '',
   ],
 ];
