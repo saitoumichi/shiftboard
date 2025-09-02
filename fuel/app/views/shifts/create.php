@@ -5,10 +5,10 @@
     <title>シフト作成 - ShiftBoard</title>
     
     <!-- Knockout.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-min.js"></script>
+    <script src="<?php echo \Uri::create('js/knockout-min.js'); ?>"></script>
     
     <!-- jQuery for AJAX -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="<?php echo \Uri::create('js/jquery-3.6.0.min.js'); ?>"></script>
     
     <style>
         body {
@@ -190,48 +190,48 @@
             <!-- シフトタイトル/月 -->
             <div class="form-group">
                 <label for="shift_title">シフトタイトル/月</label>
-                <input type="text" id="shift_title" name="shift_title" placeholder="2025/09" required>
+                <input type="text" id="shift_title" name="shift_title" placeholder="2025/09" data-bind="value: shiftTitle" required>
             </div>
             
             <!-- 新規シフトタイトル -->
             <div class="form-group">
                 <label for="new_shift_title">新規シフトタイトル</label>
-                <input type="text" id="new_shift_title" name="new_shift_title" placeholder="平日シフト" required>
+                <input type="text" id="new_shift_title" name="new_shift_title" placeholder="平日シフト" data-bind="value: newShiftTitle" required>
             </div>
             
             <!-- 日付・時間・定員 -->
             <div class="form-row">
                 <div class="form-group">
                     <label for="shift_date">日付</label>
-                    <input type="date" id="shift_date" name="shift_date" required>
+                    <input type="date" id="shift_date" name="shift_date" data-bind="value: shiftDate" required>
                 </div>
                 <div class="form-group">
                     <label for="start_time">開始時間</label>
-                    <input type="time" id="start_time" name="start_time" required>
+                    <input type="time" id="start_time" name="start_time" data-bind="value: startTime" required>
                 </div>
             </div>
             
             <div class="form-row">
                 <div class="form-group">
                     <label for="end_time">終了時間</label>
-                    <input type="time" id="end_time" name="end_time" required>
+                    <input type="time" id="end_time" name="end_time" data-bind="value: endTime" required>
                 </div>
                 <div class="form-group">
                     <label for="slot_count">定員数</label>
-                    <input type="number" id="slot_count" name="slot_count" min="1" value="1" required>
+                    <input type="number" id="slot_count" name="slot_count" min="1" value="1" data-bind="value: slotCount" required>
                 </div>
             </div>
             
             <!-- 備考 -->
             <div class="form-group">
                 <label for="note">備考</label>
-                <textarea id="note" name="note" rows="4" placeholder="シフトに関する備考があれば入力してください"></textarea>
+                <textarea id="note" name="note" rows="4" placeholder="シフトに関する備考があれば入力してください" data-bind="value: note"></textarea>
             </div>
             
             <!-- アクションボタン -->
             <div class="form-actions">
                 <button type="button" class="btn btn-back" onclick="goBack()">戻る</button>
-                <button type="submit" class="btn btn-save" id="save-btn">保存</button>
+                <button type="submit" class="btn btn-save" id="save-btn" data-bind="click: submitForm">保存</button>
             </div>
         </form>
     </div>
@@ -274,6 +274,14 @@
             
             // フォーム送信
             self.submitForm = function() {
+                // デバッグ用：現在の値をコンソールに出力
+                console.log('Debug - Form values:');
+                console.log('shiftDate:', self.shiftDate());
+                console.log('startTime:', self.startTime());
+                console.log('endTime:', self.endTime());
+                console.log('slotCount:', self.slotCount());
+                console.log('note:', self.note());
+                
                 // バリデーション
                 if (!self.shiftDate() || !self.startTime() || !self.endTime()) {
                     self.showAlert('必須項目を入力してください', 'error');

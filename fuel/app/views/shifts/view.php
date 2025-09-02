@@ -5,10 +5,10 @@
     <title>シフト詳細 - ShiftBoard</title>
     
     <!-- Knockout.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-min.js"></script>
+    <script src="<?php echo \Uri::create('js/knockout-min.js'); ?>"></script>
     
     <!-- jQuery for AJAX -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="<?php echo \Uri::create('js/jquery-3.6.0.min.js'); ?>"></script>
     
     <style>
         body {

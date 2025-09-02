@@ -5,10 +5,10 @@
     <title>自分のシフト - ShiftBoard</title>
     
     <!-- Knockout.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-min.js"></script>
+    <script src="<?php echo \Uri::create('js/knockout-min.js'); ?>"></script>
     
     <!-- jQuery for AJAX -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="<?php echo \Uri::create('js/jquery-3.6.0.min.js'); ?>"></script>
     
     <style>
         body {
@@ -290,12 +290,9 @@
                 
                 <!-- シフト一覧 -->
                 <div data-bind="visible: !loading() && myShifts().length > 0" class="shifts-list">
-                    <!-- ko foreach: myShifts -->
-                    <div class="shift-item">
-                        <div class="shift-date-time" data-bind="text: dateTime">2025/11/12 10:00-14:00</div>
-                        <div class="shift-slot-info" data-bind="text: slotInfo">2/4</div>
+                    <div id="my-shifts-container">
+                        <!-- JavaScriptで動的に生成 -->
                     </div>
-                    <!-- /ko -->
                 </div>
                 
                 <!-- シフトが無い場合 -->
@@ -399,6 +396,7 @@
                                 };
                             });
                             self.myShifts(formattedShifts);
+                            self.renderMyShifts(formattedShifts);
                         } else {
                             self.showAlert('シフト一覧の取得に失敗しました: ' + response.message, 'error');
                         }
@@ -410,6 +408,31 @@
                     complete: function() {
                         self.loading(false);
                     }
+                });
+            };
+            
+            // 自分のシフトをレンダリング
+            self.renderMyShifts = function(shifts) {
+                var container = document.getElementById('my-shifts-container');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                shifts.forEach(function(shift) {
+                    var itemElement = document.createElement('div');
+                    itemElement.className = 'shift-item';
+                    
+                    var dateTimeDiv = document.createElement('div');
+                    dateTimeDiv.className = 'shift-date-time';
+                    dateTimeDiv.textContent = shift.dateTime;
+                    itemElement.appendChild(dateTimeDiv);
+                    
+                    var slotInfoDiv = document.createElement('div');
+                    slotInfoDiv.className = 'shift-slot-info';
+                    slotInfoDiv.textContent = shift.slotInfo;
+                    itemElement.appendChild(slotInfoDiv);
+                    
+                    container.appendChild(itemElement);
                 });
             };
             

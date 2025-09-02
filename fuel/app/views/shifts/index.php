@@ -5,10 +5,10 @@
     <title>シフト一覧 - ShiftBoard</title>
     
     <!-- Knockout.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-min.js"></script>
+    <script src="<?php echo \Uri::create('js/knockout-min.js'); ?>"></script>
     
     <!-- jQuery for AJAX -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="<?php echo \Uri::create('js/jquery-3.6.0.min.js'); ?>"></script>
     
     <style>
         body {
@@ -268,10 +268,10 @@
     <div class="header">
         <h1 data-bind="text: screenTitle">シフト一覧</h1>
         <div class="view-toggle">
-            <button class="view-btn active" data-bind="click: setView('month')">月</button>
-            <button class="view-btn" data-bind="click: setView('week')">週</button>
-            <button class="view-btn" data-bind="click: setView('day')">日</button>
-            <button class="view-btn" data-bind="click: setView('list')">リスト</button>
+            <button class="view-btn active" data-bind="click: function() { setView('month'); }">月</button>
+            <button class="view-btn" data-bind="click: function() { setView('week'); }">週</button>
+            <button class="view-btn" data-bind="click: function() { setView('day'); }">日</button>
+            <button class="view-btn" data-bind="click: function() { setView('list'); }">リスト</button>
         </div>
         <a href="<?php echo \Uri::create('shifts/create'); ?>" class="btn">新規シフト登録</a>
     </div>
@@ -305,17 +305,9 @@
                 <div class="calendar-day" style="background: #e9ecef; font-weight: bold; text-align: center;">日</div>
                 
                 <!-- カレンダー日付 -->
-                <!-- ko foreach: calendarDays -->
-                <div class="calendar-day" data-bind="css: { 'weekend': isWeekend }">
-                    <div class="day-number" data-bind="text: day"></div>
-                    <!-- ko foreach: shifts -->
-                    <div class="shift-block" data-bind="css: { 'full': available_slots == 0 }, click: $parent.viewShift">
-                        <div data-bind="text: start_time + '-' + end_time"></div>
-                        <div data-bind="text: assigned_count + '/' + slot_count"></div>
-                    </div>
-                    <!-- /ko -->
+                <div id="calendar-days-container">
+                    <!-- JavaScriptで動的に生成 -->
                 </div>
-                <!-- /ko -->
             </div>
         </div>
         
@@ -330,22 +322,12 @@
             
             <!-- 募集中のシフト一覧 -->
             <div data-bind="visible: !loading()">
-                <!-- ko foreach: availableShifts -->
-                <div class="recruitment-item">
-                    <div class="recruitment-date" data-bind="text: shift_date"></div>
-                    <div class="recruitment-time" data-bind="text: start_time + ' - ' + end_time"></div>
-                    <div class="recruitment-slots" data-bind="text: assigned_count + '/' + slot_count"></div>
-                    
-                    <div class="recruitment-actions">
-                        <button class="action-btn join" data-bind="click: $parent.joinShift">参加</button>
-                        <button class="action-btn cancel" data-bind="click: $parent.cancelShift">取消</button>
-                        <button class="action-btn detail" data-bind="click: $parent.viewShift">詳細</button>
-                    </div>
+                <div id="available-shifts-container">
+                    <!-- JavaScriptで動的に生成 -->
                 </div>
-                <!-- /ko -->
                 
                 <!-- 募集中のシフトが無い場合 -->
-                <div data-bind="visible: availableShifts().length === 0">
+                <div id="no-shifts-message" style="display: none;">
                     <p>募集中のシフトはありません。</p>
                 </div>
             </div>
@@ -370,7 +352,7 @@
             self.alertMessage = ko.observable('');
             self.alertType = ko.observable('');
             self.currentView = ko.observable('month');
-            self.currentDate = ko.observable(new Date());
+            self.currentDate = ko.observable(new Date(2025, 8, 1)); // 2025年9月に設定
             self.screenTitle = ko.observable('シフト一覧');
             
             // 現在の月を表示
@@ -392,9 +374,25 @@
             self.setView = function(view) {
                 self.currentView(view);
                 $('.view-btn').removeClass('active');
-                event.target.classList.add('active');
+                // アクティブボタンを設定
+                $('.view-btn').each(function() {
+                    if ($(this).text().trim() === getViewText(view)) {
+                        $(this).addClass('active');
+                    }
+                });
                 self.generateCalendar();
             };
+            
+            // ビューテキストを取得
+            function getViewText(view) {
+                switch(view) {
+                    case 'month': return '月';
+                    case 'week': return '週';
+                    case 'day': return '日';
+                    case 'list': return 'リスト';
+                    default: return '月';
+                }
+            }
             
             // 前の月
             self.previousMonth = function() {
@@ -440,16 +438,136 @@
                         day: currentDate.getDate(),
                         date: new Date(currentDate),
                         isWeekend: currentDate.getDay() === 0 || currentDate.getDay() === 6,
-                        shifts: dayShifts,
-                        viewShift: function(shift) {
-                            self.viewShift(shift);
-                        }
+                        shifts: dayShifts
                     });
                     
                     currentDate.setDate(currentDate.getDate() + 1);
                 }
                 
+                // デバッグ用ログ
+                console.log('Generated calendar days:', days);
+                
                 self.calendarDays(days);
+                self.renderCalendarDays(days);
+            };
+            
+            // カレンダー日付をレンダリング
+            self.renderCalendarDays = function(days) {
+                var container = document.getElementById('calendar-days-container');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                days.forEach(function(day) {
+                    var dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day';
+                    if (day.isWeekend) {
+                        dayElement.classList.add('weekend');
+                    }
+                    
+                    var dayNumber = document.createElement('div');
+                    dayNumber.className = 'day-number';
+                    dayNumber.textContent = day.day;
+                    dayElement.appendChild(dayNumber);
+                    
+                    // シフトブロックを追加
+                    day.shifts.forEach(function(shift) {
+                        var shiftBlock = document.createElement('div');
+                        shiftBlock.className = 'shift-block';
+                        if (shift.available_slots === 0) {
+                            shiftBlock.classList.add('full');
+                        }
+                        
+                        var timeDiv = document.createElement('div');
+                        timeDiv.textContent = shift.start_time + '-' + shift.end_time;
+                        shiftBlock.appendChild(timeDiv);
+                        
+                        var countDiv = document.createElement('div');
+                        countDiv.textContent = shift.assigned_users.length + '/' + shift.slot_count;
+                        shiftBlock.appendChild(countDiv);
+                        
+                        // クリックイベント
+                        shiftBlock.addEventListener('click', function() {
+                            self.viewShift(shift);
+                        });
+                        
+                        dayElement.appendChild(shiftBlock);
+                    });
+                    
+                    container.appendChild(dayElement);
+                });
+            };
+            
+            // 募集中のシフトをレンダリング
+            self.renderAvailableShifts = function() {
+                var container = document.getElementById('available-shifts-container');
+                var noShiftsMessage = document.getElementById('no-shifts-message');
+                
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                var availableShifts = self.availableShifts();
+                
+                if (availableShifts.length === 0) {
+                    if (noShiftsMessage) {
+                        noShiftsMessage.style.display = 'block';
+                    }
+                } else {
+                    if (noShiftsMessage) {
+                        noShiftsMessage.style.display = 'none';
+                    }
+                    
+                    availableShifts.forEach(function(shift) {
+                        var itemElement = document.createElement('div');
+                        itemElement.className = 'recruitment-item';
+                        
+                        var dateDiv = document.createElement('div');
+                        dateDiv.className = 'recruitment-date';
+                        dateDiv.textContent = shift.shift_date;
+                        itemElement.appendChild(dateDiv);
+                        
+                        var timeDiv = document.createElement('div');
+                        timeDiv.className = 'recruitment-time';
+                        timeDiv.textContent = shift.start_time + ' - ' + shift.end_time;
+                        itemElement.appendChild(timeDiv);
+                        
+                        var slotsDiv = document.createElement('div');
+                        slotsDiv.className = 'recruitment-slots';
+                        slotsDiv.textContent = shift.assigned_users.length + '/' + shift.slot_count;
+                        itemElement.appendChild(slotsDiv);
+                        
+                        var actionsDiv = document.createElement('div');
+                        actionsDiv.className = 'recruitment-actions';
+                        
+                        var joinBtn = document.createElement('button');
+                        joinBtn.className = 'action-btn join';
+                        joinBtn.textContent = '参加';
+                        joinBtn.addEventListener('click', function() {
+                            self.joinShift(shift);
+                        });
+                        actionsDiv.appendChild(joinBtn);
+                        
+                        var cancelBtn = document.createElement('button');
+                        cancelBtn.className = 'action-btn cancel';
+                        cancelBtn.textContent = '取消';
+                        cancelBtn.addEventListener('click', function() {
+                            self.cancelShift(shift);
+                        });
+                        actionsDiv.appendChild(cancelBtn);
+                        
+                        var detailBtn = document.createElement('button');
+                        detailBtn.className = 'action-btn detail';
+                        detailBtn.textContent = '詳細';
+                        detailBtn.addEventListener('click', function() {
+                            self.viewShift(shift);
+                        });
+                        actionsDiv.appendChild(detailBtn);
+                        
+                        itemElement.appendChild(actionsDiv);
+                        container.appendChild(itemElement);
+                    });
+                }
             };
             
             // シフト一覧を取得
@@ -466,7 +584,12 @@
                             self.availableShifts(response.data.filter(function(shift) {
                                 return shift.available_slots > 0;
                             }));
+                            
+                            // デバッグ用ログ
+                            console.log('Loaded shifts:', response.data);
+                            console.log('Available shifts:', self.availableShifts());
                             self.generateCalendar();
+                            self.renderAvailableShifts();
                         } else {
                             self.showAlert('シフト一覧の取得に失敗しました: ' + response.message, 'error');
                         }
@@ -544,6 +667,7 @@
             };
             
             // 初期化
+            self.generateCalendar(); // カレンダーを先に生成
             self.loadShifts();
         }
         
