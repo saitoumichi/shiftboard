@@ -3,7 +3,7 @@
 /**
  * メンバー管理用のコントローラー
  */
-class Controller_Members extends Controller
+class Controller_Members extends \Fuel\Core\Controller
 {
     /**
      * メンバー一覧画面
@@ -15,7 +15,7 @@ class Controller_Members extends Controller
             'subtitle' => '・ メンバーの一覧表示・管理'
         );
         
-        return View::forge('members/index', $data);
+        return \Fuel\Core\View::forge('members/index', $data);
     }
     
     /**
@@ -28,7 +28,7 @@ class Controller_Members extends Controller
             'subtitle' => '・ 新しいメンバーを追加'
         );
         
-        return View::forge('members/create', $data);
+        return \Fuel\Core\View::forge('members/create', $data);
     }
     
     /**
@@ -37,7 +37,7 @@ class Controller_Members extends Controller
     public function action_view($id = null)
     {
         if (!$id) {
-            throw new HttpNotFoundException('メンバーIDが指定されていません');
+            throw new \Fuel\Core\HttpNotFoundException('メンバーIDが指定されていません');
         }
         
         $data = array(
@@ -46,6 +46,6 @@ class Controller_Members extends Controller
             'member_id' => $id
         );
         
-        return View::forge('members/view', $data);
+        return \Fuel\Core\View::forge('members/view', $data);
     }
 }

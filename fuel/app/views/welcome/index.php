@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>FuelPHP Framework</title>
-	<?php echo Asset::css('bootstrap.css'); ?>
+	<?php echo \Fuel\Core\Asset::css('bootstrap.css'); ?>
 	<style>
 		#logo{
 			display: block;
@@ -68,7 +68,7 @@
 			<p class="pull-right">Page rendered in {exec_time}s using {mem_usage}mb of memory.</p>
 			<p>
 				<a href="https://fuelphp.com">Fuel</a> PHP Framework is released under the MIT license.<br>
-				<small>Fuel v<?php echo Fuel::VERSION;?> running on PHP v<?php echo phpversion();?></small>
+				<small>Fuel v<?php echo \Fuel\Core\Fuel::VERSION;?> running on PHP v<?php echo phpversion();?></small>
 			</p>
 		</footer>
 	</div>

@@ -21,7 +21,7 @@ namespace Fuel\Core;
  * @category  Core
  * @author    Fuel Development Team
  */
-abstract class Controller_Template extends \Controller
+abstract class Controller_Template extends \Fuel\Core\Controller
 {
 	/**
 	* @var string page template
@@ -36,7 +36,7 @@ abstract class Controller_Template extends \Controller
 		if ( ! empty($this->template) and is_string($this->template))
 		{
 			// Load the template
-			$this->template = \View::forge($this->template);
+			$this->template = \Fuel\Core\View::forge($this->template);
 		}
 
 		return parent::before();

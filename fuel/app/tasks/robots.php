@@ -46,14 +46,14 @@ class Robots
 			$speech = 'KILL ALL HUMANS!';
 		}
 
-		$eye = \Cli::color("*", 'red');
+		$eye = \Fuel\Core\Cli::color("*", 'red');
 
-		return \Cli::color("
+		return \Fuel\Core\Cli::color("
 					\"{$speech}\"
 			          _____     /
 			         /_____\\", 'blue')."\n"
-.\Cli::color("			    ____[\\", 'blue').$eye.\Cli::color('---', 'blue').$eye.\Cli::color('/]____', 'blue')."\n"
-.\Cli::color("			   /\\ #\\ \\_____/ /# /\\
+.\Fuel\Core\Cli::color("			    ____[\\", 'blue').$eye.\Fuel\Core\Cli::color('---', 'blue').$eye.\Fuel\Core\Cli::color('/]____', 'blue')."\n"
+.\Fuel\Core\Cli::color("			   /\\ #\\ \\_____/ /# /\\
 			  /  \\# \\_.---._/ #/  \\
 			 /   /|\\  |   |  /|\\   \\
 			/___/ | | |   | | | \\___\\
@@ -82,14 +82,14 @@ class Robots
 	 */
 	public static function protect()
 	{
-		$eye = \Cli::color("*", 'green');
+		$eye = \Fuel\Core\Cli::color("*", 'green');
 
-		return \Cli::color("
+		return \Fuel\Core\Cli::color("
 					\"PROTECT ALL HUMANS\"
 			          _____     /
 			         /_____\\", 'blue')."\n"
-.\Cli::color("			    ____[\\", 'blue').$eye.\Cli::color('---', 'blue').$eye.\Cli::color('/]____', 'blue')."\n"
-.\Cli::color("			   /\\ #\\ \\_____/ /# /\\
+.\Fuel\Core\Cli::color("			    ____[\\", 'blue').$eye.\Fuel\Core\Cli::color('---', 'blue').$eye.\Fuel\Core\Cli::color('/]____', 'blue')."\n"
+.\Fuel\Core\Cli::color("			   /\\ #\\ \\_____/ /# /\\
 			  /  \\# \\_.---._/ #/  \\
 			 /   /|\\  |   |  /|\\   \\
 			/___/ | | |   | | | \\___\\

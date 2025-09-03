@@ -266,13 +266,7 @@
     <!-- ナビゲーションバー -->
     <nav class="navbar">
         <div class="navbar-content">
-            <a href="<?php echo \Fuel\Core\Uri::create('shifts'); ?>" class="navbar-brand">ShiftBoard</a>
-            <ul class="navbar-nav">
-                <li><a href="<?php echo \Fuel\Core\Uri::create('shifts'); ?>">シフト一覧</a></li>
-                <li><a href="<?php echo \Fuel\Core\Uri::create('shifts/create'); ?>">シフト作成</a></li>
-                <li><a href="<?php echo \Fuel\Core\Uri::create('my/shifts'); ?>">自分のシフト</a></li>
-                <li><a href="<?php echo \Fuel\Core\Uri::create('members'); ?>" class="active">メンバー管理</a></li>
-            </ul>
+            <a href="<?php echo \Fuel\Core\Uri::create('shifts'); ?>" class="navbar-brand">シフトボード</a>
         </div>
     </nav>
 

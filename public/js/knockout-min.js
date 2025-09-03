@@ -137,6 +137,15 @@
     ko.applyBindings = function(viewModel, rootNode) {
         rootNode = rootNode || document;
         
+        // 既にバインディングが適用されているかチェック
+        if (rootNode._koApplied) {
+            console.warn('Knockout bindings already applied to this element');
+            return;
+        }
+        
+        // バインディング適用済みフラグを設定
+        rootNode._koApplied = true;
+        
         // $rootプロパティを設定（まだ設定されていない場合のみ）
         if (!viewModel.$root) {
             viewModel.$root = viewModel;
@@ -341,6 +350,11 @@
                 // 新しい要素にバインディングを適用（再帰的にapplyBindingsを呼ばない）
                 var itemElements = newElement.querySelectorAll('[data-bind]');
                 itemElements.forEach(function(element) {
+                    // 既にバインディングが適用されているかチェック
+                    if (element._koApplied) {
+                        return;
+                    }
+                    
                     var bindingString = element.getAttribute('data-bind');
                     var bindings = parseBindings(bindingString);
                     
@@ -348,6 +362,9 @@
                         var bindingValue = bindings[bindingName];
                         applyBinding(element, bindingName, bindingValue, itemViewModel);
                     });
+                    
+                    // バインディング適用済みフラグを設定
+                    element._koApplied = true;
                 });
                 
                 // 要素を挿入

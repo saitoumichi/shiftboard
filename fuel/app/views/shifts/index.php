@@ -7,6 +7,9 @@
     <!-- 共通CSS -->
     <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/common.css'); ?>">
     
+    <!-- シフト専用CSS -->
+    <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/shifts.css'); ?>">
+    
     <!-- Knockout.js -->
     <script src="<?php echo \Fuel\Core\Uri::create('js/knockout-min.js'); ?>"></script>
     
@@ -15,591 +18,217 @@
     
     <!-- 共通JavaScript -->
     <script src="<?php echo \Fuel\Core\Uri::create('js/common.js'); ?>"></script>
-    
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-        }
-        
-        .header {
-            background: white;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .header h1 {
-            margin: 0;
-            color: #333;
-            font-size: 24px;
-        }
-        
-        .view-toggle {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .view-btn {
-            padding: 8px 16px;
-            border: 1px solid #ddd;
-            background: white;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .view-btn.active {
-            background: #007bff;
-            color: white;
-            border-color: #007bff;
-        }
-        
-        .btn {
-            background: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 14px;
-        }
-        
-        .btn:hover {
-            background: #0056b3;
-        }
-        
-        .main-content {
-            display: flex;
-            max-width: 1400px;
-            margin: 20px auto;
-            gap: 20px;
-            padding: 0 20px;
-        }
-        
-        .calendar-section {
-            flex: 2;
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .recruitment-section {
-            flex: 1;
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        /* 月表示での募集中シフト表示 */
-        .month-view .main-content {
-            display: flex;
-            gap: 20px;
-        }
-        
-        .month-view .calendar-section {
-            flex: 2;
-        }
-        
-        .month-view .recruitment-section {
-            flex: 1;
-        }
-        
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .month-nav {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .nav-btn {
-            background: none;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 5px;
-        }
-        
-        .current-month {
-            font-size: 18px;
-            font-weight: bold;
-        }
-        
-        .calendar-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            table-layout: fixed;
-        }
-        
-        .calendar-table th {
-            background: #4CAF50;
-            color: white;
-            padding: 12px 8px;
-            text-align: center;
-            font-weight: bold;
-            border: 1px solid #45a049;
-        }
-        
-        .calendar-table th:nth-child(1),
-        .calendar-table th:nth-child(2),
-        .calendar-table th:nth-child(3),
-        .calendar-table th:nth-child(4),
-        .calendar-table th:nth-child(5),
-        .calendar-table th:nth-child(6),
-        .calendar-table th:nth-child(7) {
-            width: 14.28%; /* 月〜日を等間隔（7列で均等分割） */
-        }
-        
-        .calendar-table td {
-            border: 1px solid #e0e0e0;
-            padding: 8px;
-            vertical-align: top;
-            min-height: 80px;
-        }
-        
-        .calendar-table td:nth-child(1),
-        .calendar-table td:nth-child(2),
-        .calendar-table td:nth-child(3),
-        .calendar-table td:nth-child(4),
-        .calendar-table td:nth-child(5),
-        .calendar-table td:nth-child(6),
-        .calendar-table td:nth-child(7) {
-            width: 14.28%; /* 月〜日を等間隔（7列で均等分割） */
-        }
-        
-        .calendar-day {
-            position: relative;
-            min-height: 80px;
-        }
-        
-        .calendar-day.other-month {
-            background: #f8f9fa;
-            color: #999;
-        }
-        
-        .calendar-day.today {
-            background: #e3f2fd;
-            font-weight: bold;
-        }
-        
-        .calendar-day.weekend {
-            background: #fff3e0;
-        }
-        
-        .day-number {
-            font-weight: bold;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-        
-        .shift-block {
-            background: #e3f2fd;
-            border: 1px solid #2196f3;
-            border-radius: 3px;
-            padding: 2px 4px;
-            margin: 1px 0;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .shift-block:hover {
-            background: #bbdefb;
-            transform: translateY(-1px);
-        }
-        
-        .shift-block.full {
-            background: #ffebee;
-            border-color: #f44336;
-        }
-        
-        .shift-block.full:hover {
-            background: #ffcdd2;
-        }
-        
-        .recruitment-header {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #333;
-        }
-        
-        .recruitment-item {
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 12px;
-            background: #f8f9fa;
-            transition: all 0.2s;
-        }
-        
-        .recruitment-item:hover {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transform: translateY(-1px);
-        }
-        
-        .recruitment-date {
-            font-weight: bold;
-            margin-bottom: 6px;
-            color: #333;
-            font-size: 14px;
-        }
-        
-        .recruitment-time {
-            color: #666;
-            font-size: 13px;
-            margin-bottom: 6px;
-        }
-        
-        .recruitment-slots {
-            color: #888;
-            font-size: 12px;
-            margin-bottom: 10px;
-        }
-        
-        .recruitment-actions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-        
-        .action-btn {
-            padding: 6px 10px;
-            border: 1px solid #ddd;
-            background: white;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 11px;
-            transition: all 0.2s;
-        }
-        
-        .action-btn:hover {
-            transform: translateY(-1px);
-        }
-        
-        .action-btn.join {
-            background: #28a745;
-            color: white;
-            border-color: #28a745;
-        }
-        
-        .action-btn.join:hover {
-            background: #218838;
-        }
-        
-        .action-btn.cancel {
-            background: #dc3545;
-            color: white;
-            border-color: #dc3545;
-        }
-        
-        .action-btn.cancel:hover {
-            background: #c82333;
-        }
-        
-        .action-btn.detail {
-            background: #007bff;
-            color: white;
-            border-color: #007bff;
-        }
-        
-        .action-btn.detail:hover {
-            background: #0056b3;
-        }
-        
-        .footer {
-            text-align: center;
-            margin: 20px 0;
-        }
-        
-        .my-shifts-btn {
-            background: #6c757d;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-        }
-        
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-        
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        /* ビュー表示制御 */
-        .view-content {
-            display: none;
-        }
-        
-        .view-content.active {
-            display: block;
-        }
-        
-        /* 週表示スタイル */
-        .week-view {
-            padding: 20px;
-        }
-        
-        .week-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 1px;
-            background: #ddd;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .week-day {
-            background: white;
-            padding: 15px;
-            min-height: 120px;
-        }
-        
-        .week-day-header {
-            background: #4CAF50;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            font-weight: bold;
-            margin: -15px -15px 10px -15px;
-        }
-        
-        .week-day.today .week-day-header {
-            background: #2196F3;
-        }
-        
-        .week-day.weekend .week-day-header {
-            background: #FF9800;
-        }
-        
-        .week-shifts {
-            min-height: 80px;
-        }
-        
-        .week-shift-item {
-            background: #e3f2fd;
-            border: 1px solid #2196F3;
-            border-radius: 4px;
-            padding: 8px;
-            margin-bottom: 5px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-        
-        .week-shift-item.full {
-            background: #ffebee;
-            border-color: #f44336;
-        }
-        
-        /* 日表示スタイル */
-        .day-view {
-            padding: 20px;
-        }
-        
-        .day-header {
-            background: #4CAF50;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            border-radius: 8px 8px 0 0;
-            margin-bottom: 0;
-        }
-        
-        .day-shifts {
-            background: white;
-            border-radius: 0 0 8px 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 20px;
-        }
-        
-        .day-shift-item {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 6px;
-            padding: 20px;
-            margin-bottom: 15px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        
-        .day-shift-item:hover {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
-        
-        .day-shift-item.full {
-            background: #ffebee;
-            border-color: #f44336;
-        }
-        
-        .day-shift-time {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .day-shift-slots {
-            color: #666;
-            margin-bottom: 10px;
-        }
-        
-        .day-shift-note {
-            color: #888;
-            font-style: italic;
-        }
-    </style>
+
 </head>
 <body>
     <!-- ナビゲーションバー -->
     <nav class="navbar">
         <div class="navbar-content">
-            <a href="<?php echo \Fuel\Core\Uri::create('shifts'); ?>" class="navbar-brand">ShiftBoard</a>
-            <ul class="navbar-nav">
-                <li><a href="<?php echo \Fuel\Core\Uri::create('shifts'); ?>" class="active">シフト一覧</a></li>
-                <li><a href="<?php echo \Fuel\Core\Uri::create('shifts/create'); ?>">シフト作成</a></li>
-                <li><a href="<?php echo \Fuel\Core\Uri::create('my/shifts'); ?>">自分のシフト</a></li>
-                <li><a href="<?php echo \Fuel\Core\Uri::create('members'); ?>">メンバー管理</a></li>
-            </ul>
+            <a href="<?php echo \Fuel\Core\Uri::create('shifts'); ?>" class="navbar-brand">シフトボード</a>
         </div>
     </nav>
 
     <!-- ヘッダー -->
     <div class="header">
-        <h1 data-bind="text: screenTitle">シフト一覧</h1>
-        <div class="view-toggle">
-            <button class="view-btn active" data-bind="click: function() { $root.setView('month'); }">月</button>
-            <button class="view-btn" data-bind="click: function() { $root.setView('week'); }">週</button>
-            <button class="view-btn" data-bind="click: function() { $root.setView('day'); }">日</button>
-            <button class="view-btn" data-bind="click: function() { $root.setView('list'); }">リスト</button>
+    <div class="container">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="month-nav">
+                    <button class="nav-btn" data-bind="click: $root.previousMonth"> ◀︎</button>
+                    <span class="current-month" data-bind="text: currentMonth"></span>
+                    <button class="nav-btn" data-bind="click: $root.nextMonth">▶︎ </button>
+                </div>
+                <div class="view-buttons">
+                    <button class="view-btn active" data-bind="click: function() { $root.setView('month'); }">月</button>
+                    <button class="view-btn" data-bind="click: function() { $root.setView('week'); }">週</button>
+                    <button class="view-btn" data-bind="click: function() { $root.setView('day'); }">日</button>
+                    <button class="view-btn">リスト</button>
+                </div>
+            </div>
+            <div class="header-right">
+                <a href="<?php echo \Fuel\Core\Uri::create('shifts/create'); ?>" class="btn">新規シフト登録</a>
+            </div>
         </div>
-        <a href="<?php echo \Fuel\Core\Uri::create('shifts/create'); ?>" class="btn">新規シフト登録</a>
+    </div>
     </div>
     
     <!-- アラート表示 -->
-    <div data-bind="visible: alertMessage" class="alert" data-bind="css: { 'alert-success': alertType() === 'success', 'alert-error': alertType() === 'error' }">
+    <div class="alert" data-bind="visible: alertMessage">
         <span data-bind="text: alertMessage"></span>
     </div>
     
+    <!-- 動的アラートコンテナ -->
+    <div id="alert-container"></div>
+    
     <!-- メインコンテンツ -->
-    <div class="main-content">
-        <!-- 月表示 -->
-        <div class="view-content active month-view" data-bind="css: { active: currentView() === 'month' }">
-            <div class="main-content">
-                <div class="calendar-section">
-                    <div class="calendar-header">
-                        <div class="month-nav">
-                            <button class="nav-btn" data-bind="click: $root.previousMonth">‹</button>
-                            <span class="current-month" data-bind="text: currentMonth"></span>
-                            <button class="nav-btn" data-bind="click: $root.nextMonth">›</button>
-                        </div>
-                    </div>
+    <!-- 日表示 -->
+    <div class="view-content day-view">
+        <div class="day-main-content">
+            <div class="day-calendar-section">
+                <div class="day-calendar-header">
                     
-                    <!-- カレンダーテーブル -->
-                    <table class="calendar-table">
-                        <thead>
-                            <tr>
-                                <th>月</th>
-                                <th>火</th>
-                                <th>水</th>
-                                <th>木</th>
-                                <th>金</th>
-                                <th>土</th>
-                                <th>日</th>
-                            </tr>
-                        </thead>
-                        <tbody id="calendar-days-container">
-                            <!-- JavaScriptで動的に生成 -->
-                        </tbody>
-                    </table>
+                </div>
+                <!-- 日表示用テーブル -->
+                <table class="day-calendar-table">
+                    <thead>
+                        <tr>
+                            <th>時間</th>
+                            <th>シフト情報</th>
+                            <th>参加者一覧</th>
+                            <th>定員状況</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="day-shifts-container">
+                        <!-- JavaScriptで動的に生成 -->
+                    </tbody>
+                </table>
+                <!-- 自分のシフトボタン -->
+        <div style="text-align: center; margin: 20px 40px;">
+            <button class="btn my-shifts-btn" data-bind="click: goToMyShifts">自分のシフト</button>
+        </div>
+            </div>
+            
+            <!-- 募集中のシフトセクション -->
+            <div class="day-recruitment-section">
+                <div class="recruitment-header">募集中のシフト</div>
+                
+                <!-- ローディング表示 -->
+                <div data-bind="visible: loading" class="loading">
+                    読み込み中...
                 </div>
                 
-                <!-- 募集中のシフトセクション -->
-                <div class="recruitment-section">
-                    <div class="recruitment-header">募集中のシフト</div>
-                    
-                    <!-- ローディング表示 -->
-                    <div data-bind="visible: loading" class="loading">
-                        読み込み中...
+                <!-- 募集中のシフト一覧 -->
+                <div data-bind="visible: !loading()">
+                    <div id="available-shifts-container-day">
+                        <!-- JavaScriptで動的に生成 -->
                     </div>
                     
-                    <!-- 募集中のシフト一覧 -->
-                    <div data-bind="visible: !loading()">
-                        <div id="available-shifts-container">
-                            <!-- JavaScriptで動的に生成 -->
-                        </div>
-                        
-                        <!-- 募集中のシフトが無い場合 -->
-                        <div id="no-shifts-message" style="display: none;">
-                            <p>募集中のシフトはありません。</p>
-                        </div>
+                    <!-- 募集中のシフトが無い場合 -->
+                    <div id="no-shifts-message-day" style="display: none;">
+                        <p>募集中のシフトはありません。</p>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- 週表示 -->
-        <div class="view-content week-view" data-bind="css: { active: currentView() === 'week' }">
-            <div class="week-grid" id="week-grid-container">
-                <!-- JavaScriptで動的に生成 -->
-            </div>
-        </div>
-        
-        <!-- 日表示 -->
-        <div class="view-content day-view" data-bind="css: { active: currentView() === 'day' }">
-            <div class="day-header" id="day-header-container">
-                <!-- JavaScriptで動的に生成 -->
-            </div>
-            <div class="day-shifts" id="day-shifts-container">
-                <!-- JavaScriptで動的に生成 -->
             </div>
         </div>
     </div>
     
-    <!-- フッター -->
-    <div class="footer">
-        <button class="my-shifts-btn" data-bind="click: $root.goToMyShifts">自分のシフト</button>
+    <!-- 週表示 -->
+    <div class="view-content week-view">
+        <div class="week-main-content">
+            <div class="week-calendar-section">
+                <div class="week-calendar-header">
+                    <div class="week-nav">
+                        <span class="current-week" data-bind="text: currentWeek"></span>
+                    </div>
+                </div>
+                <!-- 週表示用テーブル -->
+                <table class="week-calendar-table">
+  <thead>
+                        <tr>
+                            <th>Sun</th>
+                            <th>Mon</th>
+                            <th>Tue</th>
+                            <th>Wed</th>
+                            <th>Thu</th>
+                            <th>Fri</th>
+                            <th>Sat</th>
+                        </tr>
+  </thead>
+                    <tbody id="week-grid-container">
+                        <!-- JavaScriptで動的に生成 -->
+                    </tbody>
+                </table>
+                <!-- 自分のシフトボタン -->
+        <div style="text-align: center; margin: 20px 40px;">
+            <button class="btn my-shifts-btn" data-bind="click: goToMyShifts">自分のシフト</button>
+        </div>
+            </div>
+            
+            <!-- 募集中のシフトセクション -->
+            <div class="week-recruitment-section">
+                <div class="recruitment-header">募集中のシフト</div>
+                
+                <!-- ローディング表示 -->
+                <div data-bind="visible: loading" class="loading">
+                    読み込み中...
+                </div>
+                
+                <!-- 募集中のシフト一覧 -->
+                <div data-bind="visible: !loading()">
+                    <div id="available-shifts-container-week">
+                        <!-- JavaScriptで動的に生成 -->
+                    </div>
+                    
+                    <!-- 募集中のシフトが無い場合 -->
+                    <div id="no-shifts-message-week" style="display: none;">
+                        <p>募集中のシフトはありません。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    
+    <!-- 月表示 -->
+    <div class="view-content month-view">
+        <div class="month-main-content">
+            <div class="month-calendar-section">
+                <div class="month-calendar-header">
+                    <div class="day-nav">
+                        <span class="current-day" data-bind="text: currentDay"></span>
+                    </div>
+                </div>
+                
+                <!-- 月表示カレンダーテーブル -->
+                <table class="month-calendar-table">
+                    <thead>
+                        <tr>
+                            <th>Mon</th>
+                            <th>Tue</th>
+                            <th>Wed</th>
+                            <th>Thu</th>
+                            <th>Fri</th>
+                            <th>Sat</th>
+                            <th>Sun</th>
+    </tr>
+                    </thead>
+                    <tbody id="calendar-days-container">
+                        <!-- JavaScriptで動的に生成 -->
+  </tbody>
+
+</table>
+        <!-- 自分のシフトボタン -->
+        <div style="text-align: center; margin: 20px 40px;">
+            <button class="btn my-shifts-btn" data-bind="click: goToMyShifts">自分のシフト</button>
+        </div>
+            </div>
+            
+            <!-- 募集中のシフトセクション -->
+            <div class="month-recruitment-section">
+                <div class="recruitment-header">募集中のシフト</div>
+                
+                <!-- ローディング表示 -->
+                <div data-bind="visible: loading" class="loading">
+                    読み込み中...
+                </div>
+                
+                <!-- 募集中のシフト一覧 -->
+                <div data-bind="visible: !loading()">
+                    <div id="available-shifts-container">
+                        <!-- JavaScriptで動的に生成 -->
+                    </div>
+                    
+                    <!-- 募集中のシフトが無い場合 -->
+                    <div id="no-shifts-message" style="display: none;">
+                        <p>募集中のシフトはありません。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+
     
     <script>
         // Knockout.js ViewModel
@@ -614,7 +243,7 @@
             self.alertMessage = ko.observable('');
             self.alertType = ko.observable('');
             self.currentView = ko.observable('month');
-            self.currentDate = ko.observable(new Date(2025, 8, 1)); // 2025年9月に設定
+            self.currentDate = ko.observable(new Date()); // 現在の日付に設定
             self.screenTitle = ko.observable('シフト一覧');
             
             // 現在の月を表示
@@ -623,21 +252,97 @@
                 return date.getFullYear() + '年' + (date.getMonth() + 1) + '月';
             });
             
+            // 現在の週を表示
+            self.currentWeek = ko.computed(function() {
+                var date = new Date(self.currentDate());
+                var startOfWeek = new Date(date);
+                startOfWeek.setDate(date.getDate() - date.getDay());
+                var endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+                
+                var startMonth = startOfWeek.getMonth() + 1;
+                var endMonth = endOfWeek.getMonth() + 1;
+                var startYear = startOfWeek.getFullYear();
+                var endYear = endOfWeek.getFullYear();
+                
+                if (startYear === endYear && startMonth === endMonth) {
+                    return startYear + '年' + startMonth + '月' + startOfWeek.getDate() + '日〜' + endOfWeek.getDate() + '日';
+                } else if (startYear === endYear) {
+                    return startYear + '年' + startMonth + '月' + startOfWeek.getDate() + '日〜' + endMonth + '月' + endOfWeek.getDate() + '日';
+                } else {
+                    return startYear + '年' + startMonth + '月' + startOfWeek.getDate() + '日〜' + endYear + '年' + endMonth + '月' + endOfWeek.getDate() + '日';
+                }
+            });
+            
+            // 現在の日を表示
+            self.currentDay = ko.computed(function() {
+                var date = self.currentDate();
+                var dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日（' + dayNames[date.getDay()] + '）';
+            });
+            
             // アラート表示（共通機能を使用）
             self.showAlert = function(message, type) {
-                ShiftBoard.alert.show(message, type);
+                try {
+                    // エラーの場合は表示時間を延長（10秒）
+                    var duration = (type === 'error') ? 10000 : null;
+                    ShiftBoard.alert.show(message, type, duration);
+                } catch (e) {
+                    console.error('Error in ShiftBoard.alert.show:', e);
+                    // フォールバック: 古いアラート方式を使用
+                    self.alertMessage(message);
+                    self.alertType(type);
+                }
             };
             
             // 表示切り替え
             self.setView = function(view) {
+                console.log('setView called with:', view);
                 self.currentView(view);
-                $('.view-btn').removeClass('active');
-                // アクティブボタンを設定
-                $('.view-btn').each(function() {
-                    if ($(this).text().trim() === getViewText(view)) {
-                        $(this).addClass('active');
+                
+                // 日表示の場合は現在の日付に設定
+                if (view === 'day') {
+                    self.currentDate(new Date());
+                }
+                
+                // すべてのビューコンテンツを非表示
+                var viewContents = document.querySelectorAll('.view-content');
+                console.log('Found view-content elements:', viewContents.length);
+                viewContents.forEach(function(element) {
+                    element.classList.remove('active');
+                });
+                
+                // 選択されたビューを表示
+                if (view === 'month') {
+                    var monthView = document.querySelector('.month-view');
+                    if (monthView) {
+                        monthView.classList.add('active');
+                        console.log('Added active to month-view');
+                    }
+                } else if (view === 'week') {
+                    var weekView = document.querySelector('.week-view');
+                    if (weekView) {
+                        weekView.classList.add('active');
+                        console.log('Added active to week-view');
+                    }
+                } else if (view === 'day') {
+                    var dayView = document.querySelector('.day-view');
+                    if (dayView) {
+                        dayView.classList.add('active');
+                        console.log('Added active to day-view');
+                    }
+                }
+                
+                // ボタンのアクティブ状態を更新
+                var viewBtns = document.querySelectorAll('.view-btn');
+                viewBtns.forEach(function(btn) {
+                    btn.classList.remove('active');
+                    if (btn.textContent.trim() === getViewText(view)) {
+                        btn.classList.add('active');
+                        console.log('Added active to button:', btn.textContent.trim());
                     }
                 });
+                
                 self.generateCalendar();
             };
             
@@ -647,7 +352,6 @@
                     case 'month': return '月';
                     case 'week': return '週';
                     case 'day': return '日';
-                    case 'list': return 'リスト';
                     default: return '月';
                 }
             }
@@ -664,6 +368,38 @@
             self.nextMonth = function() {
                 var date = new Date(self.currentDate());
                 date.setMonth(date.getMonth() + 1);
+                self.currentDate(date);
+                self.generateCalendar();
+            };
+            
+            // 前の週
+            self.previousWeek = function() {
+                var date = new Date(self.currentDate());
+                date.setDate(date.getDate() - 7);
+                self.currentDate(date);
+                self.generateCalendar();
+            };
+            
+            // 次の週
+            self.nextWeek = function() {
+                var date = new Date(self.currentDate());
+                date.setDate(date.getDate() + 7);
+                self.currentDate(date);
+                self.generateCalendar();
+            };
+            
+            // 前の日
+            self.previousDay = function() {
+                var date = new Date(self.currentDate());
+                date.setDate(date.getDate() - 1);
+                self.currentDate(date);
+                self.generateCalendar();
+            };
+            
+            // 次の日
+            self.nextDay = function() {
+                var date = new Date(self.currentDate());
+                date.setDate(date.getDate() + 1);
                 self.currentDate(date);
                 self.generateCalendar();
             };
@@ -819,10 +555,12 @@
                             }
                             
                             var timeDiv = document.createElement('div');
+                            timeDiv.className = 'shift-time';
                             timeDiv.textContent = shift.start_time + '-' + shift.end_time;
                             shiftBlock.appendChild(timeDiv);
                             
                             var countDiv = document.createElement('div');
+                            countDiv.className = 'shift-count';
                             countDiv.textContent = shift.assigned_users.length + '/' + shift.slot_count;
                             shiftBlock.appendChild(countDiv);
                             
@@ -842,120 +580,225 @@
                 });
             };
             
-            // 週表示をレンダリング
+            // 週表示をレンダリング（テーブル形式）
             self.renderWeekView = function(weekDays) {
                 var container = document.getElementById('week-grid-container');
                 if (!container) return;
                 
                 container.innerHTML = '';
                 
-                var dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                // 1行のテーブルを作成
+                var row = document.createElement('tr');
                 
                 weekDays.forEach(function(day) {
+                    var cell = document.createElement('td');
                     var dayElement = document.createElement('div');
-                    dayElement.className = 'week-day';
+                    dayElement.className = 'calendar-day';
+                    
                     if (day.isToday) dayElement.classList.add('today');
                     if (day.isWeekend) dayElement.classList.add('weekend');
                     
-                    var headerElement = document.createElement('div');
-                    headerElement.className = 'week-day-header';
-                    headerElement.textContent = dayNames[day.dayOfWeek] + ' ' + day.day;
-                    dayElement.appendChild(headerElement);
+                    var dayNumber = document.createElement('div');
+                    dayNumber.className = 'day-number';
+                    dayNumber.textContent = day.day;
+                    dayElement.appendChild(dayNumber);
                     
-                    var shiftsElement = document.createElement('div');
-                    shiftsElement.className = 'week-shifts';
-                    
-                    if (day.shifts.length === 0) {
-                        shiftsElement.innerHTML = '<div style="color: #999; font-size: 12px;">シフトなし</div>';
-                    } else {
-                        day.shifts.forEach(function(shift) {
-                            var shiftElement = document.createElement('div');
-                            shiftElement.className = 'week-shift-item';
-                            if (shift.assigned_users.length >= shift.slot_count) {
-                                shiftElement.classList.add('full');
-                            }
-                            
-                            shiftElement.innerHTML = 
-                                '<div style="font-weight: bold;">' + shift.start_time + '-' + shift.end_time + '</div>' +
-                                '<div style="font-size: 10px;">' + shift.assigned_users.length + '/' + shift.slot_count + '</div>';
-                            
-                            // クリックイベント
-                            shiftElement.addEventListener('click', function() {
-                                self.viewShift(shift);
-                            });
-                            
-                            shiftsElement.appendChild(shiftElement);
+                    // シフトブロックを追加
+                    day.shifts.forEach(function(shift) {
+                        var shiftBlock = document.createElement('div');
+                        shiftBlock.className = 'shift-block';
+                        if (shift.available_slots === 0) {
+                            shiftBlock.classList.add('full');
+                        }
+                        
+                        var timeDiv = document.createElement('div');
+                        timeDiv.className = 'shift-time';
+                        timeDiv.textContent = shift.start_time + '-' + shift.end_time;
+                        shiftBlock.appendChild(timeDiv);
+                        
+                        var countDiv = document.createElement('div');
+                        countDiv.className = 'shift-count';
+                        countDiv.textContent = shift.assigned_users.length + '/' + shift.slot_count;
+                        shiftBlock.appendChild(countDiv);
+                        
+                        // クリックイベント
+                        shiftBlock.addEventListener('click', function() {
+                            self.viewShift(shift);
                         });
-                    }
+                        
+                        dayElement.appendChild(shiftBlock);
+                    });
                     
-                    dayElement.appendChild(shiftsElement);
-                    container.appendChild(dayElement);
+                    cell.appendChild(dayElement);
+                    row.appendChild(cell);
                 });
+                
+                container.appendChild(row);
             };
             
-            // 日表示をレンダリング
+            // 日表示をレンダリング（テーブル形式）
             self.renderDayView = function(date, dayShifts) {
-                var headerContainer = document.getElementById('day-header-container');
                 var shiftsContainer = document.getElementById('day-shifts-container');
                 
-                if (!headerContainer || !shiftsContainer) return;
-                
-                // ヘッダーを更新
-                var dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-                var monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-                
-                headerContainer.innerHTML = 
-                    '<h2>' + date.getFullYear() + '年' + monthNames[date.getMonth()] + date.getDate() + '日（' + dayNames[date.getDay()] + '）</h2>';
+                if (!shiftsContainer) return;
                 
                 // シフト一覧を更新
                 shiftsContainer.innerHTML = '';
                 
                 if (dayShifts.length === 0) {
-                    shiftsContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 40px;">この日のシフトはありません</div>';
+                    var row = document.createElement('tr');
+                    var cell = document.createElement('td');
+                    cell.colSpan = 5;
+                    cell.style.textAlign = 'center';
+                    cell.style.color = '#999';
+                    cell.style.padding = '40px';
+                    cell.textContent = 'この日のシフトはありません';
+                    row.appendChild(cell);
+                    shiftsContainer.appendChild(row);
                 } else {
                     dayShifts.forEach(function(shift) {
-                        var shiftElement = document.createElement('div');
-                        shiftElement.className = 'day-shift-item';
+                        var row = document.createElement('tr');
+                        row.className = 'day-shift-row';
                         if (shift.assigned_users.length >= shift.slot_count) {
-                            shiftElement.classList.add('full');
+                            row.classList.add('full');
                         }
                         
-                        shiftElement.innerHTML = 
-                            '<div class="day-shift-time">' + shift.start_time + ' - ' + shift.end_time + '</div>' +
-                            '<div class="day-shift-slots">参加者: ' + shift.assigned_users.length + '/' + shift.slot_count + '人</div>' +
-                            (shift.note ? '<div class="day-shift-note">' + shift.note + '</div>' : '');
+                        // 時間列
+                        var timeCell = document.createElement('td');
+                        timeCell.className = 'day-shift-time';
+                        timeCell.textContent = shift.start_time + ' - ' + shift.end_time;
+                        row.appendChild(timeCell);
                         
-                        // クリックイベント
-                        shiftElement.addEventListener('click', function() {
+                        // シフト情報列
+                        var infoCell = document.createElement('td');
+                        infoCell.className = 'day-shift-info';
+                        var infoHtml = '';
+                        if (shift.note) {
+                            infoHtml += '<div class="day-shift-note">' + shift.note + '</div>';
+                        }
+                        infoHtml += '<div class="day-shift-id">ID: ' + shift.id + '</div>';
+                        infoCell.innerHTML = infoHtml;
+                        row.appendChild(infoCell);
+                        
+                        // 参加者一覧列
+                        var participantsCell = document.createElement('td');
+                        participantsCell.className = 'day-shift-participants';
+                        if (shift.assigned_users.length === 0) {
+                            participantsCell.innerHTML = '<span style="color: #999;">参加者なし</span>';
+                        } else {
+                            var participantsHtml = '';
+                            shift.assigned_users.forEach(function(user) {
+                                participantsHtml += '<div class="participant-item">' + user.name + ' (' + user.status + ')</div>';
+                            });
+                            participantsCell.innerHTML = participantsHtml;
+                        }
+                        row.appendChild(participantsCell);
+                        
+                        // 定員状況列
+                        var statusCell = document.createElement('td');
+                        statusCell.className = 'day-shift-status';
+                        var availableSlots = shift.slot_count - shift.assigned_users.length;
+                        var statusText = shift.assigned_users.length + '/' + shift.slot_count + '人';
+                        if (availableSlots === 0) {
+                            statusText += ' (満員)';
+                            statusCell.style.color = '#d32f2f';
+                            statusCell.style.fontWeight = 'bold';
+                        } else {
+                            statusText += ' (空き: ' + availableSlots + '人)';
+                            statusCell.style.color = '#2e7d32';
+                        }
+                        statusCell.textContent = statusText;
+                        row.appendChild(statusCell);
+                        
+                        // 操作列
+                        var actionCell = document.createElement('td');
+                        actionCell.className = 'day-shift-actions';
+                        
+                        var detailBtn = document.createElement('button');
+                        detailBtn.className = 'action-btn detail';
+                        detailBtn.textContent = '詳細';
+                        detailBtn.addEventListener('click', function() {
                             self.viewShift(shift);
                         });
+                        actionCell.appendChild(detailBtn);
                         
-                        shiftsContainer.appendChild(shiftElement);
+                        // 参加ボタン（空きがある場合）
+                        if (availableSlots > 0) {
+                            var joinBtn = document.createElement('button');
+                            joinBtn.className = 'action-btn join';
+                            joinBtn.textContent = '参加';
+                            joinBtn.style.marginLeft = '5px';
+                            joinBtn.addEventListener('click', function() {
+                                self.joinShift(shift);
+                            });
+                            actionCell.appendChild(joinBtn);
+                        }
+                        
+                        row.appendChild(actionCell);
+                        shiftsContainer.appendChild(row);
                     });
                 }
             };
             
             // 募集中のシフトをレンダリング
             self.renderAvailableShifts = function() {
-                var container = document.getElementById('available-shifts-container');
-                var noShiftsMessage = document.getElementById('no-shifts-message');
+                console.log('=== renderAvailableShifts ===');
                 
-                if (!container) return;
+                // 募集中のシフトセクションの表示状態を確認
+                var monthSection = document.querySelector('.month-recruitment-section');
+                var weekSection = document.querySelector('.week-recruitment-section');
+                var daySection = document.querySelector('.day-recruitment-section');
                 
+                console.log('Month recruitment section:', monthSection);
+                console.log('Week recruitment section:', weekSection);
+                console.log('Day recruitment section:', daySection);
+                
+                if (monthSection) {
+                    console.log('Month section display:', window.getComputedStyle(monthSection).display);
+                    console.log('Month section visibility:', window.getComputedStyle(monthSection).visibility);
+                }
+                
+                // 月表示用
+                self.renderAvailableShiftsForView('available-shifts-container', 'no-shifts-message');
+                // 週表示用
+                self.renderAvailableShiftsForView('available-shifts-container-week', 'no-shifts-message-week');
+                // 日表示用
+                self.renderAvailableShiftsForView('available-shifts-container-day', 'no-shifts-message-day');
+            };
+            
+            // 特定のビュー用の募集中シフトをレンダリング
+            self.renderAvailableShiftsForView = function(containerId, messageId) {
+                console.log('=== renderAvailableShiftsForView ===');
+                console.log('containerId:', containerId, 'messageId:', messageId);
+                
+                var container = document.getElementById(containerId);
+                var noShiftsMessage = document.getElementById(messageId);
+                
+                if (!container) {
+                    console.log('Container not found:', containerId);
+                    return;
+                }
+                
+                console.log('Container found:', container);
                 container.innerHTML = '';
                 
                 var availableShifts = self.availableShifts();
+                console.log('Available shifts from observable:', availableShifts);
+                console.log('Available shifts length:', availableShifts.length);
                 
                 if (availableShifts.length === 0) {
+                    console.log('No available shifts, showing message');
                     if (noShiftsMessage) {
                         noShiftsMessage.style.display = 'block';
                     }
                 } else {
+                    console.log('Found available shifts, rendering items');
                     if (noShiftsMessage) {
                         noShiftsMessage.style.display = 'none';
                     }
                     
-                    availableShifts.forEach(function(shift) {
+                    availableShifts.forEach(function(shift, index) {
+                        console.log('Creating shift item', index + 1, 'for:', shift);
                         var itemElement = document.createElement('div');
                         itemElement.className = 'recruitment-item';
                         
@@ -971,7 +814,7 @@
                         
                         var slotsDiv = document.createElement('div');
                         slotsDiv.className = 'recruitment-slots';
-                        slotsDiv.textContent = shift.assigned_users.length + '/' + shift.slot_count;
+                        slotsDiv.textContent = '空き: ' + shift.available_slots + '人 / 定員: ' + shift.slot_count + '人';
                         itemElement.appendChild(slotsDiv);
                         
                         var actionsDiv = document.createElement('div');
@@ -1003,30 +846,75 @@
                         
                         itemElement.appendChild(actionsDiv);
                         container.appendChild(itemElement);
+                        console.log('Added shift item to container');
+                        console.log('Container innerHTML length:', container.innerHTML.length);
+                        console.log('Container children count:', container.children.length);
                     });
                 }
+                console.log('=== End renderAvailableShiftsForView ===');
             };
             
             // シフト一覧を取得
             self.loadShifts = function() {
                 self.loading(true);
-                
+                // 取得レンジを指定（APIが期間必須でも動くように）
+                (function(){
+                    var base = new Date(self.currentDate());
+                    var y = base.getFullYear(), m = base.getMonth();
+                    var first = new Date(y, m, 1);
+                    var last  = new Date(y, m + 1, 0);
+                    // 前後1週間バッファ
+                    first.setDate(first.getDate() - 7);
+                    last.setDate(last.getDate() + 7);
+                    function fmt(d){ var z=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate()); }
+                    self._from = fmt(first);
+                    self._to   = fmt(last);
+                    console.log('[loadShifts] range', self._from, '→', self._to);
+                })();
                 $.ajax({
                     url: '<?php echo \Fuel\Core\Uri::create('api/shifts'); ?>',
+                    data: { from: self._from, to: self._to },
                     type: 'GET',
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
-                            self.shifts(response.data);
-                            self.availableShifts(response.data.filter(function(shift) {
+                            console.log('=== API response ===');
+                            console.log('Full response:', response);
+                            console.log('Total shifts:', response.data.length);
+
+                            // 正規化：型を数値に統一し、available_slots を算出
+                                                    var normalized = (response.data || []).map(function(shift) {
+                                                    var assignedCount = Array.isArray(shift.assigned_users)
+                                    ? shift.assigned_users.length
+                                    : Number(shift.assigned_count ?? 0);
+                                var slotCount = Number((shift.slot_count ?? shift.capacity ?? 0));
+                                var available = (shift.available_slots != null)
+                                    ? Number(shift.available_slots)
+                                    : Math.max(slotCount - assignedCount, 0);
+                                return Object.assign({}, shift, {
+                                    assigned_users: Array.isArray(shift.assigned_users) ?
+                                    shift.assigned_users : [],
+                                    slot_count: slotCount,
+                                    available_slots: available
+                                });
+                            });
+
+                            self.shifts(normalized);
+
+                            // 募集中のみ抽出（available_slots > 0）
+                            var availableShifts = normalized.filter(function(shift) {
+                                console.log('Checking shift ID:', shift.id, 'available_slots:', shift.available_slots);
                                 return shift.available_slots > 0;
-                            }));
-                            
-                            // デバッグ用ログ
-                            console.log('Loaded shifts:', response.data);
-                            console.log('Available shifts:', self.availableShifts());
+                            });
+                            console.log('=== Available shifts ===');
+                            console.log('Filtered available shifts:', availableShifts);
+                            console.log('Available shifts count:', availableShifts.length);
+                            self.availableShifts(availableShifts);
+                            console.log('=== After setting availableShifts ===');
+                            console.log('self.availableShifts():', self.availableShifts());
                             self.generateCalendar();
                             self.renderAvailableShifts();
+                            console.log('=== After renderAvailableShifts ===');
                         } else {
                             self.showAlert('シフト一覧の取得に失敗しました: ' + response.message, 'error');
                         }
@@ -1049,18 +937,43 @@
                     data: {
                         csrf_token: 'dummy_token' // 簡易実装
                     },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            self.showAlert('シフトに参加しました', 'success');
-                            self.loadShifts();
-                        } else {
-                            self.showAlert('シフトの参加に失敗しました: ' + response.message, 'error');
+                    success: function(response, status, xhr) {
+                        // 成功レスポンス
+                        try {
+                            var data = typeof response === 'string' ? JSON.parse(response) : response;
+                            
+                            if (data.success) {
+                                self.showAlert('シフトに参加しました', 'success');
+                                self.loadShifts();
+                            } else {
+                                self.showAlert('シフトの参加に失敗しました: ' + data.message, 'error');
+                            }
+                        } catch (e) {
+                            self.showAlert('シフトの参加に失敗しました', 'error');
+                            console.error('JSON Parse Error:', e);
                         }
                     },
                     error: function(xhr, status, error) {
-                        self.showAlert('シフトの参加に失敗しました', 'error');
-                        console.error('Error:', error);
+                        // エラーメッセージを初期化
+                        var errorMessage = 'シフトの参加に失敗しました';
+                        
+                        // ステータスコード別の処理
+                        if (xhr.status === 409) {
+                            // Conflictエラーの場合
+                            try {
+                                var response = JSON.parse(xhr.responseText);
+                                errorMessage = response.message || '既に参加しているか、定員に達しています';
+                            } catch (e) {
+                                errorMessage = '既に参加しているか、定員に達しています';
+                            }
+                        } else if (xhr.status === 404) {
+                            errorMessage = 'シフトが見つかりません';
+                        } else if (xhr.status === 500) {
+                            errorMessage = 'サーバーエラーが発生しました';
+                        }
+                        
+                        // エラーメッセージを表示
+                        self.showAlert(errorMessage, 'error');
                     }
                 });
             };
@@ -1077,18 +990,33 @@
                     data: {
                         csrf_token: 'dummy_token' // 簡易実装
                     },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            self.showAlert('シフトの参加を取り消しました', 'success');
-                            self.loadShifts();
-                        } else {
-                            self.showAlert('シフトの取消に失敗しました: ' + response.message, 'error');
+                    success: function(response, status, xhr) {
+                        // レスポンスを手動でJSONパース
+                        try {
+                            var data = typeof response === 'string' ? JSON.parse(response) : response;
+                            
+                            if (data.success) {
+                                self.showAlert('シフトの参加を取り消しました', 'success');
+                                self.loadShifts();
+                            } else {
+                                self.showAlert('シフトの取消に失敗しました: ' + data.message, 'error');
+                            }
+                        } catch (e) {
+                            self.showAlert('シフトの取消に失敗しました', 'error');
+                            console.error('JSON Parse Error:', e);
                         }
                     },
                     error: function(xhr, status, error) {
-                        self.showAlert('シフトの取消に失敗しました', 'error');
-                        console.error('Error:', error);
+                        var errorMessage = 'シフトの取消に失敗しました';
+                        
+                        if (xhr.status === 404) {
+                            errorMessage = 'このシフトに参加していません';
+                        } else if (xhr.status === 409) {
+                            errorMessage = 'シフトの取消ができません';
+                        }
+                        
+                        self.showAlert(errorMessage, 'error');
+                        console.error('AJAX Error:', error, xhr.responseText);
                     }
                 });
             };
@@ -1104,6 +1032,7 @@
             };
             
             // 初期化
+            self.setView('month'); // 初期表示を月表示に設定
             self.generateCalendar(); // カレンダーを先に生成
             self.loadShifts();
         }

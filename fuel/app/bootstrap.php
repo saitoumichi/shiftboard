@@ -14,12 +14,12 @@
 require COREPATH.'bootstrap.php';
 
 // Add framework overload classes here
-\Autoloader::add_classes(array(
+\Fuel\Core\Autoloader::add_classes(array(
 	// Example: 'View' => APPPATH.'classes/myview.php',
 ));
 
 // Register the autoloader
-\Autoloader::register();
+\Fuel\Core\Autoloader::register();
 
 /**
  * Your environment.  Can be set to any of the following:
@@ -29,15 +29,15 @@ require COREPATH.'bootstrap.php';
  * Fuel::STAGING
  * Fuel::PRODUCTION
  */
-Fuel::$env = Arr::get($_SERVER, 'FUEL_ENV', Arr::get($_ENV, 'FUEL_ENV', getenv('FUEL_ENV') ?: Fuel::DEVELOPMENT));
+\Fuel\Core\Fuel::$env = \Fuel\Core\Arr::get($_SERVER, 'FUEL_ENV', \Fuel\Core\Arr::get($_ENV, 'FUEL_ENV', getenv('FUEL_ENV') ?: \Fuel\Core\Fuel::DEVELOPMENT));
 
 // Initialize the framework with the config file.
-\Fuel::init('config.php');
+\Fuel\Core\Fuel::init('config.php');
 /* --- prevent View from being auto-escaped in templates --- */
-\Config::set(
+\Fuel\Core\Config::set(
     "security.whitelisted_classes",
     array_unique(array_merge(
-        (array) \Config::get("security.whitelisted_classes", []),
+        (array) \Fuel\Core\Config::get("security.whitelisted_classes", []),
         ["Fuel\\Core\\View","Fuel\\Core\\ViewModel","Closure"]
     ))
 );

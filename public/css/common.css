@@ -33,22 +33,14 @@ body {
 
 /* ヘッダー */
 .header {
+    display: flex;
     background: white;
-    padding: 20px;
-    box-shadow: var(--box-shadow);
-    margin-bottom: 20px;
+    max-width: 1400px;
+    border-radius:8px;
+    padding: 0 20px;
+    margin: 80px auto;
     position: relative;
     overflow: hidden;
-}
-
-.header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--primary-color), var(--success-color), var(--info-color));
 }
 
 .header h1 {
@@ -73,7 +65,6 @@ body {
 .navbar {
     background: white;
     padding: 15px 20px;
-    box-shadow: var(--box-shadow);
     margin-bottom: 20px;
     position: sticky;
     top: 0;
@@ -91,13 +82,13 @@ body {
 .navbar-brand {
     font-size: 20px;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--primary-light-color);
     text-decoration: none;
-    transition: var(--transition);
+    transition: var(--primary-light-color);
 }
 
 .navbar-brand:hover {
-    color: var(--success-color);
+    color: var(--primary-light-color);
     transform: scale(1.05);
 }
 

@@ -21,12 +21,17 @@ namespace Fuel\Core;
  * @category  Core
  * @author    Fuel Development Team
  */
-abstract class Controller_Hybrid extends \Controller_Rest
+abstract class Controller_Hybrid extends \Fuel\Core\Controller_Rest
 {
 	/**
 	* @var string page template
 	*/
 	public $template = 'template';
+
+	/**
+	* @var int response status code
+	*/
+	public $response_status = 200;
 
 	/**
 	 * Load the template and create the $this->template object if needed
@@ -39,7 +44,7 @@ abstract class Controller_Hybrid extends \Controller_Rest
 			if ( ! empty($this->template) and is_string($this->template))
 			{
 				// Load the template
-				$this->template = \View::forge($this->template);
+				$this->template = \Fuel\Core\View::forge($this->template);
 			}
 		}
 
@@ -67,7 +72,7 @@ abstract class Controller_Hybrid extends \Controller_Rest
 		}
 
 		// check if a input specific method exists
-		$controller_method = strtolower(\Input::method()) . '_' . $resource;
+		$controller_method = strtolower(\Fuel\Core\Input::method()) . '_' . $resource;
 
 		// fall back to action_ if no rest method is provided
 		if ( ! method_exists($this, $controller_method))
@@ -82,7 +87,7 @@ abstract class Controller_Hybrid extends \Controller_Rest
 		}
 
 		// if not, we got ourselfs a genuine 404!
-		throw new \HttpNotFoundException();
+		throw new \Fuel\Core\HttpNotFoundException();
 	}
 
 	/**
@@ -110,13 +115,13 @@ abstract class Controller_Hybrid extends \Controller_Rest
 			// deal with returned array's in non-restful calls
 			elseif (is_array($response))
 			{
-				$response = \Format::forge()->to_json($response, true);
+				$response = \Fuel\Core\Format::forge()->to_json($response, true);
 			}
 
 			// and make sure we have a valid Response object
-			if ( ! $response instanceof Response)
+			if ( ! $response instanceof \Fuel\Core\Response)
 			{
-				$response = \Response::forge($response, $this->response_status);
+				$response = \Fuel\Core\Response::forge($response, $this->response_status);
 			}
 		}
 
@@ -131,6 +136,6 @@ abstract class Controller_Hybrid extends \Controller_Rest
 	 */
 	public function is_restful()
 	{
-		return \Input::is_ajax();
+		return \Fuel\Core\Input::is_ajax();
 	}
 }

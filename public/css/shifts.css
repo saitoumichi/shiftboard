@@ -1,0 +1,735 @@
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #fff;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+:root {
+    --content-max-width: 1400px;
+}
+
+/* Ensure padding/border are included in width calculations */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* 強制的にヘッダーレイアウトを適用 */
+body .header .container .header-content {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+}
+
+body .header .container .header-content .header-left {
+    display: flex !important;
+    gap: 20px !important;
+    align-items: center !important;
+}
+
+body .header .container .header-content .header-right {
+    display: flex !important;
+    align-items: center !important;
+    margin-left: auto !important;
+}
+
+.header {
+    background: white !important;
+    border: 1px solid #e0e0e0 !important;
+    margin: 20px !important;
+    padding: 12px 0 !important; /* vertical only; horizontal padding is on .container */
+    display: block !important; /* override common.css flex */
+}
+
+.header .container {
+    max-width: var(--content-max-width) !important;
+    margin: 0 auto !important;
+    padding: 0 20px !important; /* match main content side insets */
+    display: flex !important;
+    align-items: center !important;
+}
+
+.header h1 {
+    margin: 0;
+    color: #333;
+    font-size: 24px;
+}
+
+.header .container .header-content {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important; /* 左右に分離 */
+    width: 100% !important;
+}
+
+.header .container .header-content .header-left {
+    display: flex !important;
+    gap: 20px !important;
+    align-items: center !important;
+}
+
+.header .container .header-content .header-right {
+    display: flex !important;
+    align-items: center !important;
+    margin-left: auto !important;
+}
+
+.month-nav {
+    display: flex !important;
+    gap: 15px;
+    align-items: center;
+}
+
+.view-buttons {
+    display: flex !important;
+    gap: 10px;
+}
+
+.view-btn {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+    border-radius: 100px;
+    font-size: 14px;
+}
+
+.view-btn.active {
+    background: #c0c0c0;
+    color: white;
+    border-color: #cococo;
+}
+
+.btn {
+    background: #0066cc;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+}
+
+.btn:hover {
+    background: #0056b3;
+}
+
+.main-content {
+    display: flex;
+    max-width: var(--content-max-width);
+    margin: 20px auto;
+    gap: 20px;
+    padding: 0 20px;
+}
+
+.calendar-section {
+    flex: 2;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+}
+
+.recruitment-section {
+    flex: 1;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+}
+
+/* 月表示のスタイル */
+.month-main-content {
+    display: flex;
+    max-width: var(--content-max-width);
+    margin: 20px auto;
+    gap: 20px;
+    padding: 0 20px;
+}
+
+.month-calendar-section {
+    flex: 2;
+    background: white;
+    color:#505050;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+}
+
+.month-recruitment-section {
+    flex: 1;
+    background: #f0f8ff !important; /* 薄い青色で目立たせる */
+    border-radius: 8px;
+    padding: 20px;
+    border: 2px solid #007bff !important; /* 青い枠線で目立たせる */
+    display: block !important;
+    visibility: visible !important;
+    min-height: 400px !important; /* 最小高さを設定 */
+}
+
+/* 強制的に募集中シフトコンテナを表示 */
+body .month-recruitment-section #available-shifts-container,
+body .week-recruitment-section #available-shifts-container-week,
+body .day-recruitment-section #available-shifts-container-day {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    min-height: 200px !important;
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    padding: 10px !important;
+}
+
+.month-calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    /* border: 1px solid #e0e0e0; */
+    table-layout: fixed;
+}
+
+.month-calendar-table th {
+    background: #fff;
+    color: #505050;
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: normal;
+    /* border: 1px solid #e0e0e0; */
+}
+
+.month-calendar-table th:nth-child(1),
+.month-calendar-table th:nth-child(2),
+.month-calendar-table th:nth-child(3),
+.month-calendar-table th:nth-child(4),
+.month-calendar-table th:nth-child(5),
+.month-calendar-table th:nth-child(6),
+.month-calendar-table th:nth-child(7) {
+    width: 14.28%; /* 月〜日を等間隔（7列で均等分割） */
+}
+
+.month-calendar-table td {
+    border: 1px solid #e0e0e0;
+    padding: 4px;
+    vertical-align: top;
+    min-height: 100px;
+}
+
+.month-calendar-table td:nth-child(1),
+.month-calendar-table td:nth-child(2),
+.month-calendar-table td:nth-child(3),
+.month-calendar-table td:nth-child(4),
+.month-calendar-table td:nth-child(5),
+.month-calendar-table td:nth-child(6),
+.month-calendar-table td:nth-child(7) {
+    width: 14.28%; /* 月〜日を等間隔（7列で均等分割） */
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.month-nav {
+    display: flex;
+    color:#505050;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-btn {
+    background: #fff;
+    color:#3366ff;
+    border-radius: 4px;
+    border: 1.5px solid #3366ff;
+    font-size: 18px;
+    padding: 5px 10px;
+}
+
+.current-month {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.calendar-day {
+    position: relative;
+    min-height: 100px;
+    padding: 2px;
+}
+
+.calendar-day.other-month {
+    /* background: #f8f9fa; */
+    color: #999;
+}
+
+.calendar-day.today {
+    /* background: #e3f2fd; */
+    font-weight: bold;
+}
+
+.calendar-day.weekend {
+    /* background: #fff3e0; */
+}
+
+.day-number {
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.shift-block {
+    background: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin: 2px 0;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    line-height: 1.2;
+}
+
+.shift-block:hover {
+    background: #bbdefb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.shift-block.full {
+    background: #ffebee;
+    border-color: #f44336;
+    color: #c62828;
+}
+
+.shift-block.full:hover {
+    background: #ffcdd2;
+}
+
+.shift-time {
+    font-weight: bold;
+    color: #1565c0;
+}
+
+.shift-count {
+    font-size: 9px;
+    color: #666;
+    margin-top: 1px;
+}
+
+.shift-block.full .shift-time {
+    color: #c62828;
+}
+
+.recruitment-header {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #007bff !important; /* 青色で目立たせる */
+    background: #e3f2fd !important; /* 薄い青色の背景 */
+    padding: 10px !important;
+    border-radius: 4px !important;
+    text-align: center !important;
+}
+
+/* 強制的に募集中シフトアイテムを表示 */
+body .month-recruitment-section .recruitment-item,
+body .week-recruitment-section .recruitment-item,
+body .day-recruitment-section .recruitment-item {
+    border: 3px solid #28a745 !important; /* 太い緑色の枠線 */
+    border-radius: 8px !important;
+    padding: 15px !important;
+    margin-bottom: 15px !important;
+    background: #d4edda !important; /* 薄い緑色の背景 */
+    transition: all 0.2s !important;
+    display: block !important;
+    visibility: visible !important;
+    min-height: 100px !important; /* 最小高さを設定 */
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.recruitment-item:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+/* 強制的に募集中シフトアイテム内のテキストを表示 */
+body .month-recruitment-section .recruitment-item .recruitment-date,
+body .week-recruitment-section .recruitment-item .recruitment-date,
+body .day-recruitment-section .recruitment-item .recruitment-date {
+    font-weight: bold !important;
+    margin-bottom: 8px !important;
+    color: #155724 !important; /* 濃い緑色 */
+    font-size: 18px !important; /* 大きくする */
+    display: block !important;
+    visibility: visible !important;
+}
+
+body .month-recruitment-section .recruitment-item .recruitment-time,
+body .week-recruitment-section .recruitment-item .recruitment-time,
+body .day-recruitment-section .recruitment-item .recruitment-time {
+    color: #155724 !important; /* 濃い緑色 */
+    font-size: 16px !important; /* 大きくする */
+    margin-bottom: 8px !important;
+    display: block !important;
+    visibility: visible !important;
+}
+
+body .month-recruitment-section .recruitment-item .recruitment-slots,
+body .week-recruitment-section .recruitment-item .recruitment-slots,
+body .day-recruitment-section .recruitment-item .recruitment-slots {
+    color: #155724 !important; /* 濃い緑色 */
+    font-size: 14px !important; /* 大きくする */
+    margin-bottom: 12px !important;
+    font-weight: bold !important; /* 太字にする */
+    display: block !important;
+    visibility: visible !important;
+}
+
+.recruitment-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 11px;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+}
+
+.action-btn.join {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.action-btn.join:hover {
+    background: #218838;
+}
+
+.action-btn.cancel {
+    background: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+.action-btn.cancel:hover {
+    background: #c82333;
+}
+
+.action-btn.detail {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.action-btn.detail:hover {
+    background: #0056b3;
+}
+
+.footer {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.my-shifts-btn {
+    background: #6c757d;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* 動的アラートコンテナ */
+#alert-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+    max-width: 400px;
+}
+
+#alert-container .alert {
+    position: relative;
+    margin-bottom: 10px;
+    padding: 15px 20px;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    animation: slideIn 0.3s ease;
+    font-size: 16px;
+    font-weight: bold;
+    min-width: 300px;
+}
+
+.alert-close {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.7;
+}
+
+.alert-close:hover {
+    opacity: 1;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* ビュー表示制御 */
+.view-content {
+    display: none;
+}
+
+.view-content.active {
+    display: block;
+}
+
+/* 月表示の特別な制御（active のときだけ表示） */
+.month-view { /* inherit default from .view-content (display: none) */ }
+.month-view.active { display: flex; }
+
+.month-view .main-content {
+    display: flex;
+    gap: 20px;
+}
+
+/* 週表示・日表示のスタイル */
+.week-main-content,
+.day-main-content {
+    display: flex;
+    max-width: var(--content-max-width);
+    margin: 20px auto;
+    gap: 20px;
+    padding: 0 20px;
+}
+
+.week-calendar-section,
+.day-calendar-section {
+    flex: 2;
+    color:#505050;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    border:1px solid #e0e0e0;
+}
+
+.week-recruitment-section,
+.day-recruitment-section {
+    flex: 1;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    border:1px solid #e0e0e0;
+}
+
+.week-calendar-table,
+.day-calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    table-layout: fixed;
+}
+
+.week-calendar-table th,
+.day-calendar-table th {
+    color: #505050;
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: normal;
+}
+
+.week-calendar-table td,
+.day-calendar-table td {
+    border: 1px solid #e0e0e0;
+    padding: 4px;
+    vertical-align: top;
+    min-height: 100px;
+}
+
+/* 日表示のテーブル行スタイル */
+.day-shift-row {
+    transition: all 0.2s;
+}
+
+.day-shift-row:hover {
+    background: #f8f9fa;
+}
+
+.day-shift-row.full {
+    background: #ffebee;
+}
+
+.day-shift-row.full:hover {
+    background: #ffcdd2;
+}
+
+.day-shift-time {
+    font-weight: bold;
+    color: #333;
+}
+
+.day-shift-info {
+    color: #666;
+}
+
+.day-shift-slots {
+    color: #666;
+}
+
+.day-shift-actions {
+    text-align: center;
+}
+
+.day-shift-participants {
+    font-size: 12px;
+}
+
+.participant-item {
+    margin-bottom: 2px;
+    padding: 2px 4px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+.day-shift-status {
+    font-weight: bold;
+}
+
+.day-shift-id {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+}
+
+.day-shift-note {
+    font-style: italic;
+    color: #666;
+    margin-bottom: 2px;
+}
+
+.day-header {
+    background: #4CAF50;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 0;
+}
+
+.day-shifts {
+    background: white;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.day-shift-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 15px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.day-shift-item:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.day-shift-item.full {
+    background: #ffebee;
+    border-color: #f44336;
+}
+
+.day-shift-time {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.day-shift-slots {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.day-shift-note {
+    color: #888;
+    font-style: italic;
+}
+
+
