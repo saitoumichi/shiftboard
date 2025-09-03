@@ -235,6 +235,13 @@
         function ShiftViewModel() {
             var self = this;
             
+            // YYYY-MM-DD をローカル日付で確実に解釈する
+            function parseYMD(ymd) {
+                if (!ymd) return null;
+                var p = ymd.split('-').map(Number);
+                return new Date(p[0], (p[1] || 1) - 1, p[2] || 1);
+            }
+            
             // データ
             self.shifts = ko.observableArray([]);
             self.availableShifts = ko.observableArray([]);
@@ -673,7 +680,7 @@
                         // 時間列
                         var timeCell = document.createElement('td');
                         timeCell.className = 'day-shift-time';
-                        timeCell.textContent = shift.start_time + ' - ' + shift.end_time;
+                        timeCell.textContent = shift.start_time + '-' + shift.end_time;
                         row.appendChild(timeCell);
                         
                         // シフト情報列
@@ -757,16 +764,16 @@
                         day:   { container: 'available-shifts-container-day',  msg: 'no-shifts-message-day' }
                     };
                     var target = map[view] || map.month;
-                    self.renderAvailableShiftsForView(target.container, target.msg);
+                    self.renderAvailableShiftsForView(view, target.container, target.msg);
                 } catch (error) {
                     console.error('Error in renderAvailableShifts:', error);
                 }
             };
             
             // 特定のビュー用の募集中シフトをレンダリング
-            self.renderAvailableShiftsForView = function(containerId, messageId) {
+            self.renderAvailableShiftsForView = function(view, containerId, messageId) {
                 console.log('=== renderAvailableShiftsForView ===');
-                console.log('containerId:', containerId, 'messageId:', messageId);
+                console.log('view:', view, 'containerId:', containerId, 'messageId:', messageId);
                 
                 var container = document.getElementById(containerId);
                 var noShiftsMessage = document.getElementById(messageId);
@@ -783,8 +790,40 @@
                 console.log('Available shifts from observable:', availableShifts);
                 console.log('Available shifts length:', availableShifts.length);
                 
-                if (availableShifts.length === 0) {
-                    console.log('No available shifts, showing message');
+                // 週表記の場合は、その週のシフトのみをフィルタリング
+                var filteredShifts = availableShifts;
+                if (view === 'week') {
+                    var base = new Date(self.currentDate());
+                    var weekStart = new Date(base);
+                    weekStart.setHours(0,0,0,0);
+                    weekStart.setDate(base.getDate() - base.getDay()); // Sun
+                    var weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6); // Sat
+                    weekEnd.setHours(23,59,59,999);
+                    console.log('Week view - filtering shifts for week:', weekStart, 'to', weekEnd);
+
+                    filteredShifts = availableShifts.filter(function(shift) {
+                        var sd = parseYMD(shift.shift_date); // ローカル日付
+                        return sd && sd >= weekStart && sd <= weekEnd;
+                    });
+                    console.log('Filtered shifts for week (count):', filteredShifts.length);
+                }
+
+                // 日表示の場合は、その日のシフトのみをフィルタリング
+                if (view === 'day') {
+                    var cur = new Date(self.currentDate());
+                    cur.setHours(0,0,0,0);
+                    var next = new Date(cur);
+                    next.setDate(cur.getDate() + 1);
+                    next.setMilliseconds(-1);
+                    filteredShifts = availableShifts.filter(function(shift) {
+                        var sd = parseYMD(shift.shift_date);
+                        return sd && sd >= cur && sd <= next;
+                    });
+                }
+                
+                if (filteredShifts.length === 0) {
+                    console.log('No available shifts for current view, showing message');
                     if (noShiftsMessage) {
                         noShiftsMessage.style.display = 'block';
                     }
@@ -794,7 +833,7 @@
                         noShiftsMessage.style.display = 'none';
                     }
                     
-                    availableShifts.forEach(function(shift, index) {
+                    filteredShifts.forEach(function(shift, index) {
                         console.log('Creating shift item', index + 1, 'for:', shift);
                         var itemElement = document.createElement('div');
                         itemElement.className = 'recruitment-item';
@@ -809,7 +848,10 @@
                         
                         var dateDiv = document.createElement('div');
                         dateDiv.className = 'recruitment-date';
-                        dateDiv.textContent = shift.shift_date + '  ' +  shift.start_time + ' - ' + shift.end_time;
+                        // 秒数表記を削除（HH:MM:SS → HH:MM）
+                        var startTime = shift.start_time.substring(0, 5);
+                        var endTime = shift.end_time.substring(0, 5);
+                        dateDiv.textContent = shift.shift_date + '  ' + startTime + '-' + endTime;
                         dateDiv.style.cssText = 'font-weight: bold; margin-bottom: 4px;';
                         shiftInfo.appendChild(dateDiv);
                         
@@ -829,7 +871,6 @@
                         var joinBtn = document.createElement('button');
                         joinBtn.className = 'action-btn join';
                         joinBtn.textContent = '参加';
-                        joinBtn.style.cssText = 'padding: 4px 8px; font-size: 11px; border: 1px solid #28a745; background: #28a745; color: white; border-radius: 3px; cursor: pointer;';
                         joinBtn.addEventListener('click', function() {
                             self.joinShift(shift);
                         });
@@ -838,20 +879,10 @@
                         var cancelBtn = document.createElement('button');
                         cancelBtn.className = 'action-btn cancel';
                         cancelBtn.textContent = '取消';
-                        cancelBtn.style.cssText = 'padding: 4px 8px; font-size: 11px; border: 1px solid #dc3545; background: #dc3545; color: white; border-radius: 3px; cursor: pointer;';
                         cancelBtn.addEventListener('click', function() {
                             self.cancelShift(shift);
                         });
                         actionsDiv.appendChild(cancelBtn);
-                        
-                        var detailBtn = document.createElement('button');
-                        detailBtn.className = 'action-btn detail';
-                        detailBtn.textContent = '詳細';
-                        detailBtn.style.cssText = 'padding: 4px 8px; font-size: 11px; border: 1px solid #007bff; background: #007bff; color: white; border-radius: 3px; cursor: pointer;';
-                        detailBtn.addEventListener('click', function() {
-                            self.viewShift(shift);
-                        });
-                        actionsDiv.appendChild(detailBtn);
                         
                         infoContainer.appendChild(actionsDiv);
                         itemElement.appendChild(infoContainer);

@@ -348,7 +348,7 @@ body .day-recruitment-section .recruitment-item {
     border-radius: 8px !important;
     padding: 15px !important;
     margin-bottom: 15px !important;
-    background:rgb(224, 238, 248) !important; /* 薄い緑色の背景 */
+    background:rgb(244, 249, 252) !important; /* 薄い緑色の背景 */
     transition: all 0.2s !important;
     display: block !important;
     visibility: visible !important;
@@ -366,9 +366,9 @@ body .day-recruitment-section .recruitment-item {
 body .month-recruitment-section .recruitment-item .recruitment-date,
 body .week-recruitment-section .recruitment-item .recruitment-date,
 body .day-recruitment-section .recruitment-item .recruitment-date {
-    font-weight: bold !important;
+    font-weight: normal !important;
     margin-bottom: 8px !important;
-    color: #155724 !important; /* 濃い緑色 */
+    color: black !important; /* 濃い緑色 */
     font-size: 18px !important; /* 大きくする */
     display: block !important;
     visibility: visible !important;
@@ -377,7 +377,7 @@ body .day-recruitment-section .recruitment-item .recruitment-date {
 body .month-recruitment-section .recruitment-item .recruitment-time,
 body .week-recruitment-section .recruitment-item .recruitment-time,
 body .day-recruitment-section .recruitment-item .recruitment-time {
-    color: #155724 !important; /* 濃い緑色 */
+    color: black !important; /* 濃い緑色 */
     font-size: 16px !important; /* 大きくする */
     margin-bottom: 8px !important;
     display: block !important;
@@ -387,10 +387,10 @@ body .day-recruitment-section .recruitment-item .recruitment-time {
 body .month-recruitment-section .recruitment-item .recruitment-slots,
 body .week-recruitment-section .recruitment-item .recruitment-slots,
 body .day-recruitment-section .recruitment-item .recruitment-slots {
-    color: #155724 !important; /* 濃い緑色 */
+    color: black !important; /* 濃い緑色 */
     font-size: 14px !important; /* 大きくする */
     margin-bottom: 12px !important;
-    font-weight: bold !important; /* 太字にする */
+    font-weight: normal !important; /* 太字にする */
     display: block !important;
     visibility: visible !important;
 }
@@ -416,33 +416,17 @@ body .day-recruitment-section .recruitment-item .recruitment-slots {
 }
 
 .action-btn.join {
-    background: #28a745;
-    color: white;
-    border-color: #28a745;
-}
-
-.action-btn.join:hover {
-    background: #218838;
-}
-
-.action-btn.cancel {
-    background: #dc3545;
-    color: white;
-    border-color: #dc3545;
-}
-
-.action-btn.cancel:hover {
-    background: #c82333;
-}
-
-.action-btn.detail {
-    background: #007bff;
-    color: white;
+    background: #ffffff;
+    color: #007bff;
     border-color: #007bff;
 }
 
-.action-btn.detail:hover {
-    background: #0056b3;
+
+
+.action-btn.cancel {
+    background: #ffffff;
+    color: #007bff;
+    border-color: #007bff;
 }
 
 .footer {
@@ -756,6 +740,15 @@ body .day-recruitment-section .recruitment-item .recruitment-slots {
 
 /* KO visible wrapper must not collapse even when toggled */
 .month-recruitment-section > [data-bind*="visible: !loading()"] {
+    display: block !important;
+    visibility: visible !important;
+    min-height: 200px !important;
+    overflow: visible !important;
+}
+
+/* Ensure KO wrapper is visible also in Week/Day views */
+.week-recruitment-section > [data-bind*="visible: !loading()"],
+.day-recruitment-section  > [data-bind*="visible: !loading()"] {
     display: block !important;
     visibility: visible !important;
     min-height: 200px !important;

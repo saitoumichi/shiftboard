@@ -7,6 +7,9 @@
     <!-- 共通CSS -->
     <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/common.css'); ?>">
     
+    <!-- シフト作成ページ専用CSS -->
+    <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/shifts-create.css'); ?>">
+    
     <!-- Knockout.js -->
     <script src="<?php echo \Fuel\Core\Uri::create('js/knockout-min.js'); ?>"></script>
     
@@ -15,177 +18,22 @@
     
     <!-- 共通JavaScript -->
     <script src="<?php echo \Fuel\Core\Uri::create('js/common.js'); ?>"></script>
-    
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #2c3e50;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 20px;
-            text-align: left;
-        }
-        
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-        
-        .header .subtitle {
-            margin: 5px 0 0 0;
-            font-size: 14px;
-            color: #bdc3c7;
-        }
-        
-        .form-container {
-            background: white;
-            border-radius: 12px;
-            padding: 40px;
-            width: 500px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            margin-top: 100px;
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e8ed;
-            border-radius: 6px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-            box-sizing: border-box;
-        }
-        
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-        
-        .form-row {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .form-row .form-group {
-            flex: 1;
-        }
-        
-        .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 15px;
-            margin-top: 30px;
-        }
-        
-        .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            transition: all 0.3s;
-        }
-        
-        .btn-back {
-            background: #3498db;
-            color: white;
-        }
-        
-        .btn-back:hover {
-            background: #2980b9;
-        }
-        
-        .btn-save {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .btn-save:hover {
-            background: #c0392b;
-        }
-        
-        .btn-save:disabled {
-            background: #bdc3c7;
-            cursor: not-allowed;
-        }
-        
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            display: none;
-        }
-        
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-            display: none;
-        }
-        
-        .navigation-hint {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            color: #bdc3c7;
-            font-size: 14px;
-        }
-    </style>
 </head>
 <body>
-    <!-- ナビゲーションバー -->
-    <nav class="navbar">
-        <div class="navbar-content">
-            <a href="<?php echo \Fuel\Core\Uri::create('shifts'); ?>" class="navbar-brand">シフトボード</a>
-        </div>
-    </nav>
 
     <!-- ヘッダー -->
     <div class="header">
-        <h1>シフト作成</h1>
-        <p class="subtitle">- シフトを作成できる</p>
+        <div class="container">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="navbar-brand">シフトボード</div>
+                    <div class="navbar-title">シフト作成</div>
+                </div>
+            </div>
+        </div>
     </div>
+
+
     
     <!-- フォームコンテナ -->
     <div class="form-container">
@@ -212,33 +60,37 @@
                 <input type="text" id="new_shift_title" name="new_shift_title" placeholder="平日シフト" data-bind="value: newShiftTitle" required>
             </div>
             
-            <!-- 日付・時間・定員 -->
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="shift_date">日付</label>
-                    <input type="date" id="shift_date" name="shift_date" data-bind="value: shiftDate" required>
+            <div class="form-grid">
+                <div class="form-line">
+                    <div class="form-label">日付</div>
+                    <div class="form-field">
+                        <input type="date" id="shift_date" name="shift_date" data-bind="value: shiftDate" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="start_time">開始時間</label>
-                    <input type="time" id="start_time" name="start_time" data-bind="value: startTime" required>
+                <div class="form-line">
+                    <div class="form-label">開始時間</div>
+                    <div class="form-field">
+                        <input type="time" id="start_time" name="start_time" data-bind="value: startTime" required>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="end_time">終了時間</label>
-                    <input type="time" id="end_time" name="end_time" data-bind="value: endTime" required>
+                <div class="form-line">
+                    <div class="form-label">終了時間</div>
+                    <div class="form-field">
+                        <input type="time" id="end_time" name="end_time" data-bind="value: endTime" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="slot_count">定員数</label>
-                    <input type="number" id="slot_count" name="slot_count" min="1" value="1" data-bind="value: slotCount" required>
+                <div class="form-line">
+                    <div class="form-label">定員数</div>
+                    <div class="form-field">
+                        <input type="number" id="slot_count" name="slot_count" min="1" value="1" data-bind="value: slotCount" required>
+                    </div>
                 </div>
-            </div>
-            
-            <!-- 備考 -->
-            <div class="form-group">
-                <label for="note">備考</label>
-                <textarea id="note" name="note" rows="4" placeholder="シフトに関する備考があれば入力してください" data-bind="value: note"></textarea>
+                <div class="form-line">
+                    <div class="form-label">備考</div>
+                    <div class="form-field">
+                        <textarea id="note" name="note" rows="4" placeholder="シフトに関する備考があれば入力してください" data-bind="value: note"></textarea>
+                    </div>
+                </div>
             </div>
             
             <!-- アクションボタン -->
