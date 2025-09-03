@@ -5,7 +5,7 @@
  * 
  * シフト管理用のコントローラー
  */
-class Controller_Shifts extends Controller
+class Controller_Shifts extends \Fuel\Core\Controller
 {
     /**
      * シフト一覧表示
@@ -16,7 +16,7 @@ class Controller_Shifts extends Controller
             'title' => 'シフト一覧'
         );
         
-        return Response::forge(View::forge('shifts/index', $data));
+        return \Fuel\Core\Response::forge(\Fuel\Core\View::forge('shifts/index', $data));
     }
 
     /**
@@ -28,7 +28,7 @@ class Controller_Shifts extends Controller
             'title' => 'シフト作成'
         );
         
-        return Response::forge(View::forge('shifts/create', $data));
+        return \Fuel\Core\Response::forge(\Fuel\Core\View::forge('shifts/create', $data));
     }
 
     /**
@@ -37,7 +37,7 @@ class Controller_Shifts extends Controller
     public function action_view($id = null)
     {
         if (!$id) {
-            throw new HttpNotFoundException();
+            throw new \Fuel\Core\HttpNotFoundException();
         }
         
         $data = array(
@@ -45,6 +45,6 @@ class Controller_Shifts extends Controller
             'shift_id' => $id
         );
         
-        return Response::forge(View::forge('shifts/view', $data));
+        return \Fuel\Core\Response::forge(\Fuel\Core\View::forge('shifts/view', $data));
     }
 }

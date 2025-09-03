@@ -5,7 +5,7 @@
  * 
  * 自分のシフト管理用のAPIコントローラー
  */
-class Controller_Api_Myshifts extends Controller
+class Controller_Api_Myshifts extends \Fuel\Core\Controller
 {
     /**
      * 自分のシフト一覧取得
@@ -17,34 +17,24 @@ class Controller_Api_Myshifts extends Controller
             $user_id = 1;
             
             // 期間パラメータを取得
-            $start_date = Input::get('start', date('Y-m-01'));
-            $end_date = Input::get('end', date('Y-m-t'));
+            $start_date = \Fuel\Core\Input::get('start', date('Y-m-01'));
+            $end_date = \Fuel\Core\Input::get('end', date('Y-m-t'));
             
-            // 自分のシフト一覧を取得（簡易版）
-            $shifts = array(
-                array(
-                    'id' => 1,
-                    'shift_date' => '2025-09-03',
-                    'start_time' => '09:00:00',
-                    'end_time' => '17:00:00',
-                    'note' => '平日シフト',
-                    'slot_count' => 2,
-                    'assigned_count' => 2,
-                    'created_at' => '2025-09-02 20:45:48',
-                    'updated_at' => null
-                ),
-                array(
-                    'id' => 3,
-                    'shift_date' => '2025-09-05',
-                    'start_time' => '10:00:00',
-                    'end_time' => '18:00:00',
-                    'note' => '遅番シフト',
-                    'slot_count' => 1,
-                    'assigned_count' => 1,
-                    'created_at' => '2025-09-02 20:45:48',
-                    'updated_at' => null
-                )
-            );
+            // 自分のシフト一覧を取得（PDO直接接続）
+            $pdo = new PDO('mysql:host=127.0.0.1;port=13306;dbname=shiftboard', 'app', 'app_pass');
+            $stmt = $pdo->prepare("
+                SELECT s.*, COUNT(sa.id) as assigned_count
+                FROM shifts s
+                JOIN shift_assignments sa ON s.id = sa.shift_id
+                WHERE sa.member_id = ? 
+                AND sa.status != 'cancelled'
+                AND s.shift_date >= ? 
+                AND s.shift_date <= ?
+                GROUP BY s.id
+                ORDER BY s.shift_date ASC, s.start_time ASC
+            ");
+            $stmt->execute([$user_id, $start_date, $end_date]);
+            $shifts = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // データを整形
             $data = array();
@@ -81,7 +71,7 @@ class Controller_Api_Myshifts extends Controller
      */
     private function response($data, $status = 200)
     {
-        $response = Response::forge(json_encode($data), $status);
+        $response = \Fuel\Core\Response::forge(json_encode($data), $status);
         $response->set_header('Content-Type', 'application/json; charset=utf-8');
         return $response;
     }

@@ -8,6 +8,9 @@ return [
   'shifts/create'       => 'shifts/create',
   'shifts/(:num)'       => 'shifts/view/$1',
   'my/shifts'           => 'myshifts/index',
+  'members'             => 'members/index',    // メンバー一覧
+  'members/create'      => 'members/create',   // メンバー作成
+  'members/(:num)'      => 'members/view/$1',  // メンバー詳細
 
   // API (JSON)
   'api/shifts'                    => 'api/shifts/index',     // GET一覧 / POST作成
@@ -24,4 +27,13 @@ return [
   'api/user-shifts/(:num)/delete' => 'api/user_shifts/delete/$1',
   
   'api/my/shifts'                 => 'api/myshifts/index',   // ログインユーザーの一覧
+  
+  // メンバー管理API
+  'api/members'                   => 'api/members/index',    // GET一覧 / POST作成
+  'api/members/(:num)'            => 'api/members/show/$1',  // GET詳細
+  'api/members/(:num)/update'     => 'api/members/update/$1', // PUT更新
+  'api/members/(:num)/delete'     => 'api/members/delete/$1', // DELETE削除
+  
+  // デバッグ用
+  'api/debug/db-test'             => 'api/debug/db_test',
 ];

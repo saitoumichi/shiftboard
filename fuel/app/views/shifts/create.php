@@ -4,11 +4,17 @@
     <meta charset="utf-8">
     <title>シフト作成 - ShiftBoard</title>
     
+    <!-- 共通CSS -->
+    <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/common.css'); ?>">
+    
     <!-- Knockout.js -->
-    <script src="<?php echo \Uri::create('js/knockout-min.js'); ?>"></script>
+    <script src="<?php echo \Fuel\Core\Uri::create('js/knockout-min.js'); ?>"></script>
     
     <!-- jQuery for AJAX -->
-    <script src="<?php echo \Uri::create('js/jquery-3.6.0.min.js'); ?>"></script>
+    <script src="<?php echo \Fuel\Core\Uri::create('js/jquery-3.6.0.min.js'); ?>"></script>
+    
+    <!-- 共通JavaScript -->
+    <script src="<?php echo \Fuel\Core\Uri::create('js/common.js'); ?>"></script>
     
     <style>
         body {
@@ -168,6 +174,19 @@
     </style>
 </head>
 <body>
+    <!-- ナビゲーションバー -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="<?php echo \Fuel\Core\Uri::create('shifts'); ?>" class="navbar-brand">ShiftBoard</a>
+            <ul class="navbar-nav">
+                <li><a href="<?php echo \Fuel\Core\Uri::create('shifts'); ?>">シフト一覧</a></li>
+                <li><a href="<?php echo \Fuel\Core\Uri::create('shifts/create'); ?>" class="active">シフト作成</a></li>
+                <li><a href="<?php echo \Fuel\Core\Uri::create('my/shifts'); ?>">自分のシフト</a></li>
+                <li><a href="<?php echo \Fuel\Core\Uri::create('members'); ?>">メンバー管理</a></li>
+            </ul>
+        </div>
+    </nav>
+
     <!-- ヘッダー -->
     <div class="header">
         <h1>シフト作成</h1>
@@ -231,7 +250,7 @@
             <!-- アクションボタン -->
             <div class="form-actions">
                 <button type="button" class="btn btn-back" onclick="goBack()">戻る</button>
-                <button type="submit" class="btn btn-save" id="save-btn" data-bind="click: submitForm">保存</button>
+                <button type="submit" class="btn btn-save" id="save-btn" data-bind="click: $root.submitForm">保存</button>
             </div>
         </form>
     </div>
@@ -298,7 +317,7 @@
                 
                 // AJAX送信
                 $.ajax({
-                    url: '<?php echo \Uri::create('api/shifts'); ?>',
+                    url: '<?php echo \Fuel\Core\Uri::create('api/shifts'); ?>',
                     type: 'POST',
                     data: {
                         shift_date: self.shiftDate(),
@@ -313,7 +332,7 @@
                         if (response.success) {
                             self.showAlert('シフトが作成されました', 'success');
                             setTimeout(function() {
-                                window.location.href = '<?php echo \Uri::create('shifts'); ?>';
+                                window.location.href = '<?php echo \Fuel\Core\Uri::create('shifts'); ?>';
                             }, 1500);
                         } else {
                             self.showAlert('シフトの作成に失敗しました: ' + response.message, 'error');
@@ -343,7 +362,7 @@
         
         // 戻るボタン
         function goBack() {
-            window.location.href = '<?php echo \Uri::create('shifts'); ?>';
+            window.location.href = '<?php echo \Fuel\Core\Uri::create('shifts'); ?>';
         }
         
         // ローディング表示制御

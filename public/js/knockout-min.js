@@ -137,6 +137,11 @@
     ko.applyBindings = function(viewModel, rootNode) {
         rootNode = rootNode || document;
         
+        // $rootプロパティを設定（まだ設定されていない場合のみ）
+        if (!viewModel.$root) {
+            viewModel.$root = viewModel;
+        }
+        
         // data-bind属性を持つ要素を探す
         var elements = rootNode.querySelectorAll('[data-bind]');
         
@@ -331,9 +336,19 @@
                 itemViewModel.$data = item;
                 itemViewModel.$index = index;
                 itemViewModel.$parent = viewModel;
+                itemViewModel.$root = getRootViewModel(viewModel);
                 
-                // 新しい要素にバインディングを適用
-                ko.applyBindings(itemViewModel, newElement);
+                // 新しい要素にバインディングを適用（再帰的にapplyBindingsを呼ばない）
+                var itemElements = newElement.querySelectorAll('[data-bind]');
+                itemElements.forEach(function(element) {
+                    var bindingString = element.getAttribute('data-bind');
+                    var bindings = parseBindings(bindingString);
+                    
+                    Object.keys(bindings).forEach(function(bindingName) {
+                        var bindingValue = bindings[bindingName];
+                        applyBinding(element, bindingName, bindingValue, itemViewModel);
+                    });
+                });
                 
                 // 要素を挿入
                 endComment.parentNode.insertBefore(newElement, endComment);
@@ -359,8 +374,16 @@
             if (typeof expression === 'string') {
                 // 関数定義の場合はそのまま実行
                 if (expression.indexOf('function') === 0) {
-                    var func = new Function('return ' + expression);
-                    return func();
+                    var func = new Function('$data', '$root', 'return ' + expression);
+                    var rootViewModel = viewModel.$root || getRootViewModel(viewModel);
+                    return func(viewModel, rootViewModel);
+                }
+                
+                // $root参照を処理
+                if (expression.indexOf('$root') !== -1) {
+                    var rootViewModel = viewModel.$root || getRootViewModel(viewModel);
+                    var func = new Function('$data', '$root', 'with($data) { return ' + expression + '; }');
+                    return func(viewModel, rootViewModel);
                 }
                 
                 // $parent参照を処理
@@ -378,6 +401,15 @@
             console.warn('Failed to evaluate expression:', expression, e);
             return null;
         }
+    }
+    
+    function getRootViewModel(viewModel) {
+        // $parentを辿ってルートViewModelを見つける
+        var current = viewModel;
+        while (current.$parent) {
+            current = current.$parent;
+        }
+        return current;
     }
     
     // グローバルに公開

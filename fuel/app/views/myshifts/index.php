@@ -4,11 +4,17 @@
     <meta charset="utf-8">
     <title>自分のシフト - ShiftBoard</title>
     
+    <!-- 共通CSS -->
+    <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/common.css'); ?>">
+    
     <!-- Knockout.js -->
-    <script src="<?php echo \Uri::create('js/knockout-min.js'); ?>"></script>
+    <script src="<?php echo \Fuel\Core\Uri::create('js/knockout-min.js'); ?>"></script>
     
     <!-- jQuery for AJAX -->
-    <script src="<?php echo \Uri::create('js/jquery-3.6.0.min.js'); ?>"></script>
+    <script src="<?php echo \Fuel\Core\Uri::create('js/jquery-3.6.0.min.js'); ?>"></script>
+    
+    <!-- 共通JavaScript -->
+    <script src="<?php echo \Fuel\Core\Uri::create('js/common.js'); ?>"></script>
     
     <style>
         body {
@@ -265,8 +271,8 @@
                     <input type="text" class="period-input" id="period-input" placeholder="2025年11月" data-bind="value: periodInput">
                     
                     <div class="period-controls">
-                        <button class="period-btn" data-bind="click: previousPeriod">‹</button>
-                        <button class="period-btn" data-bind="click: nextPeriod">›</button>
+                        <button class="period-btn" data-bind="click: $root.previousPeriod">‹</button>
+                        <button class="period-btn" data-bind="click: $root.nextPeriod">›</button>
                     </div>
                 </div>
             </div>
@@ -278,8 +284,8 @@
                 <div class="navigation-bar">
                     <div class="screen-title" data-bind="text: screenTitle">参加予定シフト一覧</div>
                     <div class="nav-buttons">
-                        <button class="nav-btn btn-back" data-bind="click: goBack">戻る</button>
-                        <button class="nav-btn btn-csv" data-bind="click: exportCSV">CSV出力</button>
+                        <button class="nav-btn btn-back" data-bind="click: $root.goBack">戻る</button>
+                        <button class="nav-btn btn-csv" data-bind="click: $root.exportCSV">CSV出力</button>
                     </div>
                 </div>
                 
@@ -374,7 +380,7 @@
                 var endDate = new Date(year, month, 0).toISOString().split('T')[0];
                 
                 $.ajax({
-                    url: '<?php echo \Uri::create('api/my/shifts'); ?>',
+                    url: '<?php echo \Fuel\Core\Uri::create('api/my/shifts'); ?>',
                     type: 'GET',
                     data: {
                         start: startDate,
@@ -470,7 +476,7 @@
             
             // 戻る
             self.goBack = function() {
-                window.location.href = '<?php echo \Uri::create('shifts'); ?>';
+                window.location.href = '<?php echo \Fuel\Core\Uri::create('shifts'); ?>';
             };
             
             // 初期化
