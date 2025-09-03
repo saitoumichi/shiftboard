@@ -161,10 +161,10 @@ body .header .container .header-content .header-right {
 
 .month-recruitment-section {
     flex: 1;
-    background: #f0f8ff !important; /* 薄い青色で目立たせる */
+    background: #ffffff !important; /* 薄い青色で目立たせる */
     border-radius: 8px;
     padding: 20px;
-    border: 2px solid #007bff !important; /* 青い枠線で目立たせる */
+    border: 1px solid #e0e0e0;
     display: block !important;
     visibility: visible !important;
     min-height: 400px !important; /* 最小高さを設定 */
@@ -179,7 +179,7 @@ body .day-recruitment-section #available-shifts-container-day {
     width: 100% !important;
     min-height: 200px !important;
     background: #fff !important;
-    border: 1px solid #ddd !important;
+    border: 1px solid #e0e0e0;
     border-radius: 4px !important;
     padding: 10px !important;
 }
@@ -239,7 +239,7 @@ body .day-recruitment-section #available-shifts-container-day {
 
 .month-nav {
     display: flex;
-    color:#505050;
+    color: #505050;
     align-items: center;
     gap: 15px;
 }
@@ -332,22 +332,23 @@ body .day-recruitment-section #available-shifts-container-day {
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 15px;
-    color: #007bff !important; /* 青色で目立たせる */
-    background: #e3f2fd !important; /* 薄い青色の背景 */
-    padding: 10px !important;
+    color: #505050 !important; /* 青色で目立たせる */
+    background: #ffffff !important; /* 薄い青色の背景 */
+    padding: 0 !important;
     border-radius: 4px !important;
-    text-align: center !important;
+    text-align: left !important;
 }
 
 /* 強制的に募集中シフトアイテムを表示 */
 body .month-recruitment-section .recruitment-item,
 body .week-recruitment-section .recruitment-item,
 body .day-recruitment-section .recruitment-item {
-    border: 3px solid #28a745 !important; /* 太い緑色の枠線 */
+    border: 1px solid #e0e0e0;
+    /* 太い緑色の枠線 */
     border-radius: 8px !important;
     padding: 15px !important;
     margin-bottom: 15px !important;
-    background: #d4edda !important; /* 薄い緑色の背景 */
+    background:rgb(224, 238, 248) !important; /* 薄い緑色の背景 */
     transition: all 0.2s !important;
     display: block !important;
     visibility: visible !important;
@@ -553,7 +554,7 @@ body .day-recruitment-section .recruitment-item .recruitment-slots {
 
 /* 月表示の特別な制御（active のときだけ表示） */
 .month-view { /* inherit default from .view-content (display: none) */ }
-.month-view.active { display: flex; }
+.month-view.active { display: block; }
 
 .month-view .main-content {
     display: flex;
@@ -733,3 +734,48 @@ body .day-recruitment-section .recruitment-item .recruitment-slots {
 }
 
 
+
+
+/* ===== Stabilize recruitment column visibility & layout ===== */
+/* Ensure the month two-column layout wraps instead of squashing */
+.month-main-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.month-calendar-section {
+    flex: 2 1 600px;
+    min-width: 560px;
+}
+.month-recruitment-section {
+    flex: 1 1 360px;
+    min-width: 320px;
+    position: relative;
+    z-index: 1;
+}
+
+/* KO visible wrapper must not collapse even when toggled */
+.month-recruitment-section > [data-bind*="visible: !loading()"] {
+    display: block !important;
+    visibility: visible !important;
+    min-height: 200px !important;
+    overflow: visible !important;
+}
+
+/* Container must always have some height and be visible */
+#available-shifts-container,
+#available-shifts-container-week,
+#available-shifts-container-day {
+    display: block !important;
+    visibility: visible !important;
+    min-height: 200px !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* Make sure nothing upstream clips the recruitment items */
+.month-recruitment-section,
+.week-recruitment-section,
+.day-recruitment-section {
+    overflow: visible !important;
+}
