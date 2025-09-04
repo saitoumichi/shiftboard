@@ -7,22 +7,6 @@
 class Controller_Api_Shifts extends \Fuel\Core\Controller
 {
     /**
-     * レスポンスを返す
-     * 
-     * @param mixed $data レスポンスデータ
-     * @param int $status HTTPステータスコード
-     * @return \Fuel\Core\Response
-     */
-    protected function response($data, $status = 200)
-    {
-        $response = new \Fuel\Core\Response();
-        $response->set_status($status);
-        $response->set_header('Content-Type', 'application/json; charset=utf-8');
-        $response->body = is_string($data) ? $data : json_encode($data, JSON_UNESCAPED_UNICODE);
-        return $response;
-    }
-
-    /**
      * シフト一覧取得 / シフト作成
      */
     public function action_index()
