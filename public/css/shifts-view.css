@@ -9,28 +9,30 @@ body {
 }
 
 .header {
-    background: white;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-}
-
-.header h1 {
+    background: #2c3e50;
+    padding: 15px 20px;
     margin: 0;
-    color: #333;
-    font-size: 24px;
+    border-radius: 0;
+    /* display: flex; */
 }
 
-.header .subtitle {
-    margin: 5px 0 0 0;
-    font-size: 14px;
-    color: #666;
+.btn-back-header {
+    background: transparent;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    font-size: 20px;
+    /* cursor: pointer; */
+    margin: 0;
+    /* padding: 8px 16px; */
+    /* border-radius: 4px; */
+    /* transition: background-color 0.3s; */
 }
 
 .action-buttons {
     display: flex;
-    justify-content: center;
-    gap: 20px;
+    flex-direction: column;
+    gap: 15px;
     margin-bottom: 30px;
 }
 
@@ -95,7 +97,7 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     gap: 30px;
-    padding: 0 20px;
+    padding: 20px;
 }
 
 .left-section {
@@ -104,6 +106,59 @@ body {
 
 .right-section {
     flex: 1;
+}
+
+.shift-basic-info {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.shift-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.shift-date {
+    font-size: 18px;
+    color: #34495e;
+    margin-bottom: 10px;
+}
+
+.shift-time {
+    font-size: 18px;
+    color: #34495e;
+    margin-bottom: 10px;
+}
+
+.slot-info {
+    font-size: 20px;
+    font-weight: bold;
+    color: #e74c3c;
+    margin-bottom: 15px;
+}
+
+.shift-note {
+    font-size: 14px;
+    color: #7f8c8d;
+    line-height: 1.5;
+}
+
+.participants-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.participants-section h3 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 18px;
 }
 
 .section-card {
@@ -239,6 +294,26 @@ body {
 
 .recruitment-details li:last-child {
     border-bottom: none;
+}
+
+.recruitment-times {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.recruitment-times h3 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 18px;
+}
+
+.no-participants {
+    text-align: center;
+    color: #7f8c8d;
+    padding: 20px;
+    font-style: italic;
 }
 
 .loading {

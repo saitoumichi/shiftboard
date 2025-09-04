@@ -22,17 +22,7 @@
 <body>
     <!-- ヘッダー -->
     <div class="header">
-        <h1>シフト詳細</h1>
-        <p class="subtitle">・ その日のシフトの詳細を確認できる</p>
-    </div>
-    
-    <!-- アクションボタン -->
-    <div class="action-buttons">
-        <button class="action-btn btn-back" data-bind="click: $root.goBack">戻る</button>
-        <button class="action-btn btn-edit" data-bind="click: $root.editShift">編集</button>
-        <button class="action-btn btn-delete" data-bind="click: $root.deleteShift">削除</button>
-        <button class="action-btn btn-recruitment" data-bind="click: $root.showRecruitmentTimes">募集中の時刻</button>
-        <button class="action-btn btn-participate" data-bind="click: $root.toggleParticipation">参加/取消</button>
+        <button class="btn-back-header" data-bind="click: $root.goBack">戻る</button>
     </div>
     
     <!-- アラート表示 -->
@@ -44,81 +34,71 @@
     <div class="main-content">
         <!-- 左セクション -->
         <div class="left-section">
-            <!-- シフト詳細情報 -->
-            <div class="section-card">
-                <div class="section-header">シフト詳細</div>
+            <!-- シフト基本情報 -->
+            <div class="shift-basic-info">
+                <div class="shift-title" data-bind="text: shiftTitle">読み込み中...</div>
+                <div class="shift-date" data-bind="text: shiftDate">読み込み中...</div>
+                <div class="shift-time" data-bind="text: shiftTime">読み込み中...</div>
+                <div class="slot-info" data-bind="text: slotInfo">読み込み中...</div>
+                <div class="shift-note" data-bind="text: shiftNote">読み込み中...</div>
                 
-                <div class="shift-info">
-                    <div class="shift-title" data-bind="text: shiftTitle">シフトタイトル</div>
-                    
-                    <div class="shift-details">
-                        <div class="detail-item">
-                            <div class="detail-label">日付</div>
-                            <div class="detail-value" data-bind="text: shiftDate">2025/11/15</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">時間</div>
-                            <div class="detail-value" data-bind="text: shiftTime">10:00-14:00</div>
-                        </div>
-                    </div>
-                    
-                    <div class="slot-info" data-bind="text: slotInfo">2/4</div>
-                    
-                    <div class="detail-item" style="margin-top: 15px;">
-                        <div class="detail-label">備考</div>
-                        <div class="detail-value" data-bind="text: shiftNote">シフトに関する備考</div>
-                    </div>
+                <!-- デバッグ情報 -->
+                <div style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 4px; font-size: 12px;">
+                    <strong>デバッグ情報:</strong><br>
+                    シフトID: <span data-bind="text: shift().id">-</span><br>
+                    シフト日付: <span data-bind="text: shift().shift_date">-</span><br>
+                    開始時間: <span data-bind="text: shift().start_time">-</span><br>
+                    終了時間: <span data-bind="text: shift().end_time">-</span><br>
+                    定員数: <span data-bind="text: shift().slot_count">-</span><br>
+                    備考: <span data-bind="text: shift().note">-</span>
                 </div>
             </div>
             
             <!-- 参加者リスト -->
-            <div class="section-card">
-                <div class="section-header">参加者一覧</div>
-                
+            <div class="participants-section">
+                <h3>参加者一覧</h3>
                 <div class="participants-list">
+                    <!-- ko if: participants().length > 0 -->
                     <!-- ko foreach: participants -->
                     <div class="participant-item">
                         <div class="participant-icon"></div>
                         <div class="participant-name" data-bind="text: name">参加者名</div>
-                        <div class="participant-status">CONFIRMED</div>
+                        <div class="participant-status" data-bind="text: status">CONFIRMED</div>
                     </div>
+                    <!-- /ko -->
                     <!-- /ko -->
                     
                     <!-- 参加者がいない場合 -->
-                    <div data-bind="visible: participants().length === 0" style="text-align: center; color: #7f8c8d; padding: 20px;">
+                    <!-- ko if: participants().length === 0 -->
+                    <div class="no-participants">
                         参加者がいません
                     </div>
+                    <!-- /ko -->
+                </div>
+                
+                <!-- デバッグ情報 -->
+                <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                    参加者数: <span data-bind="text: participants().length">0</span><br>
+                    シフトID: <span data-bind="text: shift().id">-</span><br>
+                    シフトデータ: <span data-bind="text: JSON.stringify(shift())">-</span>
                 </div>
             </div>
         </div>
         
         <!-- 右セクション -->
         <div class="right-section">
-            <!-- 募集情報 -->
-            <div class="section-card">
-                <div class="section-header">募集状況</div>
-                
-                <div class="recruitment-info">
-                    <div class="recruitment-numbers">
-                        <div class="recruitment-number" data-bind="text: availableSlots">2</div>
-                        <div class="recruitment-number" data-bind="text: totalSlots">4</div>
-                    </div>
-                    
-                    <ul class="recruitment-details">
-                        <li>空き枠: <span data-bind="text: availableSlots">2</span>名</li>
-                        <li>総枠数: <span data-bind="text: totalSlots">4</span>名</li>
-                        <li>参加者: <span data-bind="text: participantCount">2</span>名</li>
-                    </ul>
-                </div>
+            <!-- アクションボタン -->
+            <div class="action-buttons">
+                <button class="action-btn btn-participate" data-bind="click: $root.toggleParticipation">参加/取消</button>
+                <button class="action-btn btn-edit" data-bind="click: $root.editShift">編集</button>
             </div>
             
             <!-- 募集中の時刻詳細 -->
-            <div class="section-card" data-bind="visible: showRecruitmentDetails">
-                <div class="section-header">募集中の時刻詳細</div>
-                
+            <div class="recruitment-times">
+                <h3>募集中の時刻</h3>
                 <ul class="recruitment-details">
-                    <li>開始時刻: <span data-bind="text: startTime">10:00</span></li>
-                    <li>終了時刻: <span data-bind="text: endTime">14:00</span></li>
+                    <li>開始時刻: <span data-bind="text: startTime">読み込み中...</span></li>
+                    <li>終了時刻: <span data-bind="text: endTime">読み込み中...</span></li>
                     <li>募集締切: <span data-bind="text: deadline">前日18:00</span></li>
                 </ul>
             </div>
@@ -130,44 +110,116 @@
         読み込み中...
     </div>
     
-    <!-- ナビゲーションヒント -->
-    <div class="navigation-hint">
-        ・戻る→シフト一覧
-    </div>
-    
     <script>
         // Knockout.js ViewModel
         function ShiftDetailViewModel() {
             var self = this;
             
             // データ
-            self.shift = ko.observable({});
+            self.shift = ko.observable({
+                id: null,
+                shift_date: null,
+                start_time: null,
+                end_time: null,
+                note: null,
+                slot_count: 0,
+                assigned_users: []
+            });
             self.participants = ko.observableArray([]);
             self.loading = ko.observable(false);
             self.showRecruitmentDetails = ko.observable(false);
             
             // 計算プロパティ
             self.shiftTitle = ko.computed(function() {
-                return self.shift().title || 'シフトタイトル';
+                var shift = self.shift();
+                if (shift.note && shift.note.trim() !== '') {
+                    return shift.note; // 備考がある場合は備考をタイトルとして使用
+                } else {
+                    // 備考がない場合は日付を読みやすい形式で表示
+                    var dateStr = shift.shift_date || '2025-09-15';
+                    if (dateStr && dateStr.length >= 10) {
+                        var year = dateStr.substring(0, 4);
+                        var month = dateStr.substring(5, 7);
+                        var day = dateStr.substring(8, 10);
+                        
+                        // 月と日の先頭の0を削除
+                        month = parseInt(month, 10).toString();
+                        day = parseInt(day, 10).toString();
+                        
+                        return year + '年' + month + '月' + day + '日のシフト';
+                    }
+                    return dateStr;
+                }
             });
             
             self.shiftDate = ko.computed(function() {
-                return self.shift().shift_date || '2025/11/15';
+                var shift = self.shift();
+                var dateStr = shift.shift_date;
+                
+                console.log('shiftDate computed - shift:', shift, 'dateStr:', dateStr);
+                
+                if (!dateStr || dateStr === null) {
+                    return '読み込み中...';
+                }
+                
+                // 日付を読みやすい形式に変換 (YYYY-MM-DD → YYYY年MM月DD日)
+                if (dateStr.length >= 10) {
+                    var year = dateStr.substring(0, 4);
+                    var month = dateStr.substring(5, 7);
+                    var day = dateStr.substring(8, 10);
+                    
+                    // 月と日の先頭の0を削除
+                    month = parseInt(month, 10).toString();
+                    day = parseInt(day, 10).toString();
+                    
+                    return year + '年' + month + '月' + day + '日';
+                }
+                
+                return dateStr;
             });
             
             self.shiftTime = ko.computed(function() {
                 var shift = self.shift();
-                return (shift.start_time || '10:00') + '-' + (shift.end_time || '14:00');
+                var startTime = shift.start_time;
+                var endTime = shift.end_time;
+                
+                console.log('shiftTime computed - shift:', shift, 'startTime:', startTime, 'endTime:', endTime);
+                
+                if (!startTime || !endTime) {
+                    return '読み込み中...';
+                }
+                
+                // 秒数を削除（HH:MM:SS → HH:MM）
+                if (startTime.length > 5) {
+                    startTime = startTime.substring(0, 5);
+                }
+                if (endTime.length > 5) {
+                    endTime = endTime.substring(0, 5);
+                }
+                
+                return startTime + ' - ' + endTime;
             });
             
             self.shiftNote = ko.computed(function() {
-                return self.shift().note || 'シフトに関する備考';
+                var shift = self.shift();
+                var note = shift.note;
+                
+                if (!note) {
+                    return '読み込み中...';
+                }
+                
+                return note.trim() !== '' ? note : '備考なし';
             });
             
             self.slotInfo = ko.computed(function() {
                 var shift = self.shift();
                 var assigned = self.participants().length;
-                var total = shift.slot_count || 4;
+                var total = shift.slot_count;
+                
+                if (!total) {
+                    return '読み込み中...';
+                }
+                
                 return assigned + '/' + total;
             });
             
@@ -187,11 +239,13 @@
             });
             
             self.startTime = ko.computed(function() {
-                return self.shift().start_time || '10:00';
+                var time = self.shift().start_time || '10:00';
+                return time.length > 5 ? time.substring(0, 5) : time;
             });
             
             self.endTime = ko.computed(function() {
-                return self.shift().end_time || '14:00';
+                var time = self.shift().end_time || '14:00';
+                return time.length > 5 ? time.substring(0, 5) : time;
             });
             
             self.deadline = ko.computed(function() {
@@ -220,14 +274,42 @@
                 var pathParts = window.location.pathname.split('/');
                 var shiftId = pathParts[pathParts.length - 1];
                 
+                console.log('Loading shift detail for ID:', shiftId);
+                
                 $.ajax({
                     url: '<?php echo \Fuel\Core\Uri::create('api/shifts'); ?>/' + shiftId,
                     type: 'GET',
                     dataType: 'json',
                     success: function(response) {
+                        console.log('API Response:', response);
                         if (response.success) {
+                            console.log('Shift data:', response.data);
+                            console.log('Assigned users:', response.data.assigned_users);
+                            
+                            // シフトデータを設定
                             self.shift(response.data);
-                            self.participants(response.data.assigned_users || []);
+                            console.log('Shift data set:', self.shift());
+                            
+                            // 参加者データを設定（配列をクリアしてから追加）
+                            self.participants.removeAll();
+                            if (response.data.assigned_users && Array.isArray(response.data.assigned_users)) {
+                                response.data.assigned_users.forEach(function(user) {
+                                    self.participants.push(user);
+                                });
+                            }
+                            
+                            console.log('Participants after setting:', self.participants());
+                            console.log('Participants count:', self.participants().length);
+                            
+                            // データ設定後に少し待ってからデバッグ情報を出力
+                            setTimeout(function() {
+                                console.log('Shift data after timeout:', self.shift());
+                                console.log('Shift title:', self.shiftTitle());
+                                console.log('Shift date:', self.shiftDate());
+                                console.log('Shift time:', self.shiftTime());
+                                console.log('Shift note:', self.shiftNote());
+                                console.log('Slot info:', self.slotInfo());
+                            }, 100);
                         } else {
                             self.showAlert('シフト詳細の取得に失敗しました: ' + response.message, 'error');
                         }
@@ -414,7 +496,12 @@
         }
         
         // ViewModelを適用
-        ko.applyBindings(new ShiftDetailViewModel());
+        try {
+            ko.applyBindings(new ShiftDetailViewModel());
+            console.log('Knockout.js binding applied successfully');
+        } catch (error) {
+            console.error('Knockout.js binding error:', error);
+        }
     </script>
 </body>
 </html>

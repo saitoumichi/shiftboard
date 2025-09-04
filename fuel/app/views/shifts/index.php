@@ -561,6 +561,23 @@
                         dayNumber.textContent = day.day;
                         dayElement.appendChild(dayNumber);
                         
+                        // 日付セルにクリックイベントを追加
+                        dayElement.addEventListener('click', function() {
+                            // その日のシフトがある場合は最初のシフトの詳細を表示
+                            if (day.shifts.length > 0) {
+                                self.viewShift(day.shifts[0]);
+                            } else {
+                                // シフトがない場合はその日の日付でシフト作成ページに遷移
+                                var dateStr = day.date.getFullYear() + '-' + 
+                                            String(day.date.getMonth() + 1).padStart(2, '0') + '-' + 
+                                            String(day.date.getDate()).padStart(2, '0');
+                                window.location.href = '<?php echo \Fuel\Core\Uri::create('shifts/create'); ?>?date=' + dateStr;
+                            }
+                        });
+                        
+                        // 日付セルをクリック可能にするスタイル
+                        dayElement.style.cursor = 'pointer';
+                        
                         // シフトブロックを追加
                         day.shifts.forEach(function(shift) {
                             var shiftBlock = document.createElement('div');
@@ -617,6 +634,23 @@
                     dayNumber.className = 'day-number';
                     dayNumber.textContent = day.day;
                     dayElement.appendChild(dayNumber);
+                    
+                    // 日付セルにクリックイベントを追加
+                    dayElement.addEventListener('click', function() {
+                        // その日のシフトがある場合は最初のシフトの詳細を表示
+                        if (day.shifts.length > 0) {
+                            self.viewShift(day.shifts[0]);
+                        } else {
+                            // シフトがない場合はその日の日付でシフト作成ページに遷移
+                            var dateStr = day.date.getFullYear() + '-' + 
+                                        String(day.date.getMonth() + 1).padStart(2, '0') + '-' + 
+                                        String(day.date.getDate()).padStart(2, '0');
+                            window.location.href = '<?php echo \Fuel\Core\Uri::create('shifts/create'); ?>?date=' + dateStr;
+                        }
+                    });
+                    
+                    // 日付セルをクリック可能にするスタイル
+                    dayElement.style.cursor = 'pointer';
                     
                     // シフトブロックを追加
                     day.shifts.forEach(function(shift) {
