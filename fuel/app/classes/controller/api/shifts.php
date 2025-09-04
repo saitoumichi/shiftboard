@@ -72,6 +72,78 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
     }
 
     /**
+     * シフト詳細取得
+     */
+    public function action_show($id = null)
+    {
+        if (!$id) {
+            return $this->response(array(
+                'success' => false,
+                'message' => 'シフトIDが指定されていません'
+            ), 400);
+        }
+
+        try {
+            // シフト詳細を取得（PDO直接接続）
+            $pdo = new PDO('mysql:host=127.0.0.1;port=13306;dbname=shiftboard', 'app', 'app_pass');
+            $stmt = $pdo->prepare("SELECT * FROM shifts WHERE id = ?");
+            $stmt->execute([$id]);
+            $shift = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$shift) {
+                return $this->response(array(
+                    'success' => false,
+                    'message' => 'シフトが見つかりません'
+                ), 404);
+            }
+
+            // 参加者情報を取得
+            $stmt = $pdo->prepare("
+                SELECT m.name, sa.status 
+                FROM shift_assignments sa 
+                JOIN members m ON sa.member_id = m.id 
+                WHERE sa.shift_id = ? AND sa.status != 'cancelled'
+            ");
+            $stmt->execute([$id]);
+            $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $assigned_users = array();
+            foreach ($assignments as $assignment) {
+                $assigned_users[] = array(
+                    'id' => 1, // 仮のユーザーID
+                    'name' => $assignment['name'],
+                    'status' => $assignment['status']
+                );
+            }
+
+            $data = array(
+                'id' => $shift['id'],
+                'shift_date' => $shift['shift_date'],
+                'start_time' => $shift['start_time'],
+                'end_time' => $shift['end_time'],
+                'note' => $shift['note'],
+                'slot_count' => $shift['slot_count'],
+                'available_slots' => max(0, $shift['slot_count'] - count($assigned_users)),
+                'assigned_users' => $assigned_users,
+                'created_at' => $shift['created_at'],
+                'updated_at' => $shift['updated_at']
+            );
+
+            return $this->response(array(
+                'success' => true,
+                'data' => $data,
+                'message' => 'シフト詳細を取得しました'
+            ));
+
+        } catch (Exception $e) {
+            return $this->response(array(
+                'success' => false,
+                'message' => 'シフト詳細の取得に失敗しました: ' . $e->getMessage()
+            ), 500);
+        }
+    }
+
+    /**
      * シフト作成
      */
     public function action_create()
@@ -133,79 +205,6 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
             return $this->response(array(
                 'success' => false,
                 'message' => 'シフトの作成に失敗しました: ' . $e->getMessage()
-            ), 500);
-        }
-    }
-
-    /**
-     * シフト詳細取得
-     */
-    public function action_show($id = null)
-    {
-        try {
-            if (!$id) {
-                return $this->response(array(
-                    'success' => false,
-                    'message' => 'シフトIDが指定されていません'
-                ), 400);
-            }
-            
-            // シフト詳細を取得（PDO直接接続）
-            $pdo = new PDO('mysql:host=127.0.0.1;port=13306;dbname=shiftboard', 'app', 'app_pass');
-            $stmt = $pdo->prepare("SELECT * FROM shifts WHERE id = ?");
-            $stmt->execute([$id]);
-            $shift = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$shift) {
-                return $this->response(array(
-                    'success' => false,
-                    'message' => 'シフトが見つかりません'
-                ), 404);
-            }
-            
-            // 割り当て情報を取得
-            $stmt = $pdo->prepare("
-                SELECT m.id, m.name, sa.status 
-                FROM shift_assignments sa 
-                JOIN members m ON sa.member_id = m.id 
-                WHERE sa.shift_id = ? AND sa.status != 'cancelled'
-            ");
-            $stmt->execute([$id]);
-            $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            $assigned_users = array();
-            foreach ($assignments as $assignment) {
-                $assigned_users[] = array(
-                    'id' => $assignment['id'],
-                    'name' => $assignment['name'],
-                    'status' => $assignment['status']
-                );
-            }
-            
-            $data = array(
-                'id' => $shift['id'],
-                'title' => 'シフト ' . $shift['shift_date'],
-                'shift_date' => $shift['shift_date'],
-                'start_time' => $shift['start_time'],
-                'end_time' => $shift['end_time'],
-                'note' => $shift['note'],
-                'slot_count' => $shift['slot_count'],
-                'available_slots' => max(0, $shift['slot_count'] - count($assigned_users)),
-                'assigned_users' => $assigned_users,
-                'created_at' => $shift['created_at'],
-                'updated_at' => $shift['updated_at']
-            );
-            
-            return $this->response(array(
-                'success' => true,
-                'data' => $data,
-                'message' => 'シフト詳細を取得しました'
-            ));
-            
-        } catch (Exception $e) {
-            return $this->response(array(
-                'success' => false,
-                'message' => 'シフト詳細の取得に失敗しました: ' . $e->getMessage()
             ), 500);
         }
     }

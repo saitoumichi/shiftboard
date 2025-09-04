@@ -7,6 +7,23 @@ window.ShiftBoard = {
         animationDuration: 300,
         alertTimeout: 5000
     },
+
+    // DOMユーティリティ
+    dom: {
+        ready: function (fn) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', fn, { once: true });
+            } else {
+                fn();
+            }
+        },
+        ensureBody: function (fn) {
+            if (document.body) return fn(document.body);
+            document.addEventListener('DOMContentLoaded', function () {
+                if (document.body) fn(document.body);
+            }, { once: true });
+        }
+    },
     
     // ユーティリティ関数
     utils: {
@@ -115,7 +132,11 @@ window.ShiftBoard = {
                 z-index: 9999;
                 max-width: 400px;
             `;
-            document.body.appendChild(container);
+            
+            // DOM が準備できていないタイミングでも安全に body に追加
+            ShiftBoard.dom.ensureBody(function (body) {
+                body.appendChild(container);
+            });
             return container;
         }
     },
@@ -123,7 +144,7 @@ window.ShiftBoard = {
     // ローディング管理
     loading: {
         show: function(element = null) {
-            const target = element || document.body;
+            const target = element || document.body || document.documentElement;
             const loadingId = 'loading-' + Date.now();
             
             const loadingElement = document.createElement('div');
@@ -134,9 +155,18 @@ window.ShiftBoard = {
                 <div class="loading-text">読み込み中...</div>
             `;
             
-            target.style.position = 'relative';
-            target.appendChild(loadingElement);
-            
+            const append = function(tgt){
+                if (getComputedStyle(tgt).position === 'static') {
+                    tgt.style.position = 'relative';
+                }
+                tgt.appendChild(loadingElement);
+            };
+            if (target && target.appendChild) {
+                append(target);
+            } else {
+                ShiftBoard.dom.ensureBody(function (body) { append(body); });
+            }
+    
             return loadingId;
         },
         
@@ -175,7 +205,9 @@ window.ShiftBoard = {
                 </div>
             `;
             
-            document.body.appendChild(modalElement);
+            ShiftBoard.dom.ensureBody(function (body) {
+                body.appendChild(modalElement);
+            });
             
             // アニメーション
             setTimeout(() => {
@@ -451,3 +483,6 @@ window.addEventListener('unhandledrejection', function(e) {
     console.error('Unhandled promise rejection:', e.reason);
     ShiftBoard.alert.show('通信エラーが発生しました', 'danger');
 });
+
+// 最終セーフティ：ShiftBoard 初期化で body 未準備のときでも安全に動作
+ShiftBoard.dom && ShiftBoard.dom.ready(function(){ /* no-op: フック確保 */ });

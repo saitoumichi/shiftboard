@@ -1,0 +1,95 @@
+<div id="shift-detail-root">
+    <!-- ヘッダー -->
+    <div class="header">
+        <button class="btn-back-header" data-bind="click: goBack">戻る</button>
+    </div>
+
+    <!-- エラー表示 -->
+    <div data-bind="visible: error()" style="color:#d33; padding: 10px; background: #ffe6e6; margin: 10px;">
+        <span data-bind="text: error()"></span>
+    </div>
+
+    <!-- ローディング表示 -->
+    <div data-bind="visible: loading()" class="loading">
+        読み込み中...
+    </div>
+
+    <!-- デバッグ情報 -->
+    <div style="background: yellow; padding: 10px; margin: 10px;">
+        <div>
+            <strong>Loading状態:</strong> <span data-bind="text: loading() ? 'true' : 'false'"></span><br>
+            <strong>Shiftデータ:</strong> <span data-bind="text: shift() ? 'あり' : 'なし'"></span><br>
+            <strong>Shift ID:</strong> <span data-bind="text: shift() && shift().id || 'なし'"></span><br>
+            <strong>Shift日付:</strong> <span data-bind="text: shift() && shift().shift_date || 'なし'"></span><br>
+            <strong>Error:</strong> <span data-bind="text: error() ? error() : ''"></span>
+        </div>
+
+        <hr>
+
+        <div data-bind="visible: !loading() && shift()">
+            <h1 data-bind="text: shiftTitle()"></h1>
+            <p>
+                <span data-bind="text: shiftDate()"></span>
+                <span data-bind="text: shiftTime()"></span>
+            </p>
+        </div>
+
+        <pre data-bind="text: 'Debug: ' + (shift() ? 'Data loaded' : 'No data')"></pre>
+    </div>
+
+    <!-- メインコンテンツ（読み込み完了後に表示） -->
+    <div data-bind="visible: !loading() && shift()" class="main-content">
+    <!-- 左セクション -->
+    <div class="left-section">
+        <!-- シフト基本情報 -->
+        <div class="shift-basic-info">
+            <div class="shift-title" data-bind="text: shiftTitle()"></div>
+            <div class="shift-date" data-bind="text: shiftDate()"></div>
+            <div class="shift-time" data-bind="text: shiftTime()"></div>
+            <div class="slot-info" data-bind="text: slotInfo()"></div>
+            <div class="shift-note" data-bind="text: shiftNote()"></div>
+        </div>
+        
+        <!-- 参加者リスト -->
+        <div class="participants-section">
+            <h3>参加者一覧</h3>
+            <div class="participants-list">
+                <!-- ko if: participants().length > 0 -->
+                <!-- ko foreach: participants -->
+                <div class="participant-item">
+                    <div class="participant-icon"></div>
+                    <div class="participant-name" data-bind="text: name"></div>
+                    <div class="participant-status" data-bind="text: status"></div>
+                </div>
+                <!-- /ko -->
+                <!-- /ko -->
+                
+                <!-- 参加者がいない場合 -->
+                <!-- ko if: participants().length === 0 -->
+                <div class="no-participants">
+                    参加者がいません
+                </div>
+                <!-- /ko -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 右セクション -->
+    <div class="right-section">
+        <!-- アクションボタン -->
+        <div class="action-buttons">
+            <button class="action-btn btn-participate" data-bind="click: $root.toggleParticipation">参加/取消</button>
+            <button class="action-btn btn-edit" data-bind="click: $root.editShift">編集</button>
+        </div>
+        
+        <!-- 募集中の時刻詳細 -->
+        <div class="recruitment-times">
+            <h3>募集中の時刻</h3>
+            <ul class="recruitment-details">
+                <li>開始時刻: <span data-bind="text: shift() ? shift().start_time : ''"></span></li>
+                <li>終了時刻: <span data-bind="text: shift() ? shift().end_time : ''"></span></li>
+                <li>募集締切: <span data-bind="text: shift() ? shift().deadline || '未設定' : ''"></span></li>
+            </ul>
+        </div>
+    </div>
+</div>

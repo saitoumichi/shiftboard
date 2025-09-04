@@ -1,0 +1,56 @@
+<div class="create-page">
+  <!-- ページ上部のヒーローバー（デザイン準拠） -->
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div class="page-title">シフトボード</div>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <div class="alert alert-success" id="success-alert" style="display: none;"></div>
+    <div class="alert alert-error" id="error-alert" style="display: none;"></div>
+
+    <form id="shift-form" method="post" action="/api/shifts">
+      <!-- 上段：シフトタイトル／新規シフトタイトル -->
+      <div class="top-row">
+        <div class="form-group">
+          <label for="new_shift_title">新規シフトタイトル</label>
+          <input type="text" id="new_shift_title" name="new_shift_title" placeholder="平日シフト" required>
+        </div>
+      </div>
+
+      <!-- 左ラベル／右入力の2カラム -->
+      <div class="form-grid">
+        <div class="form-line">
+          <div class="form-label">日付</div>
+          <div class="form-field">
+            <input type="date" id="shift_date" name="shift_date" required>
+          </div>
+        </div>
+        <div class="form-line">
+          <div class="form-label">開始時間</div>
+          <div class="form-field">
+            <input type="time" id="start_time" name="start_time" required>
+          </div>
+        </div>
+        <div class="form-line">
+          <div class="form-label">終了時間</div>
+          <div class="form-field">
+            <input type="time" id="end_time" name="end_time" required>
+          </div>
+        </div>
+        <div class="form-line">
+          <div class="form-label">定員数</div>
+          <div class="form-field">
+            <input type="number" id="slot_count" name="slot_count" min="1" value="1" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a class="btn btn-back" href="/shifts">戻る</a>
+        <button class="btn btn-save" type="submit">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
