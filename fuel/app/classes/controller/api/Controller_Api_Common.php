@@ -1,9 +1,15 @@
 <?php
+
+/**
+ * API Common Controller
+ *
+ * 各APIコントローラーで共通利用されるメソッドをまとめたクラス
+ */
 class Controller_Api_Common extends \Fuel\Core\Controller
 {
     private static $pdo;
 
-    private static function getDbConnection()
+    public static function getDbConnection()
     {
         if (self::$pdo === null) {
             $config = \Fuel\Core\Config::load('db', true);
@@ -16,7 +22,7 @@ class Controller_Api_Common extends \Fuel\Core\Controller
 
     public static function formatShiftData($shift)
     {
-        $assigned_count = count($shift['assigned_users']);
+        $assigned_count = count($shift['assigned_users'] ?? []);
         $shift['available_slots'] = max(0, $shift['slot_count'] - $assigned_count);
         return $shift;
     }
@@ -45,6 +51,11 @@ class Controller_Api_Common extends \Fuel\Core\Controller
             'message' => 'バリデーションエラー',
             'errors' => $errors,
         ]);
+    }
+
+    public static function validateShiftId($id)
+    {
+        return filter_var($id, FILTER_VALIDATE_INT) ? (int)$id : false;
     }
 
     public static function shiftExists($id)

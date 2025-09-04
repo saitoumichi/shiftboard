@@ -50,9 +50,6 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       vm.showRecruitmentDetails = ko.observable(false);
       vm.isReady = ko.observable(false);
       
-      // 初期化時にisReadyをfalseに設定
-      vm.isReady(false);
-      
       // 計算プロパティ
       vm.shiftTitle = ko.pureComputed(function() {
           var s = vm.shift();
@@ -158,9 +155,6 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               self.isReady(true);
               
               console.log('Data loaded successfully');
-              console.log('isReady:', self.isReady());
-              console.log('loading:', self.loading());
-              console.log('shift data:', self.shift());
             })
             .catch(function (e) {
               console.error('Load failed:', e);
@@ -312,14 +306,6 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
         }
         ko.applyBindings(vm, root);
         console.log('Knockout binding applied ONCE');
-        
-        // バインディング後の状態を確認
-        setTimeout(function() {
-          console.log('After binding - isReady:', vm.isReady());
-          console.log('After binding - loading:', vm.loading());
-          console.log('After binding - shift:', vm.shift());
-          console.log('After binding - participants:', vm.participants().length);
-        }, 100);
       } catch (e) {
         console.error('Binding error:', e);
       }
