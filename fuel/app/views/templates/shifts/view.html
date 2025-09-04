@@ -23,7 +23,7 @@
 
         <hr>
 
-        <div data-bind="visible: shift()">
+        <div data-bind="visible: isReady()">
             <h1 data-bind="text: shiftTitle()"></h1>
             <p>
                 <span data-bind="text: shiftDate()"></span>
@@ -33,7 +33,7 @@
 
         <pre data-bind="text: 'Debug: ' + (shift() ? 'Data loaded' : 'No data')"></pre>
         
-        <div style="background: lightblue; padding: 10px; margin: 10px;">
+        <div style="background: lightblue; padding: 10px; margin: 10px;" data-bind="visible: isReady()">
             <h3>テスト表示</h3>
             <p>シフトタイトル: <span data-bind="text: shiftTitle()"></span></p>
             <p>シフト日付: <span data-bind="text: shiftDate()"></span></p>
@@ -42,7 +42,7 @@
         </div>
     </div>
 
-    <div data-bind="visible: !loading() && shift()" class="main-content">
+    <div data-bind="visible: isReady()" class="main-content">
     <div class="left-section">
         <div class="shift-basic-info">
             <div class="shift-title" data-bind="text: shiftTitle()"></div>

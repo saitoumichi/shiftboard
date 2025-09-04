@@ -50,6 +50,9 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       vm.showRecruitmentDetails = ko.observable(false);
       vm.isReady = ko.observable(false);
       
+      // 初期化時にisReadyをfalseに設定
+      vm.isReady(false);
+      
       // 計算プロパティ
       vm.shiftTitle = ko.pureComputed(function() {
           var s = vm.shift();
@@ -315,6 +318,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           console.log('After binding - isReady:', vm.isReady());
           console.log('After binding - loading:', vm.loading());
           console.log('After binding - shift:', vm.shift());
+          console.log('After binding - participants:', vm.participants().length);
         }, 100);
       } catch (e) {
         console.error('Binding error:', e);
