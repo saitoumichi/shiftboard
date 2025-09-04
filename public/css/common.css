@@ -9,16 +9,16 @@
 
 /* 基本設定 */
 :root {
-    --primary-color: #007bff;
-    --secondary-color: #6c757d;
-    --success-color: #28a745;
-    --danger-color: #dc3545;
-    --warning-color: #ffc107;
-    --info-color: #17a2b8;
-    --light-color: #f8f9fa;
-    --dark-color: #343a40;
+    --primary-color: rgb(0, 123, 255);
+    --secondary-color: rgb(108, 117, 125);
+    --success-color: rgb(40, 167, 69);
+    --danger-color: rgb(220, 53, 69);
+    --warning-color: rgb(255, 193, 7);
+    --info-color: rgb(23, 162, 184);
+    --light-color: rgb(248, 249, 250);
+    --dark-color: rgb(52, 58, 64);
     --border-radius: 8px;
-    --box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     --transition: all 0.3s ease;
 }
 
@@ -66,7 +66,7 @@ body {
     background: white;
     padding: 15px 20px;
     margin-top: 0;
-    margin-bottom: 20px;
+    /* margin-bottom: 20px; */
     position: sticky;
     top: 0;
     z-index: 1000;

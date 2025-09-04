@@ -107,7 +107,7 @@ body .header .container .header-content .header-right {
     padding: 10px 20px;
     border: none;
     border-radius: 8px;
-    cursor: pointer;
+    /* cursor: pointer; */
     text-decoration: none;
     display: inline-block;
     font-size: 14px;

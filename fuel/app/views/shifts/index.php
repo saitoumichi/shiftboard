@@ -5,7 +5,8 @@
     <title>シフト一覧 - ShiftBoard</title>
     
     <!-- 共通CSS -->
-    <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/common.css'); ?>">
+    <link rel="stylesheet" href="
+    <?php echo \Fuel\Core\Uri::create('css/common.css');?>">
     
     <!-- シフト専用CSS -->
     <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/shifts.css'); ?>">
@@ -901,7 +902,9 @@
                 // 取得レンジを指定（APIが期間必須でも動くように）
                 (function(){
                     var base = new Date(self.currentDate());
+                    console.log('[loadShifts] currentDate:', base);
                     var y = base.getFullYear(), m = base.getMonth();
+                    console.log('[loadShifts] year:', y, 'month:', m);
                     var first = new Date(y, m, 1);
                     var last  = new Date(y, m + 1, 0);
                     // 前後1週間バッファ
