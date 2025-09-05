@@ -6,57 +6,69 @@ body {
     min-height: 100vh;
 }
 
+.navbar {
+    background: #34495e;
+    color: white;
+    padding: 15px 20px;
+    margin-top: 0;
+    /* margin-bottom: 20px; */
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
 .header {
-    background: white;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-}
-
-.header h1 {
-    margin: 0;
-    color: #333;
-    font-size: 24px;
-}
-
-.header .subtitle {
-    margin: 5px 0 0 0;
-    font-size: 14px;
-    color: #666;
-}
-
-.main-content {
-    display: flex;
-    max-width: 1200px;
-    margin: 0 auto;
-    gap: 30px;
-    padding: 0 20px;
-}
-
-.left-section {
-    flex: 1;
-    max-width: 300px;
-}
-
-.right-section {
-    flex: 2;
-}
-
-.section-card {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-}
-
-.section-header {
     background: #34495e;
     color: white;
     padding: 10px 15px;
     margin: -20px -20px 20px -20px;
     border-radius: 8px 8px 0 0;
     font-weight: bold;
+}
+
+.header h1 {
+    background: #34495e;
+    color: white;
+    padding: 10px 15px;
+    margin: -20px -20px 20px -20px;
+    border-radius: 8px 8px 0 0;
+    font-weight: bold;
+}
+
+.page-container {
+    padding: 0 60px !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+}
+
+body .main-content {
+    display: flex !important;
+    max-width: 1200px !important;
+    margin: 20px auto !important;
+    gap: 30px !important;
+    padding: 20px 0 !important;
+    box-sizing: border-box !important;
+}
+
+.section-card {
+    background: white;
+    border-radius: 8px !important;
+    padding: 20px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    margin-bottom: 20px !important;
+    width: 100%;
+}
+
+.section-header {
+    /* background: #34495e; */
+    color: black;
+    padding: 10px 15px;
+    margin: -20px -20px 0px -20px;
+    border-radius: 8px 8px 0 0;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .period-specification {
@@ -70,7 +82,20 @@ body {
     border-radius: 6px;
     font-size: 16px;
     margin-bottom: 15px;
-    box-sizing: border-box;
+    /* box-sizing: border-box !important; */
+}
+
+/* 日付入力フィールドを横並びにする */
+.period-inputs {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    padding: 0 700px 20px 0;
+}
+
+.period-inputs .period-input {
+    flex: 1;
+    margin-bottom: 0;
 }
 
 .period-input:focus {
@@ -81,6 +106,7 @@ body {
 .period-controls {
     display: flex;
     gap: 10px;
+    padding: 0 700px 0 0;
 }
 
 .period-btn {
@@ -100,14 +126,14 @@ body {
 }
 
 .navigation-bar {
-    background: #34495e;
-    color: white;
+    background: white;
+    color: black;
     padding: 15px 20px;
     border-radius: 8px 8px 0 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: -20px -20px 20px -20px;
+    margin: -20px -20px 0px -20px;
 }
 
 .screen-title {

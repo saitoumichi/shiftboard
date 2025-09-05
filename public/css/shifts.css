@@ -7,6 +7,16 @@ body {
     min-height: 100vh;
 }
 
+/* セクションカードのスタイル */
+.section-card {
+    background: white;
+    border-radius: 8px !important;
+    padding: 20px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    margin-bottom: 20px !important;
+    width: 100%;
+}
+
 :root {
     --content-max-width: 1400px;
 }

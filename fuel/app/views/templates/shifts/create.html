@@ -2,7 +2,7 @@
   <!-- ページ上部のヒーローバー（デザイン準拠） -->
   <div class="page-header">
     <div class="page-header-inner">
-      <div class="page-title">シフトボード</div>
+      <div class="page-title">シフト作成</div>
     </div>
   </div>
 
@@ -14,8 +14,8 @@
       <!-- 上段：シフトタイトル／新規シフトタイトル -->
       <div class="top-row">
         <div class="form-group">
-          <label for="new_shift_title">新規シフトタイトル</label>
-          <input type="text" id="new_shift_title" name="new_shift_title" placeholder="平日シフト" required>
+          <label for="title">シフトタイトル</label>
+          <input type="text" id="title" name="title" placeholder="例: 早番(山田さん)" required>
         </div>
       </div>
 
@@ -43,6 +43,12 @@
           <div class="form-label">定員数</div>
           <div class="form-field">
             <input type="number" id="slot_count" name="slot_count" min="1" value="1" required>
+          </div>
+        </div>
+        <div class="form-line">
+          <div class="form-label">備考</div>
+          <div class="form-field">
+            <textarea id="note" name="note" placeholder="備考があれば入力してください"></textarea>
           </div>
         </div>
       </div>

@@ -80,15 +80,40 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
     public function action_create()
     {
         try {
+            // デバッグ用：リクエストヘッダーとボディをログに出力
+            error_log('API Debug - Content-Type: ' . ($_SERVER['CONTENT_TYPE'] ?? 'not set'));
+            error_log('API Debug - Request method: ' . $_SERVER['REQUEST_METHOD']);
+            
+            // JSONデータを取得
+            $input = file_get_contents('php://input');
+            error_log('API Debug - Raw input: ' . $input);
+            
+            $data = json_decode($input, true);
+            error_log('API Debug - JSON decode result: ' . var_export($data, true));
+            
+            // フォールバック：POSTデータも確認
+            if (empty($data) && !empty($_POST)) {
+                error_log('API Debug - Using POST data as fallback');
+                $data = $_POST;
+            }
+            
             // 入力データを取得・サニタイズ
-            $shift_date = Controller_Api_Common::validateDate(\Fuel\Core\Input::post('shift_date'));
-            $start_time = Controller_Api_Common::validateTime(\Fuel\Core\Input::post('start_time'));
-            $end_time = Controller_Api_Common::validateTime(\Fuel\Core\Input::post('end_time'));
-            $note = Controller_Api_Common::sanitizeInput(\Fuel\Core\Input::post('note'));
-            $slot_count = Controller_Api_Common::sanitizeInput(\Fuel\Core\Input::post('slot_count', 1), 'int');
+            $title = Controller_Api_Common::sanitizeInput($data['title'] ?? '');
+            $shift_date = Controller_Api_Common::validateDate($data['shift_date'] ?? '');
+            $start_time = Controller_Api_Common::validateTime($data['start_time'] ?? '');
+            $end_time = Controller_Api_Common::validateTime($data['end_time'] ?? '');
+            $note = Controller_Api_Common::sanitizeInput($data['note'] ?? '');
+            $slot_count = Controller_Api_Common::sanitizeInput($data['slot_count'] ?? 1, 'int');
+            
+            // デバッグ用：最終的なデータをログに出力
+            error_log('API Debug - Final title: ' . var_export($title, true));
+            error_log('API Debug - Final data: ' . var_export($data, true));
 
             // バリデーション
             $errors = array();
+            if (empty($title)) {
+                $errors[] = 'シフトタイトルを入力してください';
+            }
             if (!$shift_date) {
                 $errors[] = '有効なシフト日付を入力してください（YYYY-MM-DD形式）';
             }
@@ -122,10 +147,10 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
 
             // シフトを作成
             $stmt = $pdo->prepare("
-                INSERT INTO shifts (shift_date, start_time, end_time, note, slot_count, created_at) 
-                VALUES (?, ?, ?, ?, ?, NOW())
+                INSERT INTO shifts (title, shift_date, start_time, end_time, note, slot_count, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, NOW())
             ");
-            $stmt->execute([$shift_date, $start_time, $end_time, $note, $slot_count]);
+            $stmt->execute([$title, $shift_date, $start_time, $end_time, $note, $slot_count]);
 
             $shift_id = $pdo->lastInsertId();
 

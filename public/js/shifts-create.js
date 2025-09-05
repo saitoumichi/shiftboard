@@ -14,15 +14,21 @@ $(document).ready(function() {
         e.preventDefault();
         
         var formData = {
+            title: $('#title').val(),
             shift_date: $('#shift_date').val(),
             start_time: $('#start_time').val(),
             end_time: $('#end_time').val(),
-            slot_count: parseInt($('#slot_count').val()),
-            note: $('#new_shift_title').val()
+            slot_count: Number($('#slot_count').val() || 1),
+            note: $('#note').val() || ''
         };
         
+        // デバッグ用：送信データをコンソールに出力
+        console.log('Form data being sent:', formData);
+        console.log('Title value:', $('#title').val());
+        console.log('Title element exists:', $('#title').length > 0);
+        
         // バリデーション
-        if (!formData.shift_date || !formData.start_time || !formData.end_time) {
+        if (!formData.title || !formData.shift_date || !formData.start_time || !formData.end_time) {
             showAlert('すべての必須項目を入力してください。', 'error');
             return;
         }
@@ -35,8 +41,17 @@ $(document).ready(function() {
         // AJAX送信
         $.ajax({
             url: '/api/shifts',
-            type: 'POST',
-            data: formData,
+            method: 'POST',
+            contentType: 'application/json',
+            processData: false,
+            data: JSON.stringify({
+              title: ($('#title').val() || '').trim(),              // ★これが必須
+              shift_date: ($('#shift_date').val() || '').trim(),
+              start_time: ($('#start_time').val() || '').trim(),
+              end_time:   ($('#end_time').val() || '').trim(),
+              slot_count: Number($('#slot_count').val() || 1),
+              note:       ($('#note').val() || '').trim()
+            }),
             dataType: 'json',
             success: function(response) {
                 if (response.success) {

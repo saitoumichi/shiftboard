@@ -1,19 +1,29 @@
 <!-- ヘッダー -->
-<div class="header">
-    <h1>自分のシフト</h1>
-    <div class="subtitle">参加予定のシフト一覧</div>
-</div>
+<nav class="navbar">
+    <div class="navbar-content">
+        <a href="/shifts" class="navbar-brand">自分のシフト</a>
+        <div class="navbar-links">
 
+        </div>
+    </div>
+</nav>
 <!-- メインコンテンツ -->
+<div class="page-container">
 <div class="main-content">
-    <!-- 左セクション -->
-    <div class="left-section">
         <!-- 期間指定 -->
         <div class="section-card">
-            <div class="section-header">期間指定</div>
+            <div class="section-header">
+                <span>期間指定</span>
+                <div class="nav-buttons">
+                    <a href="/shifts" class="nav-btn btn-back">戻る</a>
+                </div>
+            </div>
             <div class="period-specification">
-                <input type="date" class="period-input" id="start-date" data-bind="value: startDate">
-                <input type="date" class="period-input" id="end-date" data-bind="value: endDate">
+                <div class="period-inputs">
+                    <input type="date" class="period-input" id="start-date" data-bind="value: startDate">
+                    <input type="date" class="period-input" id="end-date" data-bind="value: endDate">
+                </div>
+                
                 <div class="period-controls">
                     <button class="period-btn" data-bind="click: setThisWeek">今週</button>
                     <button class="period-btn" data-bind="click: setThisMonth">今月</button>
@@ -21,37 +31,13 @@
                 </div>
             </div>
         </div>
-        
-        <!-- 統計情報 -->
-        <div class="section-card">
-            <div class="section-header">統計情報</div>
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-label">総シフト数</div>
-                    <div class="stat-value" data-bind="text: totalShifts">0</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">総時間</div>
-                    <div class="stat-value" data-bind="text: totalHours">0時間</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">平均時間/日</div>
-                    <div class="stat-value" data-bind="text: averageHoursPerDay">0時間</div>
-                </div>
-            </div>
-        </div>
     </div>
     
-    <!-- 右セクション -->
-    <div class="right-section">
+
         <!-- ナビゲーションバー -->
         <div class="section-card">
             <div class="navigation-bar">
-                <div class="screen-title">シフト一覧</div>
-                <div class="nav-buttons">
-                    <a href="/shifts" class="nav-btn btn-back">戻る</a>
-                    <button class="nav-btn btn-csv" data-bind="click: exportCSV">CSV出力</button>
-                </div>
+                <div class="screen-title">参加予定シフト一覧</div>
             </div>
             
             <!-- シフト一覧 -->
@@ -83,4 +69,5 @@
             </div>
         </div>
     </div>
+</div>
 </div>

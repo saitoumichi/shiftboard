@@ -51,29 +51,43 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       vm.isReady = ko.observable(false);
       
       // 計算プロパティ
-      vm.shiftTitle = ko.pureComputed(function() {
+      vm.shiftTitle = ko.computed(function() {
           var s = vm.shift();
+          console.log('shiftTitle computed - shift:', s);
           if (!s) return '';
+          
+          // データベースのtitleフィールドを優先的に使用
+          if (s.title) {
+              console.log('shiftTitle computed - using database title:', s.title);
+              return s.title;
+          }
+          
+          // フォールバック：日付と時間から生成
           var t = (s.start_time && s.end_time) ? (s.start_time.substring(0,5) + '〜' + s.end_time.substring(0,5)) : '';
-          return (s.shift_date ? s.shift_date + ' ' : '') + t;
+          var result = (s.shift_date ? s.shift_date + ' ' : '') + t;
+          console.log('shiftTitle computed - fallback result:', result);
+          return result;
       });
       
-      vm.shiftDate = ko.pureComputed(function() {
+      vm.shiftDate = ko.computed(function() {
           var s = vm.shift();
-          return s ? s.shift_date : '';
+          console.log('shiftDate computed - shift:', s);
+          var result = s ? s.shift_date : '';
+          console.log('shiftDate computed - result:', result);
+          return result;
       });
       
-      vm.shiftTime = ko.pureComputed(function() {
+      vm.shiftTime = ko.computed(function() {
           var s = vm.shift();
           return (s && s.start_time && s.end_time) ? (s.start_time.substring(0,5) + '〜' + s.end_time.substring(0,5)) : '';
       });
       
-      vm.shiftNote = ko.pureComputed(function() {
+      vm.shiftNote = ko.computed(function() {
           var s = vm.shift();
           return s ? (s.note || '備考なし') : '';
       });
       
-      vm.slotInfo = ko.pureComputed(function() {
+      vm.slotInfo = ko.computed(function() {
           var s = vm.shift();
           if (!s) return '';
           var assigned = s.assigned_users ? s.assigned_users.length : 0;
@@ -82,21 +96,42 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       });
       
       // 参加状況の判定
-      vm.isParticipating = ko.pureComputed(function() {
+      vm.isParticipating = ko.computed(function() {
           var s = vm.shift();
-          if (!s || !s.assigned_users) return false;
-          // 現在のユーザーID（デバッグ用に1を固定）
-          var currentUserId = 1;
-          return s.assigned_users.some(function(user) {
-              return user.id === currentUserId || user.name === 'Alice'; // デバッグ用
+          if (!s) {
+              console.log('isParticipating: shift is null');
+              return false;
+          }
+          
+          // 現在のユーザーを特定（仮の実装）
+          var currentUser = 'Alice'; // 仮のユーザー名
+          var result = Array.isArray(s.assigned_users) && s.assigned_users.some(u => u.name === currentUser);
+          
+          console.log('isParticipating calculation:', {
+              currentUser: currentUser,
+              assigned_users: s.assigned_users,
+              result: result
           });
+          
+          return result;
       });
       
-      vm.canParticipate = ko.pureComputed(function() {
+      vm.canParticipate = ko.computed(function() {
           var s = vm.shift();
-          if (!s) return false;
-          var assigned = s.assigned_users ? s.assigned_users.length : 0;
-          return assigned < s.slot_count;
+          if (!s) {
+              console.log('canParticipate: shift is null');
+              return false;
+          }
+          var assigned = Array.isArray(s.assigned_users) ? s.assigned_users.length : 0;
+          var total = s.slot_count || 0;
+          var result = assigned < total;
+          console.log('canParticipate calculation:', {
+              assigned: assigned,
+              total: total,
+              result: result,
+              assigned_users: s.assigned_users
+          });
+          return result;
       });
       
       // デバッグ用 JSON（テンプレから <pre data-bind="text: debugJSON"> で参照）
@@ -177,6 +212,130 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               console.log('isReady after load:', self.isReady());
               console.log('shift after load:', self.shift());
               
+              // 手動でDOMを更新
+              setTimeout(function() {
+                var root = document.getElementById('shift-detail-root');
+                if (root) {
+                  var loadingDiv = root.querySelector('.loading');
+                  var mainContent = root.querySelector('.main-content');
+                  
+                  if (loadingDiv) {
+                    loadingDiv.style.display = 'none';
+                    console.log('Loading div hidden manually');
+                  }
+                  if (mainContent) {
+                    mainContent.style.display = 'flex';
+                    mainContent.style.visibility = 'visible';
+                    mainContent.style.opacity = '1';
+                    console.log('Main content shown manually');
+                  }
+                  
+                  // シフト詳細を手動で更新
+                  var shiftTitleElement = root.querySelector('.shift-title');
+                  var shiftDateElement = root.querySelector('.shift-date');
+                  var shiftTimeElement = root.querySelector('.shift-time');
+                  var shiftNoteElement = root.querySelector('.shift-note');
+                  var slotInfoElement = root.querySelector('.slot-info');
+                  
+                  // 募集中の時刻セクションの要素
+                  var startTimeElement = root.querySelector('.recruitment-details li:nth-child(1) span');
+                  var endTimeElement = root.querySelector('.recruitment-details li:nth-child(2) span');
+                  
+                  if (shiftTitleElement) {
+                    var shift = self.shift();
+                    var title = 'シフト詳細';
+                    if (shift) {
+                      // データベースのtitleフィールドを使用
+                      if (shift.title) {
+                        title = shift.title;
+                      } else {
+                        // フォールバック：日付と時間から生成
+                        var dateStr = '';
+                        if (shift.shift_date) {
+                          var date = new Date(shift.shift_date);
+                          dateStr = (date.getMonth() + 1) + '月' + date.getDate() + '日のシフト';
+                        }
+                        
+                        var timeStr = '';
+                        if (shift.start_time && shift.end_time) {
+                          timeStr = shift.start_time.substring(0,5) + '〜' + shift.end_time.substring(0,5);
+                        }
+                        
+                        title = dateStr + (timeStr ? ' (' + timeStr + ')' : '');
+                      }
+                    }
+                    shiftTitleElement.textContent = title;
+                    console.log('Manual update - shift title:', title);
+                  }
+                  
+                  if (shiftDateElement) {
+                    var shift = self.shift();
+                    var date = '';
+                    if (shift && shift.shift_date) {
+                      var dateObj = new Date(shift.shift_date);
+                      var year = dateObj.getFullYear();
+                      var month = dateObj.getMonth() + 1;
+                      var day = dateObj.getDate();
+                      var dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
+                      date = year + '年' + month + '月' + day + '日(' + dayOfWeek + ')';
+                    }
+                    shiftDateElement.textContent = date;
+                    console.log('Manual update - shift date:', date);
+                  }
+                  
+                  if (shiftTimeElement) {
+                    var shift = self.shift();
+                    var time = '';
+                    if (shift && shift.start_time && shift.end_time) {
+                      time = shift.start_time.substring(0,5) + '〜' + shift.end_time.substring(0,5);
+                    }
+                    shiftTimeElement.textContent = time;
+                    console.log('Manual update - shift time:', time);
+                  }
+                  
+                  if (shiftNoteElement) {
+                    var shift = self.shift();
+                    var note = shift ? (shift.note || '備考なし') : '';
+                    shiftNoteElement.textContent = note;
+                    console.log('Manual update - shift note:', note);
+                  }
+                  
+                  if (slotInfoElement) {
+                    var shift = self.shift();
+                    var slotInfo = '';
+                    if (shift) {
+                      var assigned = shift.assigned_users ? shift.assigned_users.length : 0;
+                      var total = shift.slot_count || 0;
+                      slotInfo = assigned + '/' + total + '人';
+                    }
+                    slotInfoElement.textContent = slotInfo;
+                    console.log('Manual update - slot info:', slotInfo);
+                  }
+                  
+                  // 募集中の時刻を手動で更新
+                  if (startTimeElement) {
+                    var shift = self.shift();
+                    var startTime = '';
+                    if (shift && shift.start_time) {
+                      startTime = shift.start_time.substring(0,5);
+                    }
+                    startTimeElement.textContent = startTime;
+                    console.log('Manual update - start time:', startTime);
+                  }
+                  
+                  if (endTimeElement) {
+                    var shift = self.shift();
+                    var endTime = '';
+                    if (shift && shift.end_time) {
+                      endTime = shift.end_time.substring(0,5);
+                    }
+                    endTimeElement.textContent = endTime;
+                    console.log('Manual update - end time:', endTime);
+                  }
+                }
+              }, 100);
+              
+              
               // デバッグ情報の手動更新（バインディング再適用は不要）
               setTimeout(function() {
                 console.log('Final state - loading:', self.loading());
@@ -201,6 +360,63 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   if (shiftDateSpan) shiftDateSpan.textContent = self.shift() && self.shift().shift_date || 'なし';
                   
                   console.log('Debug info updated manually');
+                }
+                
+                // ボタンの表示状態をデバッグ
+                var participateBtn = root.querySelector('.btn-participate');
+                var cancelBtn = root.querySelector('.btn-cancel');
+                
+                // 手動で参加状況を計算
+                var shift = self.shift();
+                var isParticipating = false;
+                var canParticipate = false;
+                
+                if (shift) {
+                  // 参加状況の手動計算
+                  var currentUser = 'Alice';
+                  isParticipating = Array.isArray(shift.assigned_users) && shift.assigned_users.some(u => u.name === currentUser);
+                  
+                  // 参加可能かの手動計算
+                  var assigned = Array.isArray(shift.assigned_users) ? shift.assigned_users.length : 0;
+                  var total = shift.slot_count || 0;
+                  canParticipate = assigned < total;
+                  
+                  console.log('Manual calculation:', {
+                    assigned: assigned,
+                    total: total,
+                    isParticipating: isParticipating,
+                    canParticipate: canParticipate,
+                    assigned_users: shift.assigned_users
+                  });
+                }
+                
+                if (participateBtn) {
+                  var shouldShowParticipate = shift && !isParticipating && canParticipate;
+                  console.log('Participate button should show:', shouldShowParticipate);
+                  console.log('  - shift exists:', !!shift);
+                  console.log('  - isParticipating:', isParticipating);
+                  console.log('  - canParticipate:', canParticipate);
+                  
+                  if (shouldShowParticipate) {
+                    participateBtn.style.display = 'block';
+                    participateBtn.style.visibility = 'visible';
+                  } else {
+                    participateBtn.style.display = 'none';
+                  }
+                }
+                
+                if (cancelBtn) {
+                  var shouldShowCancel = shift && isParticipating;
+                  console.log('Cancel button should show:', shouldShowCancel);
+                  console.log('  - shift exists:', !!shift);
+                  console.log('  - isParticipating:', isParticipating);
+                  
+                  if (shouldShowCancel) {
+                    cancelBtn.style.display = 'block';
+                    cancelBtn.style.visibility = 'visible';
+                  } else {
+                    cancelBtn.style.display = 'none';
+                  }
                 }
                 
                 // アクションボタンエリアのデバッグ情報も手動更新
@@ -235,77 +451,9 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   if (participantsCountSpan) participantsCountSpan.textContent = shift ? shift.assigned_users.length : 0;
                   if (slotCountSpan) slotCountSpan.textContent = shift ? shift.slot_count : 0;
                   
-                  console.log('Action debug info updated manually');
-                  
-                  // アクションボタンの表示を手動で制御
-                  var participateBtn = root.querySelector('.btn-participate');
-                  var cancelBtn = root.querySelector('.btn-cancel');
-                  var capacityMessage = root.querySelector('.action-message');
-                  
-                  if (participateBtn) {
-                    participateBtn.style.display = (!isParticipating && canParticipate) ? 'block' : 'none';
-                    // クリックイベントを追加
-                    participateBtn.onclick = function() {
-                      console.log('Participate button clicked!');
-                      self.joinShift(shift.id);
-                    };
-                  }
-                  if (cancelBtn) {
-                    cancelBtn.style.display = isParticipating ? 'block' : 'none';
-                  }
-                  if (capacityMessage) {
-                    capacityMessage.style.display = (!canParticipate && !isParticipating) ? 'block' : 'none';
-                  }
-                  
-                  console.log('Action buttons visibility updated manually');
                 }
                 
-                // シフト詳細情報も手動で更新
-                var shiftTitleElement = root.querySelector('[data-bind*="shiftTitle"]');
-                var shiftDateElement = root.querySelector('[data-bind*="shiftDate"]');
-                var shiftTimeElement = root.querySelector('[data-bind*="shiftTime"]');
-                var shiftNoteElement = root.querySelector('[data-bind*="shiftNote"]');
-                var slotInfoElement = root.querySelector('[data-bind*="slotInfo"]');
                 
-                if (shiftTitleElement) shiftTitleElement.textContent = self.shiftTitle();
-                if (shiftDateElement) shiftDateElement.textContent = self.shiftDate();
-                if (shiftTimeElement) shiftTimeElement.textContent = self.shiftTime();
-                if (shiftNoteElement) shiftNoteElement.textContent = self.shiftNote();
-                if (slotInfoElement) slotInfoElement.textContent = self.slotInfo();
-                
-                // 募集中の時刻セクションも更新
-                var startTimeElement = root.querySelector('[data-bind*="shift().start_time"]');
-                var endTimeElement = root.querySelector('[data-bind*="shift().end_time"]');
-                
-                if (startTimeElement) startTimeElement.textContent = self.shift() ? self.shift().start_time : '';
-                if (endTimeElement) endTimeElement.textContent = self.shift() ? self.shift().end_time : '';
-                
-                console.log('Shift details updated manually');
-                
-                // メインコンテンツの表示を強制的に制御
-                var mainContent = root.querySelector('.main-content');
-                if (mainContent) {
-                  if (self.isReady()) {
-                    mainContent.style.display = 'flex';
-                    mainContent.style.visibility = 'visible';
-                    mainContent.style.opacity = '1';
-                    console.log('Main content displayed manually');
-                  } else {
-                    mainContent.style.display = 'none';
-                    mainContent.style.visibility = 'hidden';
-                    mainContent.style.opacity = '0';
-                  }
-                }
-                
-                // 読み込み中メッセージの表示を制御
-                var loadingDiv = root.querySelector('.loading');
-                if (loadingDiv) {
-                  if (self.loading()) {
-                    loadingDiv.style.display = 'block';
-                  } else {
-                    loadingDiv.style.display = 'none';
-                  }
-                }
               }, 100);
             })
             .catch(function (e) {

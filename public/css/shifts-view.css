@@ -8,6 +8,69 @@ body {
     min-height: 100vh;
 }
 
+/* シフト基本情報 */
+.shift-basic-info {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.shift-header {
+    /* border-bottom: 2px solid #e5e7eb; */
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+}
+
+.shift-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+}
+
+.shift-date {
+    font-size: 18px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.shift-details {
+    display: grid;
+    gap: 12px;
+}
+
+.shift-time {
+    font-size: 16px;
+    color: #374151;
+    font-weight: 600;
+    padding: 8px 12px;
+    background: #f3f4f6;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+}
+
+.slot-info {
+    font-size: 16px;
+    color: #374151;
+    font-weight: 500;
+    padding: 8px 12px;
+    background: #f0f9ff;
+    border-radius: 8px;
+    border-left: 4px solid #06b6d4;
+}
+
+.shift-note {
+    font-size: 14px;
+    color: #6b7280;
+    padding: 8px 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border-left: 4px solid #9ca3af;
+}
+
 .header {
     background: #2c3e50;
     padding: 15px 20px;
@@ -34,12 +97,23 @@ body {
     flex-direction: column;
     gap: 15px;
     margin-bottom: 30px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 4px 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.action-buttons h3 {
+    margin: 0;
+    font-size:18px;
+    font-weight: bold;
+    color: #2c3e50;
 }
 
 .action-btn {
     padding: 12px 24px;
     border: none;
-    border-radius: 20px;
+    border-radius: 8px;
     font-size: 14px;
     cursor: pointer;
     transition: all 0.3s;
@@ -57,21 +131,21 @@ body {
 }
 
 .btn-recruitment {
-    background: #e74c3c;
+    background: #3498db;
     color: white;
 }
 
 .btn-recruitment:hover {
-    background: #c0392b;
+    background: #2980b9;
 }
 
 .btn-participate {
-    background: #e74c3c;
+    background: #2980b9;
     color: white;
 }
 
 .btn-participate:hover {
-    background: #c0392b;
+    background: #2980b9;
 }
 
 .btn-edit {
@@ -84,12 +158,12 @@ body {
 }
 
 .btn-delete {
-    background: #dc3545;
+    background: #2980b9;
     color: white;
 }
 
 .btn-delete:hover {
-    background: #c82333;
+    background: #2980b9;
 }
 
 .main-content {
@@ -101,18 +175,21 @@ body {
 }
 
 .left-section {
-    flex: 2;
+    flex: 1;
 }
 
 .right-section {
     flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
 }
 
 .shift-basic-info {
     background: white;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    /* box-shadow: 0 2px 4px rgba(0,0,0,0.1); */
     margin-bottom: 20px;
 }
 
@@ -142,11 +219,11 @@ body {
     margin-bottom: 15px;
 }
 
-.shift-note {
+/* .shift-note {
     font-size: 14px;
     color: #7f8c8d;
     line-height: 1.5;
-}
+} */
 
 .participants-section {
     background: white;
@@ -311,7 +388,8 @@ body {
 
 .no-participants {
     text-align: center;
-    color: #7f8c8d;
+    background: white;
+    color: black;
     padding: 20px;
     font-style: italic;
 }
