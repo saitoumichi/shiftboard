@@ -25,4 +25,6 @@ services:
       - --default-time-zone=+09:00
       - --sql-mode=STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
     volumes:
-      - ./docker/mysql/data:/var/lib/mysql
+      - db-data:/var/lib/mysql
+volumes:
+  db-data:

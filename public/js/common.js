@@ -232,6 +232,18 @@ window.ShiftBoard = {
     
     // API呼び出し
     api: {
+        url: function (path) {
+            if (!path) return ShiftBoard.config.apiBaseUrl;
+            // absolute URL
+            if (/^https?:\/\//i.test(path)) return path;
+            // already starts with /api
+            if (path.startsWith('/api')) return path;
+            // join with base
+            const base = ShiftBoard.config.apiBaseUrl || '';
+            const left = base.replace(/\/+$/, '');
+            const right = String(path).replace(/^\/+/, '');
+            return left + '/' + right;
+        },
         request: function(url, options = {}) {
             const defaultOptions = {
                 method: 'GET',
@@ -240,10 +252,16 @@ window.ShiftBoard = {
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             };
-            
             const finalOptions = { ...defaultOptions, ...options };
-            
-            return fetch(url, finalOptions)
+            // Avoid forcing Content-Type for GET without body
+            if ((finalOptions.method || 'GET').toUpperCase() === 'GET') {
+                // Some servers dislike Content-Type on GET; remove it
+                if (finalOptions.headers && finalOptions.headers['Content-Type']) {
+                    try { delete finalOptions.headers['Content-Type']; } catch (e) {}
+                }
+            }
+            const fullUrl = (/^https?:\/\//i.test(url) || url.startsWith('/api')) ? url : ShiftBoard.api.url(url);
+            return fetch(fullUrl, finalOptions)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -256,25 +274,21 @@ window.ShiftBoard = {
                     throw error;
                 });
         },
-        
         get: function(url) {
             return this.request(url);
         },
-        
         post: function(url, data) {
             return this.request(url, {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
         },
-        
         put: function(url, data) {
             return this.request(url, {
                 method: 'PUT',
                 body: JSON.stringify(data)
             });
         },
-        
         delete: function(url) {
             return this.request(url, {
                 method: 'DELETE'
@@ -302,7 +316,14 @@ document.addEventListener('DOMContentLoaded', function() {
             z-index: 1000;
             animation: fadeIn 0.3s ease;
         }
-        
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top-color: #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
         .loading-text {
             margin-top: 15px;
             color: #666;
@@ -416,7 +437,39 @@ document.addEventListener('DOMContentLoaded', function() {
             from { opacity: 1; }
             to { opacity: 0; }
         }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     `;
+    try {
+        const path = (location.pathname || '').toLowerCase();
+        const isShiftsPage = /\/shifts(\/|$)/.test(path) || /\/myshifts(\/|$)/.test(path);
+    
+        if (isShiftsPage && ShiftBoard.dom.ensureElement) {
+          ShiftBoard.dom.ensureElement('#available-shifts-container', {
+            tag: 'div',
+            id: 'available-shifts-container',
+            className: 'available-shifts-container',
+            parentSelector: '.month-recruitment-section'
+          });
+          ShiftBoard.dom.ensureElement('#available-shifts-container-week', {
+            tag: 'div',
+            id: 'available-shifts-container-week',
+            className: 'available-shifts-container week',
+            parentSelector: '.week-recruitment-section'
+          });
+          ShiftBoard.dom.ensureElement('#available-shifts-container-day', {
+            tag: 'div',
+            id: 'available-shifts-container-day',
+            className: 'available-shifts-container day',
+            parentSelector: '.day-recruitment-section'
+          });
+        }
+      } catch(e) { console.warn(e); }
     document.head.appendChild(style);
     
     // スムーススクロール
@@ -474,15 +527,45 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // エラーハンドリング
-window.addEventListener('error', function(e) {
-    console.error('JavaScript error:', e.error);
-    ShiftBoard.alert.show('予期しないエラーが発生しました', 'danger');
-});
-
-window.addEventListener('unhandledrejection', function(e) {
-    console.error('Unhandled promise rejection:', e.reason);
-    ShiftBoard.alert.show('通信エラーが発生しました', 'danger');
-});
+(function () {
+    function safeAlert(message, type) {
+        try {
+            ShiftBoard.alert.show(message, type);
+        } catch (err) {
+            // Ensure body exists before trying to show an alert
+            ShiftBoard.dom && ShiftBoard.dom.ensureBody(function () {
+                ShiftBoard.alert.show(message, type);
+            });
+        }
+    }
+    window.addEventListener('error', function(e) {
+        console.error('JavaScript error:', e.error || e.message || e);
+        safeAlert('予期しないエラーが発生しました', 'danger');
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+        console.error('Unhandled promise rejection:', e.reason);
+        safeAlert('通信エラーが発生しました', 'danger');
+    });
+})();
 
 // 最終セーフティ：ShiftBoard 初期化で body 未準備のときでも安全に動作
 ShiftBoard.dom && ShiftBoard.dom.ready(function(){ /* no-op: フック確保 */ });
+
+ShiftBoard.dom.ensureElement = function(selector, opts = {}) {
+    const found = document.querySelector(selector);
+    if (found) return found;
+    const tag = opts.tag || 'div';
+    const el = document.createElement(tag);
+    if (opts.id) el.id = opts.id;
+    else if (selector.startsWith('#')) el.id = selector.slice(1);
+    if (opts.className) el.className = opts.className;
+  
+    const parent =
+      (opts.parentSelector && document.querySelector(opts.parentSelector)) ||
+      document.querySelector('.month-recruitment-section') ||
+      document.querySelector('.view-content.active') ||
+      document.body;
+  
+    parent.appendChild(el);
+    return el;
+  };

@@ -66,27 +66,6 @@
     </div>
         </div>
         
-        <!-- 募集中のシフトセクション -->
-        <div class="day-recruitment-section">
-            <div class="recruitment-header">募集中のシフト</div>
-            
-            <!-- ローディング表示 -->
-            <div data-bind="visible: loading" class="loading">
-                読み込み中...
-            </div>
-            
-            <!-- 募集中のシフト一覧 -->
-            <div data-bind="visible: !loading()">
-                <div id="available-shifts-container-day">
-                    <!-- JavaScriptで動的に生成 -->
-                </div>
-                
-                <!-- 募集中のシフトが無い場合 -->
-                <div id="no-shifts-message-day" style="display: none;">
-                    <p>募集中のシフトはありません。</p>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -122,27 +101,6 @@
     </div>
         </div>
         
-        <!-- 募集中のシフトセクション -->
-        <div class="week-recruitment-section">
-            <div class="recruitment-header">募集中のシフト</div>
-            
-            <!-- ローディング表示 -->
-            <div data-bind="visible: loading" class="loading">
-                読み込み中...
-            </div>
-            
-            <!-- 募集中のシフト一覧 -->
-            <div data-bind="visible: !loading()">
-                <div id="available-shifts-container-week">
-                    <!-- JavaScriptで動的に生成 -->
-                </div>
-                
-                <!-- 募集中のシフトが無い場合 -->
-                <div id="no-shifts-message-week" style="display: none;">
-                    <p>募集中のシフトはありません。</p>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -180,26 +138,22 @@
     </div>
         </div>
         
-        <!-- 募集中のシフトセクション -->
+        <!-- 月ビュー -->
         <div class="month-recruitment-section">
-            <div class="recruitment-header">募集中のシフト</div>
-            
-            <!-- ローディング表示 -->
-            <div data-bind="visible: loading" class="loading">
-                読み込み中...
-            </div>
-            
-            <!-- 募集中のシフト一覧 -->
-            <div data-bind="visible: !loading()">
-                <div id="available-shifts-container">
-                    <!-- JavaScriptで動的に生成 -->
-                </div>
-                
-                <!-- 募集中のシフトが無い場合 -->
-                <div id="no-shifts-message" style="display: none;">
-                    <p>募集中のシフトはありません。</p>
-                </div>
-            </div>
+            <div id="available-shifts-container"></div>
+            <div id="no-shifts-message" class="muted" style="display:none;">募集中のシフトはありません</div>
+        </div>
+
+        <!-- 週ビュー -->
+        <div class="week-recruitment-section" style="display:none;">
+            <div id="available-shifts-container-week"></div>
+            <div id="no-shifts-message-week" class="muted" style="display:none;">今週の募集中シフトはありません</div>
+        </div>
+
+        <!-- 日ビュー -->
+        <div class="day-recruitment-section" style="display:none;">
+            <div id="available-shifts-container-day"></div>
+            <div id="no-shifts-message-day" class="muted" style="display:none;">本日の募集中シフトはありません</div>
         </div>
     </div>
     

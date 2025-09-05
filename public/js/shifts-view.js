@@ -141,6 +141,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               return doFetch(fallbackTriedUrl);
             })
             .then(function (json) {
+              console.log('API Response:', json);
               var payload = json && (json.data || json);
               if (!payload || !payload.id) throw new Error('Invalid payload');
               console.log('Setting shift data:', payload);
@@ -155,6 +156,66 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               self.isReady(true);
               
               console.log('Data loaded successfully');
+              console.log('isReady after load:', self.isReady());
+              console.log('shift after load:', self.shift());
+              
+              // バインディングの強制更新
+              setTimeout(function() {
+                var root = document.getElementById('shift-detail-root') || document.body;
+                console.log('Forcing binding update on:', root);
+                if (window.ko) {
+                  // 既存のバインディングをクリア
+                  if (typeof ko.cleanNode === 'function') {
+                    ko.cleanNode(root);
+                  } else {
+                    // cleanNodeが利用できない場合は、手動でクリア
+                    var elements = root.querySelectorAll('[data-bind]');
+                    for (var i = 0; i < elements.length; i++) {
+                      if (ko.dataFor) {
+                        ko.dataFor(elements[i], null);
+                      }
+                    }
+                  }
+                  
+                  // 強制的にDOMを更新
+                  var debugDiv = root.querySelector('[style*="background: yellow"]');
+                  if (debugDiv) {
+                    debugDiv.style.display = 'none';
+                    setTimeout(function() {
+                      debugDiv.style.display = 'block';
+                    }, 10);
+                  }
+                  
+                  // 新しいバインディングを適用
+                  ko.applyBindings(self, root);
+                  console.log('Binding updated successfully');
+                  
+                  // デバッグ情報を強制更新
+                  setTimeout(function() {
+                    console.log('Final state - loading:', self.loading());
+                    console.log('Final state - isReady:', self.isReady());
+                    console.log('Final state - shift:', self.shift());
+                    
+                    // 手動でデバッグ情報を更新
+                    var debugDiv = root.querySelector('[style*="background: yellow"]');
+                    if (debugDiv) {
+                      var loadingSpan = debugDiv.querySelector('span[data-bind*="loading"]');
+                      var isReadySpan = debugDiv.querySelector('span[data-bind*="isReady"]');
+                      var shiftSpan = debugDiv.querySelector('span[data-bind*="Shiftデータ"]');
+                      var shiftIdSpan = debugDiv.querySelector('span[data-bind*="Shift ID"]');
+                      var shiftDateSpan = debugDiv.querySelector('span[data-bind*="Shift日付"]');
+                      
+                      if (loadingSpan) loadingSpan.textContent = self.loading() ? 'true' : 'false';
+                      if (isReadySpan) isReadySpan.textContent = self.isReady() ? 'true' : 'false';
+                      if (shiftSpan) shiftSpan.textContent = self.shift() ? 'あり' : 'なし';
+                      if (shiftIdSpan) shiftIdSpan.textContent = self.shift() && self.shift().id || 'なし';
+                      if (shiftDateSpan) shiftDateSpan.textContent = self.shift() && self.shift().shift_date || 'なし';
+                      
+                      console.log('Debug info updated manually');
+                    }
+                  }, 50);
+                }
+              }, 100);
             })
             .catch(function (e) {
               console.error('Load failed:', e);
@@ -294,18 +355,15 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
     return SHIFT_API_FALLBACK.replace(/\/+$/,'/') + encodeURIComponent(id);
   }
   
-  // 3) すでにバインド済みなら再バインドしない
+  // 3) バインディングを適用
   (function bindOnce() {
     var root = document.getElementById('shift-detail-root') || document.body;
     function bind() {
       try {
-        // dataFor が無い古い KO でも、原則 apply は一度だけ呼ぶ構成に
-        if (window.ko && ko.dataFor && ko.dataFor(root)) {
-          console.log('Knockout already bound, skip rebind');
-          return;
+        if (window.ko) {
+          ko.applyBindings(vm, root);
+          console.log('Knockout binding applied ONCE');
         }
-        ko.applyBindings(vm, root);
-        console.log('Knockout binding applied ONCE');
       } catch (e) {
         console.error('Binding error:', e);
       }
@@ -320,6 +378,10 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
   // 4) ID を取って "同じ vm" にロードする
   (function initLoad() {
     var id = resolveShiftId();
+    console.log('Initial state - loading:', vm.loading());
+    console.log('Initial state - isReady:', vm.isReady());
+    console.log('Initial state - shift:', vm.shift());
+    
     if (!id) {
       vm.loading(false);
       vm.error && vm.error('シフトIDがURLから取得できませんでした。');

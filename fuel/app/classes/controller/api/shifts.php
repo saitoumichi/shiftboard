@@ -2,24 +2,39 @@
 
 /**
  * API Shifts Controller
- * * シフト管理用のAPIコントローラー
+ * シフト管理用のAPIコントローラー
  */
 class Controller_Api_Shifts extends \Fuel\Core\Controller
 {
+    /**
+     * レスポンスを返す
+     * 
+     * @param mixed $data レスポンスデータ
+     * @param int $status HTTPステータスコード
+     * @return \Fuel\Core\Response
+     */
+    protected function response($data, $status = 200)
+    {
+        $response = new \Fuel\Core\Response();
+        $response->set_status($status);
+        $response->set_header('Content-Type', 'application/json; charset=utf-8');
+        $response->body = is_string($data) ? $data : json_encode($data, JSON_UNESCAPED_UNICODE);
+        return $response;
+    }
+
     /**
      * シフト一覧取得 / シフト作成
      */
     public function action_index()
     {
-        // POSTリクエストの場合はシフト作成
-        if (\Fuel\Core\Input::method() === 'POST') {
-            return $this->action_create();
-        }
-        
         try {
+            if (\Fuel\Core\Input::method() === 'POST') {
+                return $this->action_create();
+            }
+
             // データベース接続を取得
             $pdo = Controller_Api_Common::getDbConnection();
-            
+
             // シフト一覧を取得
             $stmt = $pdo->prepare("SELECT * FROM shifts ORDER BY shift_date ASC, start_time ASC");
             $stmt->execute();
@@ -27,7 +42,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
 
             $data = array();
             foreach ($shifts as $shift) {
-                // 各シフトの割り当て情報を取得
+                // 参加者情報を取得
                 $stmt = $pdo->prepare("
                     SELECT m.name, sa.status 
                     FROM shift_assignments sa 
@@ -87,9 +102,15 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
                 $errors[] = '募集人数は1以上の整数である必要があります';
             }
             
-            // 時間の論理チェック
-            if ($start_time && $end_time && $start_time >= $end_time) {
-                $errors[] = '終了時刻は開始時刻より後である必要があります';
+            // 時間の論理チェック（両方の時刻が有効な場合のみ実行）
+            if ($start_time !== false && $end_time !== false && 
+                !empty($start_time) && !empty($end_time) && 
+                is_string($start_time) && is_string($end_time)) {
+                
+                // 時刻の比較（文字列として比較可能）
+                if ($start_time >= $end_time) {
+                    $errors[] = '終了時刻は開始時刻より後である必要があります';
+                }
             }
 
             if (!empty($errors)) {
@@ -152,35 +173,35 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
             $stmt->execute([$validId]);
             $shift = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$shift) {
+            if ($shift) {
+                // 参加者情報を取得
+                $stmt = $pdo->prepare("
+                    SELECT m.name, sa.status 
+                    FROM shift_assignments sa 
+                    JOIN members m ON sa.member_id = m.id 
+                    WHERE sa.shift_id = ? AND sa.status != 'cancelled'
+                ");
+                $stmt->execute([$validId]);
+                $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                $assigned_users = array();
+                foreach ($assignments as $assignment) {
+                    $assigned_users[] = array(
+                        'name' => $assignment['name'],
+                        'status' => $assignment['status']
+                    );
+                }
+
+                // シフトデータに参加者情報を追加
+                $shift['assigned_users'] = $assigned_users;
+                
+                // 共通関数でフォーマット
+                $formatted_shift = Controller_Api_Common::formatShiftData($shift);
+
+                return $this->response(Controller_Api_Common::successResponse($formatted_shift, 'シフト詳細を取得しました'));
+            } else {
                 return $this->response(Controller_Api_Common::errorResponse('シフトが見つかりません', 404), 404);
             }
-
-            // 参加者情報を取得
-            $stmt = $pdo->prepare("
-                SELECT m.name, sa.status 
-                FROM shift_assignments sa 
-                JOIN members m ON sa.member_id = m.id 
-                WHERE sa.shift_id = ? AND sa.status != 'cancelled'
-            ");
-            $stmt->execute([$validId]);
-            $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            $assigned_users = array();
-            foreach ($assignments as $assignment) {
-                $assigned_users[] = array(
-                    'name' => $assignment['name'],
-                    'status' => $assignment['status']
-                );
-            }
-
-            // シフトデータに参加者情報を追加
-            $shift['assigned_users'] = $assigned_users;
-            
-            // 共通関数でフォーマット
-            $formatted_shift = Controller_Api_Common::formatShiftData($shift);
-
-            return $this->response(Controller_Api_Common::successResponse($formatted_shift, 'シフト詳細を取得しました'));
 
         } catch (Exception $e) {
             return $this->response(Controller_Api_Common::errorResponse('シフト詳細の取得に失敗しました: ' . $e->getMessage(), 500), 500);
@@ -292,37 +313,42 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
     public function action_update($id)
     {
         try {
-            // シフトIDのバリデーション
-            $validId = Controller_Api_Common::validateShiftId($id);
-            if (!$validId) {
-                return $this->response(Controller_Api_Common::errorResponse('無効なシフトIDです', 400), 400);
-            }
-
             // シフトの存在確認
-            if (!Controller_Api_Common::shiftExists($validId)) {
+            if (!Controller_Api_Common::shiftExists($id)) {
                 return $this->response(Controller_Api_Common::errorResponse('シフトが見つかりません', 404), 404);
             }
 
-            // 入力データを取得
-            $shift_date = \Fuel\Core\Input::post('shift_date');
-            $start_time = \Fuel\Core\Input::post('start_time');
-            $end_time = \Fuel\Core\Input::post('end_time');
-            $note = \Fuel\Core\Input::post('note');
-            $slot_count = (int)\Fuel\Core\Input::post('slot_count');
+            // 入力データを取得・サニタイズ
+            $shift_date = Controller_Api_Common::validateDate(\Fuel\Core\Input::post('shift_date'));
+            $start_time = Controller_Api_Common::validateTime(\Fuel\Core\Input::post('start_time'));
+            $end_time = Controller_Api_Common::validateTime(\Fuel\Core\Input::post('end_time'));
+            $note = Controller_Api_Common::sanitizeInput(\Fuel\Core\Input::post('note'));
+            $slot_count = Controller_Api_Common::sanitizeInput(\Fuel\Core\Input::post('slot_count'), 'int');
 
             // バリデーション
             $errors = array();
-            if (empty($shift_date)) {
-                $errors[] = 'シフト日付は必須です';
+            if (!$shift_date) {
+                $errors[] = '有効なシフト日付を入力してください（YYYY-MM-DD形式）';
             }
-            if (empty($start_time)) {
-                $errors[] = '開始時刻は必須です';
+            if (!$start_time) {
+                $errors[] = '有効な開始時刻を入力してください（HH:MM形式）';
             }
-            if (empty($end_time)) {
-                $errors[] = '終了時刻は必須です';
+            if (!$end_time) {
+                $errors[] = '有効な終了時刻を入力してください（HH:MM形式）';
             }
-            if ($slot_count < 1) {
-                $errors[] = '募集人数は1以上である必要があります';
+            if (!$slot_count || $slot_count < 1) {
+                $errors[] = '募集人数は1以上の整数である必要があります';
+            }
+            
+            // 時間の論理チェック（両方の時刻が有効な場合のみ実行）
+            if ($start_time !== false && $end_time !== false && 
+                !empty($start_time) && !empty($end_time) && 
+                is_string($start_time) && is_string($end_time)) {
+                
+                // 時刻の比較（文字列として比較可能）
+                if ($start_time >= $end_time) {
+                    $errors[] = '終了時刻は開始時刻より後である必要があります';
+                }
             }
 
             if (!empty($errors)) {
@@ -333,7 +359,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
             $pdo = Controller_Api_Common::getDbConnection();
 
             // 現在の参加者数を取得
-            $capacity = Controller_Api_Common::getShiftCapacity($validId);
+            $capacity = Controller_Api_Common::getShiftCapacity($id);
             if (!$capacity) {
                 return $this->response(Controller_Api_Common::errorResponse('シフト情報の取得に失敗しました', 500), 500);
             }
@@ -350,11 +376,11 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
                     updated_at = NOW()
                 WHERE id = ?
             ");
-            $stmt->execute([$shift_date, $start_time, $end_time, $note, $slot_count, $validId]);
+            $stmt->execute([$shift_date, $start_time, $end_time, $note, $slot_count, $id]);
 
             // 更新されたシフトの情報を取得
             $stmt = $pdo->prepare("SELECT * FROM shifts WHERE id = ?");
-            $stmt->execute([$validId]);
+            $stmt->execute([$id]);
             $shift = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($shift) {
@@ -365,7 +391,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
                     JOIN members m ON sa.member_id = m.id 
                     WHERE sa.shift_id = ? AND sa.status != 'cancelled'
                 ");
-                $stmt->execute([$validId]);
+                $stmt->execute([$id]);
                 $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 $assigned_users = array();
@@ -395,14 +421,8 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
     public function action_delete($id)
     {
         try {
-            // シフトIDのバリデーション
-            $validId = Controller_Api_Common::validateShiftId($id);
-            if (!$validId) {
-                return $this->response(Controller_Api_Common::errorResponse('無効なシフトIDです', 400), 400);
-            }
-            
             // シフトの存在確認
-            if (!Controller_Api_Common::shiftExists($validId)) {
+            if (!Controller_Api_Common::shiftExists($id)) {
                 return $this->response(Controller_Api_Common::errorResponse('シフトが見つかりません', 404), 404);
             }
 
@@ -411,11 +431,11 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
 
             // 参加者情報を削除
             $stmt = $pdo->prepare("DELETE FROM shift_assignments WHERE shift_id = ?");
-            $stmt->execute([$validId]);
+            $stmt->execute([$id]);
 
             // シフトを削除
             $stmt = $pdo->prepare("DELETE FROM shifts WHERE id = ?");
-            $stmt->execute([$validId]);
+            $stmt->execute([$id]);
 
             return $this->response(Controller_Api_Common::successResponse(null, 'シフトを削除しました'));
 
