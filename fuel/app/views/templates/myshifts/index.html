@@ -57,7 +57,7 @@
             <!-- シフト一覧 -->
             <div class="shifts-list">
                 <!-- ローディング表示 -->
-                <div data-bind="visible: loading" class="loading">
+                <div data-bind="visible: loading()" class="loading">
                     読み込み中...
                 </div>
                 
@@ -66,9 +66,9 @@
                     <!-- ko if: shifts().length > 0 -->
                     <!-- ko foreach: shifts -->
                     <div class="shift-item">
-                        <div class="shift-date-time" data-bind="text: displayDateTime"></div>
-                        <div class="shift-slot-info" data-bind="text: slotInfo"></div>
-                        <div class="shift-note" data-bind="text: note" style="margin-top: 8px; color: #666;"></div>
+                        <div class="shift-date-time" data-bind="text: $parent.displayDateTime($data)"></div>
+                        <div class="shift-slot-info" data-bind="text: $parent.slotInfo($data)"></div>
+                        <div class="shift-note" data-bind="text: ($data &amp;&amp; $data.note) ? $data.note : ''" style="margin-top: 8px; color: #666;"></div>
                     </div>
                     <!-- /ko -->
                     <!-- /ko -->

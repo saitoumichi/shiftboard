@@ -93,6 +93,26 @@ body {
     transform: scale(1.05);
 }
 
+.navbar-links {
+    display: flex;
+    gap: 20px;
+}
+
+.navbar-link {
+    color: var(--dark-color);
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    font-weight: 500;
+}
+
+.navbar-link:hover {
+    background: var(--light-color);
+    color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
 .navbar-nav {
     display: flex;
     gap: 20px;

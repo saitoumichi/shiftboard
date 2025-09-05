@@ -246,12 +246,30 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
             // データベース接続を取得
             $pdo = Controller_Api_Common::getDbConnection();
 
-            // 参加登録（shift_assignmentsテーブルを使用）
+            // 既存のレコードがあるかチェック（cancelledも含む）
             $stmt = $pdo->prepare("
-                INSERT INTO shift_assignments (member_id, shift_id, status, created_at) 
-                VALUES (?, ?, 'confirmed', NOW())
+                SELECT id, status FROM shift_assignments 
+                WHERE member_id = ? AND shift_id = ?
             ");
             $stmt->execute([$user_id, $validId]);
+            $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($existing) {
+                // 既存のレコードがある場合は更新
+                $stmt = $pdo->prepare("
+                    UPDATE shift_assignments 
+                    SET status = 'confirmed'
+                    WHERE id = ?
+                ");
+                $stmt->execute([$existing['id']]);
+            } else {
+                // 既存のレコードがない場合は新規作成
+                $stmt = $pdo->prepare("
+                    INSERT INTO shift_assignments (member_id, shift_id, status, created_at) 
+                    VALUES (?, ?, 'confirmed', NOW())
+                ");
+                $stmt->execute([$user_id, $validId]);
+            }
 
             return $this->response(Controller_Api_Common::successResponse(null, 'シフトに参加しました'));
 
@@ -295,7 +313,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
             // 参加取消（statusを'cancelled'に更新）
             $stmt = $pdo->prepare("
                 UPDATE shift_assignments 
-                SET status = 'cancelled', updated_at = NOW()
+                SET status = 'cancelled'
                 WHERE member_id = ? AND shift_id = ? AND status != 'cancelled'
             ");
             $stmt->execute([$user_id, $validId]);

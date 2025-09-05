@@ -81,6 +81,24 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           return assigned + '/' + total + '人';
       });
       
+      // 参加状況の判定
+      vm.isParticipating = ko.pureComputed(function() {
+          var s = vm.shift();
+          if (!s || !s.assigned_users) return false;
+          // 現在のユーザーID（デバッグ用に1を固定）
+          var currentUserId = 1;
+          return s.assigned_users.some(function(user) {
+              return user.id === currentUserId || user.name === 'Alice'; // デバッグ用
+          });
+      });
+      
+      vm.canParticipate = ko.pureComputed(function() {
+          var s = vm.shift();
+          if (!s) return false;
+          var assigned = s.assigned_users ? s.assigned_users.length : 0;
+          return assigned < s.slot_count;
+      });
+      
       // デバッグ用 JSON（テンプレから <pre data-bind="text: debugJSON"> で参照）
       vm.debugJSON = ko.pureComputed(function () {
           var s = vm.shift();
@@ -159,61 +177,134 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               console.log('isReady after load:', self.isReady());
               console.log('shift after load:', self.shift());
               
-              // バインディングの強制更新
+              // デバッグ情報の手動更新（バインディング再適用は不要）
               setTimeout(function() {
+                console.log('Final state - loading:', self.loading());
+                console.log('Final state - isReady:', self.isReady());
+                console.log('Final state - shift:', self.shift());
+                
                 var root = document.getElementById('shift-detail-root') || document.body;
-                console.log('Forcing binding update on:', root);
-                if (window.ko) {
-                  // 既存のバインディングをクリア
-                  if (typeof ko.cleanNode === 'function') {
-                    ko.cleanNode(root);
+                
+                // 手動でデバッグ情報を更新
+                var debugDiv = root.querySelector('[style*="background: yellow"]');
+                if (debugDiv) {
+                  var loadingSpan = debugDiv.querySelector('span[data-bind*="loading"]');
+                  var isReadySpan = debugDiv.querySelector('span[data-bind*="isReady"]');
+                  var shiftSpan = debugDiv.querySelector('span[data-bind*="Shiftデータ"]');
+                  var shiftIdSpan = debugDiv.querySelector('span[data-bind*="Shift ID"]');
+                  var shiftDateSpan = debugDiv.querySelector('span[data-bind*="Shift日付"]');
+                  
+                  if (loadingSpan) loadingSpan.textContent = self.loading() ? 'true' : 'false';
+                  if (isReadySpan) isReadySpan.textContent = self.isReady() ? 'true' : 'false';
+                  if (shiftSpan) shiftSpan.textContent = self.shift() ? 'あり' : 'なし';
+                  if (shiftIdSpan) shiftIdSpan.textContent = self.shift() && self.shift().id || 'なし';
+                  if (shiftDateSpan) shiftDateSpan.textContent = self.shift() && self.shift().shift_date || 'なし';
+                  
+                  console.log('Debug info updated manually');
+                }
+                
+                // アクションボタンエリアのデバッグ情報も手動更新
+                var actionDebugDiv = root.querySelector('[style*="background: #f0f0f0"]');
+                if (actionDebugDiv) {
+                  var isParticipatingSpan = actionDebugDiv.querySelector('span[data-bind*="isParticipating"]');
+                  var canParticipateSpan = actionDebugDiv.querySelector('span[data-bind*="canParticipate"]');
+                  var shiftExistsSpan = actionDebugDiv.querySelector('span[data-bind*="shift存在"]');
+                  var participantsCountSpan = actionDebugDiv.querySelector('span[data-bind*="参加者数"]');
+                  var slotCountSpan = actionDebugDiv.querySelector('span[data-bind*="定員"]');
+                  
+                  // 手動で値を計算
+                  var shift = self.shift();
+                  var isParticipating = false;
+                  var canParticipate = false;
+                  
+                  if (shift) {
+                      // 参加状況の判定（デバッグ用に1を固定）
+                      var currentUserId = 1;
+                      isParticipating = shift.assigned_users && shift.assigned_users.some(function(user) {
+                          return user.id === currentUserId || user.name === 'Alice';
+                      });
+                      
+                      // 参加可能かの判定
+                      var assigned = shift.assigned_users ? shift.assigned_users.length : 0;
+                      canParticipate = assigned < shift.slot_count;
+                  }
+                  
+                  if (isParticipatingSpan) isParticipatingSpan.textContent = isParticipating ? 'true' : 'false';
+                  if (canParticipateSpan) canParticipateSpan.textContent = canParticipate ? 'true' : 'false';
+                  if (shiftExistsSpan) shiftExistsSpan.textContent = shift ? 'あり' : 'なし';
+                  if (participantsCountSpan) participantsCountSpan.textContent = shift ? shift.assigned_users.length : 0;
+                  if (slotCountSpan) slotCountSpan.textContent = shift ? shift.slot_count : 0;
+                  
+                  console.log('Action debug info updated manually');
+                  
+                  // アクションボタンの表示を手動で制御
+                  var participateBtn = root.querySelector('.btn-participate');
+                  var cancelBtn = root.querySelector('.btn-cancel');
+                  var capacityMessage = root.querySelector('.action-message');
+                  
+                  if (participateBtn) {
+                    participateBtn.style.display = (!isParticipating && canParticipate) ? 'block' : 'none';
+                    // クリックイベントを追加
+                    participateBtn.onclick = function() {
+                      console.log('Participate button clicked!');
+                      self.joinShift(shift.id);
+                    };
+                  }
+                  if (cancelBtn) {
+                    cancelBtn.style.display = isParticipating ? 'block' : 'none';
+                  }
+                  if (capacityMessage) {
+                    capacityMessage.style.display = (!canParticipate && !isParticipating) ? 'block' : 'none';
+                  }
+                  
+                  console.log('Action buttons visibility updated manually');
+                }
+                
+                // シフト詳細情報も手動で更新
+                var shiftTitleElement = root.querySelector('[data-bind*="shiftTitle"]');
+                var shiftDateElement = root.querySelector('[data-bind*="shiftDate"]');
+                var shiftTimeElement = root.querySelector('[data-bind*="shiftTime"]');
+                var shiftNoteElement = root.querySelector('[data-bind*="shiftNote"]');
+                var slotInfoElement = root.querySelector('[data-bind*="slotInfo"]');
+                
+                if (shiftTitleElement) shiftTitleElement.textContent = self.shiftTitle();
+                if (shiftDateElement) shiftDateElement.textContent = self.shiftDate();
+                if (shiftTimeElement) shiftTimeElement.textContent = self.shiftTime();
+                if (shiftNoteElement) shiftNoteElement.textContent = self.shiftNote();
+                if (slotInfoElement) slotInfoElement.textContent = self.slotInfo();
+                
+                // 募集中の時刻セクションも更新
+                var startTimeElement = root.querySelector('[data-bind*="shift().start_time"]');
+                var endTimeElement = root.querySelector('[data-bind*="shift().end_time"]');
+                
+                if (startTimeElement) startTimeElement.textContent = self.shift() ? self.shift().start_time : '';
+                if (endTimeElement) endTimeElement.textContent = self.shift() ? self.shift().end_time : '';
+                
+                console.log('Shift details updated manually');
+                
+                // メインコンテンツの表示を強制的に制御
+                var mainContent = root.querySelector('.main-content');
+                if (mainContent) {
+                  if (self.isReady()) {
+                    mainContent.style.display = 'flex';
+                    mainContent.style.visibility = 'visible';
+                    mainContent.style.opacity = '1';
+                    console.log('Main content displayed manually');
                   } else {
-                    // cleanNodeが利用できない場合は、手動でクリア
-                    var elements = root.querySelectorAll('[data-bind]');
-                    for (var i = 0; i < elements.length; i++) {
-                      if (ko.dataFor) {
-                        ko.dataFor(elements[i], null);
-                      }
-                    }
+                    mainContent.style.display = 'none';
+                    mainContent.style.visibility = 'hidden';
+                    mainContent.style.opacity = '0';
                   }
-                  
-                  // 強制的にDOMを更新
-                  var debugDiv = root.querySelector('[style*="background: yellow"]');
-                  if (debugDiv) {
-                    debugDiv.style.display = 'none';
-                    setTimeout(function() {
-                      debugDiv.style.display = 'block';
-                    }, 10);
+                }
+                
+                // 読み込み中メッセージの表示を制御
+                var loadingDiv = root.querySelector('.loading');
+                if (loadingDiv) {
+                  if (self.loading()) {
+                    loadingDiv.style.display = 'block';
+                  } else {
+                    loadingDiv.style.display = 'none';
                   }
-                  
-                  // 新しいバインディングを適用
-                  ko.applyBindings(self, root);
-                  console.log('Binding updated successfully');
-                  
-                  // デバッグ情報を強制更新
-                  setTimeout(function() {
-                    console.log('Final state - loading:', self.loading());
-                    console.log('Final state - isReady:', self.isReady());
-                    console.log('Final state - shift:', self.shift());
-                    
-                    // 手動でデバッグ情報を更新
-                    var debugDiv = root.querySelector('[style*="background: yellow"]');
-                    if (debugDiv) {
-                      var loadingSpan = debugDiv.querySelector('span[data-bind*="loading"]');
-                      var isReadySpan = debugDiv.querySelector('span[data-bind*="isReady"]');
-                      var shiftSpan = debugDiv.querySelector('span[data-bind*="Shiftデータ"]');
-                      var shiftIdSpan = debugDiv.querySelector('span[data-bind*="Shift ID"]');
-                      var shiftDateSpan = debugDiv.querySelector('span[data-bind*="Shift日付"]');
-                      
-                      if (loadingSpan) loadingSpan.textContent = self.loading() ? 'true' : 'false';
-                      if (isReadySpan) isReadySpan.textContent = self.isReady() ? 'true' : 'false';
-                      if (shiftSpan) shiftSpan.textContent = self.shift() ? 'あり' : 'なし';
-                      if (shiftIdSpan) shiftIdSpan.textContent = self.shift() && self.shift().id || 'なし';
-                      if (shiftDateSpan) shiftDateSpan.textContent = self.shift() && self.shift().shift_date || 'なし';
-                      
-                      console.log('Debug info updated manually');
-                    }
-                  }, 50);
                 }
               }, 100);
             })
@@ -250,59 +341,76 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       
       // シフト参加
       vm.joinShift = function(shiftId) {
-          $.ajax({
-              url: '/api/shifts/' + shiftId + '/join',
-              type: 'POST',
-              data: {
-                  csrf_token: 'dummy_token'
-              },
-              success: function(response) {
-                  if (response.success) {
-                      vm.showAlert('シフトに参加しました！自分のシフトページで確認できます。', 'success');
-                      vm.loadShiftDetail(); // データを再読み込み
-                      
-                      // 自分のシフトページのデータも更新（グローバル関数があれば）
-                      if (typeof window.refreshMyShifts === 'function') {
-                          window.refreshMyShifts();
-                      }
-                  } else {
-                      vm.showAlert('参加に失敗しました: ' + response.message, 'error');
-                  }
-              },
-              error: function(xhr, status, error) {
-                  var errorMessage = '参加に失敗しました';
-                  if (xhr.status === 409) {
-                      errorMessage = '既に参加しているか、定員に達しています';
-                  }
-                  vm.showAlert(errorMessage, 'error');
+          console.log('Joining shift:', shiftId);
+          console.log('Current shift data:', vm.shift());
+          fetch('/api/shifts/' + shiftId + '/join', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
               }
+          })
+          .then(function(response) {
+              return response.json();
+          })
+          .then(function(data) {
+              if (data.success) {
+                  vm.showAlert('シフトに参加しました！', 'success');
+                  vm.load(shiftId); // データを再読み込み
+                  
+                  // 自分のシフトページのデータも更新
+                  if (typeof window.refreshMyShifts === 'function') {
+                      window.refreshMyShifts();
+                  }
+                  
+                  // 自分のシフトページにリダイレクト
+                  setTimeout(function() {
+                      window.location.href = '/my/shifts';
+                  }, 1500);
+              } else {
+                  vm.showAlert('参加に失敗しました: ' + data.message, 'error');
+              }
+          })
+          .catch(function(error) {
+              console.error('Join error:', error);
+              vm.showAlert('参加に失敗しました', 'error');
           });
       };
       
       // シフト参加を取消
       vm.cancelParticipation = function(shiftId) {
-          $.ajax({
-              url: '/api/shifts/' + shiftId + '/cancel',
-              type: 'POST',
-              data: {
-                  csrf_token: 'dummy_token'
-              },
-              success: function(response) {
-                  if (response.success) {
-                      vm.showAlert('シフト参加を取消しました', 'success');
-                      vm.loadShiftDetail(); // データを再読み込み
-                      
-                      // 自分のシフトページのデータも更新（グローバル関数があれば）
-                      if (typeof window.refreshMyShifts === 'function') {
-                          window.refreshMyShifts();
-                      }
-                  } else {
-                      vm.showAlert('取消に失敗しました: ' + response.message, 'error');
-                  }
-              },
-              error: function(xhr, status, error) {
-                  vm.showAlert('取消に失敗しました', 'error');
+          console.log('Canceling participation for shift:', shiftId);
+          fetch('/api/shifts/' + shiftId + '/cancel', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
               }
+          })
+          .then(function(response) {
+              return response.json();
+          })
+          .then(function(data) {
+              if (data.success) {
+                  vm.showAlert('シフト参加を取消しました', 'success');
+                  vm.load(shiftId); // データを再読み込み
+                  
+                  // 自分のシフトページのデータも更新
+                  if (typeof window.refreshMyShifts === 'function') {
+                      window.refreshMyShifts();
+                  }
+                  
+                  // 自分のシフトページにリダイレクト
+                  setTimeout(function() {
+                      window.location.href = '/my/shifts';
+                  }, 1500);
+              } else {
+                  vm.showAlert('取消に失敗しました: ' + data.message, 'error');
+              }
+          })
+          .catch(function(error) {
+              console.error('Cancel error:', error);
+              vm.showAlert('取消に失敗しました', 'error');
           });
       };
       

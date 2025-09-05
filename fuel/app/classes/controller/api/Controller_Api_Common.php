@@ -96,8 +96,8 @@ class Controller_Api_Common extends \Fuel\Core\Controller
     
     public static function requireCurrentUserId()
     {
-        // 実際の認証システムからユーザーIDを取得するロジックをここに実装する
-        // 現時点ではデバッグ用にハードコード
+        // デバッグ用：認証を完全にバイパスしてユーザーID 1 を返す
+        // 本番環境では適切な認証ロジックを実装する必要がある
         return 1;
     }
 

@@ -1,7 +1,7 @@
 <?php
 return [
   '_root_' => 'shifts/index',     // 一覧をトップに
-  '_404_'  => 'welcome/404',
+  '_404_'  => 'shifts/404',
 
   // ページ（KOが読み込まれるView）
   'shifts'              => 'shifts/index',     // 一覧（KOで非同期取得）

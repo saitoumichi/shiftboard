@@ -13,45 +13,47 @@ function MyShiftsViewModel() {
     self.totalHours = ko.observable(0);
     self.averageHoursPerDay = ko.observable(0);
     
-    // 計算プロパティ
-    self.displayDateTime = ko.computed(function() {
-        return function(shift) {
-            var date = shift.shift_date;
-            var startTime = shift.start_time;
-            var endTime = shift.end_time;
-            
-            // 日付を読みやすい形式に変換
-            if (date && date.length >= 10) {
-                var year = date.substring(0, 4);
-                var month = date.substring(5, 7);
-                var day = date.substring(8, 10);
-                month = parseInt(month, 10).toString();
-                day = parseInt(day, 10).toString();
-                date = year + '年' + month + '月' + day + '日';
-            }
-            
-            // 時間を読みやすい形式に変換
-            if (startTime && startTime.length > 5) {
-                startTime = startTime.substring(0, 5);
-            }
-            if (endTime && endTime.length > 5) {
-                endTime = endTime.substring(0, 5);
-            }
-            
-            return date + ' ' + startTime + '-' + endTime;
-        };
-    });
+    // ヘルパー関数
+    self.displayDateTime = function(shift) {
+        if (!shift || typeof shift !== 'object') return '';
+        
+        var date = shift.shift_date || '';
+        var startTime = shift.start_time || '';
+        var endTime = shift.end_time || '';
+        
+        // 日付を読みやすい形式に変換
+        if (date && date.length >= 10) {
+            var year = date.substring(0, 4);
+            var month = date.substring(5, 7);
+            var day = date.substring(8, 10);
+            month = parseInt(month, 10).toString();
+            day = parseInt(day, 10).toString();
+            date = year + '年' + month + '月' + day + '日';
+        }
+        
+        // 時間を読みやすい形式に変換
+        if (startTime && startTime.length > 5) {
+            startTime = startTime.substring(0, 5);
+        }
+        if (endTime && endTime.length > 5) {
+            endTime = endTime.substring(0, 5);
+        }
+        
+        return date + ' ' + startTime + '-' + endTime;
+    };
     
-    self.slotInfo = ko.computed(function() {
-        return function(shift) {
-            var assigned = shift.assigned_count || 0;
-            var total = shift.slot_count || 1;
-            return assigned + '/' + total;
-        };
-    });
+    self.slotInfo = function(shift) {
+        if (!shift || typeof shift !== 'object') return '';
+        
+        var assigned = shift.assigned_count || 0;
+        var total = shift.slot_count || 1;
+        return assigned + '/' + total;
+    };
     
     // 期間設定
     self.setThisWeek = function() {
+        self.loading(true); // ローディング開始
+        
         var today = new Date();
         var startOfWeek = new Date(today);
         startOfWeek.setDate(today.getDate() - today.getDay());
@@ -64,6 +66,23 @@ function MyShiftsViewModel() {
     };
     
     self.setThisMonth = function() {
+        console.log('setThisMonth called - setting loading to true');
+        self.loading(true); // ローディング開始
+        console.log('Loading state after setThisMonth:', self.loading());
+        
+        // 手動でローディング表示を更新
+        var loadingDiv = document.querySelector('.loading');
+        var shiftsDiv = document.querySelector('[data-bind="visible: !loading()"]');
+        
+        if (loadingDiv) {
+            loadingDiv.style.display = 'block';
+            console.log('Loading div shown manually');
+        }
+        if (shiftsDiv) {
+            shiftsDiv.style.display = 'none';
+            console.log('Shifts div hidden manually');
+        }
+        
         var today = new Date();
         var startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         var endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -74,6 +93,8 @@ function MyShiftsViewModel() {
     };
     
     self.setNextMonth = function() {
+        self.loading(true); // ローディング開始
+        
         var today = new Date();
         var nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
         var endOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0);
@@ -91,6 +112,7 @@ function MyShiftsViewModel() {
         var endDate = self.endDate();
         
         if (!startDate || !endDate) {
+            self.loading(false); // ローディングを停止
             self.setThisMonth();
             return;
         }
@@ -104,6 +126,7 @@ function MyShiftsViewModel() {
             },
             dataType: 'json',
             success: function(response) {
+                console.log('API Success:', response);
                 if (response.success) {
                     // データを整形
                     var formattedShifts = response.data.map(function(shift) {
@@ -117,8 +140,27 @@ function MyShiftsViewModel() {
                             note: shift.note || ''
                         };
                     });
+                    console.log('Formatted shifts:', formattedShifts);
                     self.shifts(formattedShifts);
                     self.calculateStats(formattedShifts);
+                    
+                    // 手動でシフト一覧を更新
+                    setTimeout(function() {
+                        var shiftsContainer = document.querySelector('[data-bind="visible: !loading()"]');
+                        if (shiftsContainer && formattedShifts.length > 0) {
+                            // シフト一覧のHTMLを手動で生成
+                            var shiftsHTML = '';
+                            formattedShifts.forEach(function(shift) {
+                                shiftsHTML += '<div class="shift-item">';
+                                shiftsHTML += '<div class="shift-date-time">' + self.displayDateTime(shift) + '</div>';
+                                shiftsHTML += '<div class="shift-slot-info">' + self.slotInfo(shift) + '</div>';
+                                shiftsHTML += '<div class="shift-note" style="margin-top: 8px; color: #666;">' + (shift.note || '') + '</div>';
+                                shiftsHTML += '</div>';
+                            });
+                            shiftsContainer.innerHTML = shiftsHTML;
+                            console.log('Shifts HTML updated manually');
+                        }
+                    }, 100);
                 } else {
                     self.showAlert('シフト一覧の取得に失敗しました: ' + response.message, 'error');
                 }
@@ -128,7 +170,40 @@ function MyShiftsViewModel() {
                 console.error('Error:', error);
             },
             complete: function() {
+                console.log('AJAX Complete - setting loading to false');
                 self.loading(false);
+                console.log('Loading state after complete:', self.loading());
+                
+                // 手動でDOMを更新
+                setTimeout(function() {
+                    var loadingDiv = document.querySelector('.loading');
+                    var shiftsDiv = document.querySelector('[data-bind="visible: !loading()"]');
+                    
+                    if (loadingDiv) {
+                        loadingDiv.style.display = 'none';
+                        console.log('Loading div hidden manually');
+                    }
+                    if (shiftsDiv) {
+                        shiftsDiv.style.display = 'block';
+                        console.log('Shifts div shown manually');
+                        
+                        // シフトデータが存在する場合は手動で表示
+                        var shifts = self.shifts();
+                        console.log('Current shifts in complete:', shifts);
+                        if (shifts && shifts.length > 0) {
+                            var shiftsHTML = '';
+                            shifts.forEach(function(shift) {
+                                shiftsHTML += '<div class="shift-item">';
+                                shiftsHTML += '<div class="shift-date-time">' + self.displayDateTime(shift) + '</div>';
+                                shiftsHTML += '<div class="shift-slot-info">' + self.slotInfo(shift) + '</div>';
+                                shiftsHTML += '<div class="shift-note" style="margin-top: 8px; color: #666;">' + (shift.note || '') + '</div>';
+                                shiftsHTML += '</div>';
+                            });
+                            shiftsDiv.innerHTML = shiftsHTML;
+                            console.log('Shifts HTML updated in complete callback');
+                        }
+                    }
+                }, 100);
             }
         });
     };
@@ -202,6 +277,9 @@ function MyShiftsViewModel() {
     };
     
     // 初期化
+    console.log('Initializing MyShiftsViewModel');
+    self.shifts([]); // 空の配列で初期化
+    console.log('Initial loading state:', self.loading());
     self.setThisMonth();
 }
 

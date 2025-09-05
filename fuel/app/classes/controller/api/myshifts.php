@@ -20,8 +20,8 @@ class Controller_Api_Myshifts extends \Fuel\Core\Controller
             $start_date = \Fuel\Core\Input::get('start', date('Y-m-01'));
             $end_date = \Fuel\Core\Input::get('end', date('Y-m-t'));
             
-            // 自分のシフト一覧を取得（PDO直接接続）
-            $pdo = new PDO('mysql:host=127.0.0.1;port=13306;dbname=shiftboard', 'app', 'app_pass');
+            // 自分のシフト一覧を取得（共通のDB接続を使用）
+            $pdo = Controller_Api_Common::getDbConnection();
             $stmt = $pdo->prepare("
                 SELECT s.*, COUNT(sa.id) as assigned_count
                 FROM shifts s
