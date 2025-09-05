@@ -22,7 +22,7 @@
                 <button class="view-btn active" data-bind="click: function() { $root.setView('month'); }">月</button>
                 <button class="view-btn" data-bind="click: function() { $root.setView('week'); }">週</button>
                 <button class="view-btn" data-bind="click: function() { $root.setView('day'); }">日</button>
-                <button class="view-btn">リスト</button>
+                <button class="view-btn" data-bind="click: function() { $root.setView('list'); }">リスト</button>
             </div>
         </div>
         <div class="header-right">
@@ -143,6 +143,7 @@
         
         <!-- 月ビュー -->
         <div class="month-recruitment-section">
+            <h3 class="shift-title">募集中のシフト</h3>
             <div id="available-shifts-container"></div>
             <div id="no-shifts-message" class="muted" style="display:none;">募集中のシフトはありません</div>
         </div>
@@ -157,6 +158,19 @@
         <div class="day-recruitment-section" style="display:none;">
             <div id="available-shifts-container-day"></div>
             <div id="no-shifts-message-day" class="muted" style="display:none;">本日の募集中シフトはありません</div>
+        </div>
+
+        <!-- リストビュー -->
+        <div class="list-recruitment-section" style="display:none;">
+            <div class="shifts-list-container">
+                <div class="shifts-list-header">
+                    <h3>募集中のシフト一覧</h3>
+                </div>
+                <div class="shifts-list-content">
+                    <div id="available-shifts-container-list"></div>
+                    <div id="no-shifts-message-list" class="muted" style="display:none;">募集中のシフトはありません</div>
+                </div>
+            </div>
         </div>
     </div>
     

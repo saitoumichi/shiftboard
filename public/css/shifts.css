@@ -17,6 +17,103 @@ body {
     width: 100%;
 }
 
+/* リストビューのスタイル */
+.list-recruitment-section {
+    margin-top: 20px;
+}
+
+.shifts-list-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.shifts-list-header {
+    background: #34495e;
+    color: white;
+    padding: 15px 20px;
+    margin: 0;
+}
+
+.shifts-list-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.shifts-list-content {
+    padding: 20px;
+}
+
+.shift-list-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.shift-list-item:hover {
+    background: #e9ecef;
+    border-color: #3498db;
+}
+
+.shift-list-item:last-child {
+    margin-bottom: 0;
+}
+
+.shift-list-info {
+    flex: 1;
+}
+
+.shift-list-title {
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.shift-list-details {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.shift-list-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.shift-list-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.shift-list-btn.primary {
+    background: #3498db;
+    color: white;
+}
+
+.shift-list-btn.primary:hover {
+    background: #2980b9;
+}
+
+.shift-list-btn.secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+.shift-list-btn.secondary:hover {
+    background: #7f8c8d;
+}
+
 :root {
     --content-max-width: 1400px;
 }
@@ -180,6 +277,13 @@ body .header .container .header-content .header-right {
     min-height: 400px !important; /* 最小高さを設定 */
 }
 
+.month-recruitment-section .shift-title{
+    font-size: 18px;
+    font-weight: bold;
+    color: black;
+    margin-bottom: 10px;
+}
+
 /* 強制的に募集中シフトコンテナを表示 */
 body .month-recruitment-section #available-shifts-container,
 body .week-recruitment-section #available-shifts-container-week,
@@ -267,6 +371,7 @@ body .day-recruitment-section #available-shifts-container-day {
     font-size: 18px;
     font-weight: bold;
 }
+
 
 .calendar-day {
     position: relative;

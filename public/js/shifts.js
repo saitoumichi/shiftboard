@@ -17,7 +17,9 @@ function ShiftViewModel() {
     // 計算プロパティ
     self.currentMonth = ko.computed(function() {
         var date = self.currentDate();
-        return date.getFullYear() + '年' + (date.getMonth() + 1) + '月';
+        var monthText = date.getFullYear() + '年' + (date.getMonth() + 1) + '月';
+        console.log('currentMonth computed - date:', date, 'result:', monthText);
+        return monthText;
     });
     
     self.currentWeek = ko.computed(function() {
@@ -65,6 +67,12 @@ function ShiftViewModel() {
             element.classList.remove('active');
         });
         
+        // リストビューを非表示
+        var listView = document.querySelector('.list-recruitment-section');
+        if (listView) {
+            listView.style.display = 'none';
+        }
+        
         // 選択されたビューを表示
         if (view === 'month') {
             var monthView = document.querySelector('.month-view');
@@ -83,6 +91,30 @@ function ShiftViewModel() {
             if (dayView) {
                 dayView.classList.add('active');
                 console.log('Added active to day-view');
+            }
+        } else if (view === 'list') {
+            var listView = document.querySelector('.list-recruitment-section');
+            console.log('List view element found:', !!listView);
+            if (listView) {
+                listView.style.display = 'block';
+                listView.style.visibility = 'visible';
+                listView.style.opacity = '1';
+                console.log('List view display set to block');
+                
+                // 強制的に表示
+                listView.style.setProperty('display', 'block', 'important');
+                listView.style.setProperty('visibility', 'visible', 'important');
+                listView.style.setProperty('opacity', '1', 'important');
+                
+                // 他のビューを非表示にする
+                var otherViews = document.querySelectorAll('.day-recruitment-section, .week-recruitment-section, .month-recruitment-section');
+                console.log('Other views found:', otherViews.length);
+                otherViews.forEach(function(view) {
+                    view.style.display = 'none';
+                });
+                self.renderListShifts();
+            } else {
+                console.error('List view element not found!');
             }
         }
         
@@ -106,24 +138,31 @@ function ShiftViewModel() {
             case 'month': return '月';
             case 'week': return '週';
             case 'day': return '日';
+            case 'list': return 'リスト';
             default: return '月';
         }
     }
     
     // 前の月
     self.previousMonth = function() {
+        console.log('Previous month clicked - current date before:', self.currentDate());
         var date = new Date(self.currentDate());
         date.setMonth(date.getMonth() - 1);
+        console.log('New date after month change:', date);
         self.currentDate(date);
+        console.log('Current month after update:', self.currentMonth());
         self.generateCalendar();
         self.renderAvailableShifts();
     };
     
     // 次の月
     self.nextMonth = function() {
+        console.log('Next month clicked - current date before:', self.currentDate());
         var date = new Date(self.currentDate());
         date.setMonth(date.getMonth() + 1);
+        console.log('New date after month change:', date);
         self.currentDate(date);
+        console.log('Current month after update:', self.currentMonth());
         self.generateCalendar();
         self.renderAvailableShifts();
     };
@@ -862,6 +901,147 @@ function ShiftViewModel() {
                 console.error('AJAX Error:', error, xhr.responseText);
             }
         });
+    };
+    
+    // リスト表示のシフトをレンダリング
+    self.renderListShifts = function() {
+        console.log('Rendering list shifts...');
+        
+        var container = document.getElementById('available-shifts-container-list');
+        var noShiftsMessage = document.getElementById('no-shifts-message-list');
+        
+        console.log('Container found:', !!container);
+        console.log('No shifts message found:', !!noShiftsMessage);
+        
+        if (!container) {
+            console.error('List container not found');
+            return;
+        }
+        
+        // コンテナをクリア
+        container.innerHTML = '';
+        
+        // 全てのシフトを取得
+        self.loadAllShiftsForList();
+    };
+    
+    // リスト表示用に全てのシフトを取得
+    self.loadAllShiftsForList = function() {
+        console.log('Loading all shifts for list...');
+        
+        $.ajax({
+            url: '/api/shifts',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                console.log('All shifts API response:', response);
+                
+                if (response.success && response.data) {
+                    var shifts = response.data;
+                    console.log('All shifts loaded:', shifts.length);
+                    self.renderShiftsList(shifts);
+                } else {
+                    console.error('Failed to load shifts:', response);
+                    self.showNoShiftsMessage();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading shifts:', error);
+                self.showNoShiftsMessage();
+            }
+        });
+    };
+    
+    // シフトリストをレンダリング
+    self.renderShiftsList = function(shifts) {
+        var container = document.getElementById('available-shifts-container-list');
+        var noShiftsMessage = document.getElementById('no-shifts-message-list');
+        
+        console.log('renderShiftsList called with:', shifts ? shifts.length : 'null', 'shifts');
+        console.log('Container found:', !!container);
+        console.log('No shifts message found:', !!noShiftsMessage);
+        
+        if (!shifts || shifts.length === 0) {
+            console.log('No shifts to display, showing no shifts message');
+            self.showNoShiftsMessage();
+            return;
+        }
+        
+        console.log('Rendering', shifts.length, 'shifts to list');
+        
+        // シフトをリスト形式で表示
+        shifts.forEach(function(shift) {
+            var shiftItem = document.createElement('div');
+            shiftItem.className = 'shift-list-item';
+            
+            var shiftInfo = document.createElement('div');
+            shiftInfo.className = 'shift-list-info';
+            
+            var title = document.createElement('div');
+            title.className = 'shift-list-title';
+            title.textContent = shift.title || 'シフト';
+            
+            var details = document.createElement('div');
+            details.className = 'shift-list-details';
+            details.textContent = shift.shift_date + ' ' + shift.start_time + '〜' + shift.end_time;
+            
+            shiftInfo.appendChild(title);
+            shiftInfo.appendChild(details);
+            
+            var actions = document.createElement('div');
+            actions.className = 'shift-list-actions';
+            
+            var viewBtn = document.createElement('button');
+            viewBtn.className = 'shift-list-btn primary';
+            viewBtn.textContent = '詳細';
+            viewBtn.onclick = function() {
+                window.location.href = '/shifts/' + shift.id;
+            };
+            
+            var joinBtn = document.createElement('button');
+            joinBtn.className = 'shift-list-btn secondary';
+            joinBtn.textContent = '参加';
+            joinBtn.onclick = function() {
+                self.joinShift(shift.id);
+            };
+            
+            actions.appendChild(viewBtn);
+            actions.appendChild(joinBtn);
+            
+            shiftItem.appendChild(shiftInfo);
+            shiftItem.appendChild(actions);
+            
+            container.appendChild(shiftItem);
+            console.log('Added shift item to list container:', shift.title);
+        });
+        
+        console.log('List rendering complete. Container children count:', container.children.length);
+        
+        // リストビューの表示状態を確認
+        var listView = document.querySelector('.list-recruitment-section');
+        if (listView) {
+            console.log('List view display style:', listView.style.display);
+            console.log('List view computed display:', window.getComputedStyle(listView).display);
+            console.log('List view visibility:', window.getComputedStyle(listView).visibility);
+            console.log('List view height:', window.getComputedStyle(listView).height);
+        }
+        
+        // コンテナの表示状態を確認
+        console.log('Container display style:', container.style.display);
+        console.log('Container computed display:', window.getComputedStyle(container).display);
+        console.log('Container height:', window.getComputedStyle(container).height);
+        
+        if (noShiftsMessage) {
+            noShiftsMessage.style.display = 'none';
+        }
+    };
+    
+    // シフトなしメッセージを表示
+    self.showNoShiftsMessage = function() {
+        var noShiftsMessage = document.getElementById('no-shifts-message-list');
+        if (noShiftsMessage) {
+            noShiftsMessage.style.display = 'block';
+        }
     };
     
     // 初期化
