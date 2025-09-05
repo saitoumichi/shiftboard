@@ -674,6 +674,16 @@ function ShiftViewModel() {
                 console.log('Creating shift item', index + 1, 'for:', shift);
                 var itemElement = document.createElement('div');
                 itemElement.className = 'recruitment-item';
+                itemElement.style.cssText = 'cursor: pointer;';
+                
+                // クリックイベントを追加（ボタン以外の部分）
+                itemElement.addEventListener('click', function(e) {
+                    // ボタンがクリックされた場合は詳細ページに遷移しない
+                    if (e.target.tagName === 'BUTTON') {
+                        return;
+                    }
+                    window.location.href = '/shifts/' + shift.id;
+                });
                 
                 // シフト情報とボタンを横並びにするコンテナ
                 var infoContainer = document.createElement('div');
