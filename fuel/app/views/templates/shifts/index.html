@@ -69,6 +69,13 @@
     </div>
         </div>
         
+        <!-- 日表示の募集中シフトセクション -->
+        <div class="day-recruitment-section">
+            <h3 class="shift-title">募集中のシフト</h3>
+            <div id="available-shifts-container-day"></div>
+            <div id="no-shifts-message-day" class="muted" style="display:none;">本日の募集中シフトはありません</div>
+        </div>
+        
     </div>
 </div>
 
@@ -104,6 +111,13 @@
     </div>
         </div>
         
+        <!-- 週表示の募集中シフトセクション -->
+        <div class="week-recruitment-section">
+            <h3 class="shift-title">募集中のシフト</h3>
+            <div id="available-shifts-container-week"></div>
+            <div id="no-shifts-message-week" class="muted" style="display:none;">今週の募集中シフトはありません</div>
+        </div>
+        
     </div>
 </div>
 
@@ -113,7 +127,7 @@
         <div class="month-calendar-section">
             <div class="month-calendar-header">
                 <div class="day-nav">
-                    <span class="current-month" data-bind="text: currentDate"></span>
+                    <span class="current-month" data-bind="text: currentDay"></span>
                 </div>
             </div>
             
@@ -141,37 +155,30 @@
     </div>
         </div>
         
-        <!-- 月ビュー -->
+        <!-- 月表示の募集中シフトセクション -->
         <div class="month-recruitment-section">
             <h3 class="shift-title">募集中のシフト</h3>
             <div id="available-shifts-container"></div>
             <div id="no-shifts-message" class="muted" style="display:none;">募集中のシフトはありません</div>
         </div>
+        
+    </div>
+</div>
 
-        <!-- 週ビュー -->
-        <div class="week-recruitment-section" style="display:none;">
-            <div id="available-shifts-container-week"></div>
-            <div id="no-shifts-message-week" class="muted" style="display:none;">今週の募集中シフトはありません</div>
-        </div>
-
-        <!-- 日ビュー -->
-        <div class="day-recruitment-section" style="display:none;">
-            <div id="available-shifts-container-day"></div>
-            <div id="no-shifts-message-day" class="muted" style="display:none;">本日の募集中シフトはありません</div>
-        </div>
-
-        <!-- リストビュー -->
-        <div class="list-recruitment-section" style="display:none;">
-            <div class="shifts-list-container">
-                <div class="shifts-list-header">
-                    <h3>募集中のシフト一覧</h3>
-                </div>
-                <div class="shifts-list-content">
-                    <div id="available-shifts-container-list"></div>
-                    <div id="no-shifts-message-list" class="muted" style="display:none;">募集中のシフトはありません</div>
-                </div>
+<!-- リストビュー -->
+<div class="view-content list-view">
+    <div class="list-main-content">
+        <div class="shifts-list-container">
+            <div class="shifts-list-header">
+                <h3>募集中のシフト一覧</h3>
+            </div>
+            <div class="shifts-list-content">
+                <div id="available-shifts-container-list"></div>
+                <div id="no-shifts-message-list" class="muted" style="display:none;">募集中のシフトはありません</div>
             </div>
         </div>
+    </div>
+</div>
     </div>
     
 </div>

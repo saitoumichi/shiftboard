@@ -65,12 +65,6 @@ function ShiftViewModel() {
             element.classList.remove('active');
         });
         
-        // リストビューを非表示
-        var listView = document.querySelector('.list-recruitment-section');
-        if (listView) {
-            listView.style.display = 'none';
-        }
-        
         // 選択されたビューを表示
         if (view === 'month') {
             var monthView = document.querySelector('.month-view');
@@ -91,12 +85,10 @@ function ShiftViewModel() {
                 console.log('Added active to day-view');
             }
         } else if (view === 'list') {
-            var listView = document.querySelector('.list-recruitment-section');
-            console.log('List view element found:', !!listView);
+            var listView = document.querySelector('.list-view');
             if (listView) {
-                listView.style.display = 'block';
-                listView.style.visibility = 'visible';
-                listView.style.opacity = '1';
+                listView.classList.add('active');
+                console.log('Added active to list-view');
                 console.log('List view display set to block');
                 
                 // 強制的に表示
