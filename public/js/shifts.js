@@ -17,9 +17,7 @@ function ShiftViewModel() {
     // 計算プロパティ
     self.currentMonth = ko.computed(function() {
         var date = self.currentDate();
-        var monthText = date.getFullYear() + '年' + (date.getMonth() + 1) + '月';
-        console.log('currentMonth computed - date:', date, 'result:', monthText);
-        return monthText;
+        return date.getFullYear() + '年' + (date.getMonth() + 1) + '月';
     });
     
     self.currentWeek = ko.computed(function() {
@@ -35,7 +33,7 @@ function ShiftViewModel() {
     
     self.currentDay = ko.computed(function() {
         var date = self.currentDate();
-        return (date.getMonth() + 1) + '/' + date.getDate();
+        return (date.getMonth() + 1) + '月' + date.getDate() + '日';
     });
     
     // アラート表示
@@ -145,25 +143,53 @@ function ShiftViewModel() {
     
     // 前の月
     self.previousMonth = function() {
-        console.log('Previous month clicked - current date before:', self.currentDate());
+        console.log('=== PREVIOUS MONTH ===');
         var date = new Date(self.currentDate());
+        console.log('Before change:', date.getFullYear(), '年', date.getMonth() + 1, '月');
+        
+        // 月の1日に設定してから月を変更（月末問題を回避）
+        date.setDate(1);
         date.setMonth(date.getMonth() - 1);
-        console.log('New date after month change:', date);
+        console.log('After change:', date.getFullYear(), '年', date.getMonth() + 1, '月');
+        
         self.currentDate(date);
-        console.log('Current month after update:', self.currentMonth());
+        
+        // 手動で日付表示を更新
+        var monthDisplay = document.querySelector('.current-month');
+        if (monthDisplay) {
+            var newDateText = self.currentDay();
+            console.log('Setting display to:', newDateText);
+            monthDisplay.textContent = newDateText;
+        }
+        
         self.generateCalendar();
+        self.loadShifts(); // シフトを再読み込み
         self.renderAvailableShifts();
     };
     
     // 次の月
     self.nextMonth = function() {
-        console.log('Next month clicked - current date before:', self.currentDate());
+        console.log('=== NEXT MONTH ===');
         var date = new Date(self.currentDate());
+        console.log('Before change:', date.getFullYear(), '年', date.getMonth() + 1, '月');
+        
+        // 月の1日に設定してから月を変更（月末問題を回避）
+        date.setDate(1);
         date.setMonth(date.getMonth() + 1);
-        console.log('New date after month change:', date);
+        console.log('After change:', date.getFullYear(), '年', date.getMonth() + 1, '月');
+        
         self.currentDate(date);
-        console.log('Current month after update:', self.currentMonth());
+        
+        // 手動で日付表示を更新
+        var monthDisplay = document.querySelector('.current-month');
+        if (monthDisplay) {
+            var newDateText = self.currentDay();
+            console.log('Setting display to:', newDateText);
+            monthDisplay.textContent = newDateText;
+        }
+        
         self.generateCalendar();
+        self.loadShifts(); // シフトを再読み込み
         self.renderAvailableShifts();
     };
     
@@ -1048,4 +1074,24 @@ function ShiftViewModel() {
     self.setView('month'); // 初期表示を月表示に設定
     self.generateCalendar(); // カレンダーを先に生成
     self.loadShifts();
+    
+    // 手動でナビゲーションボタンのイベントリスナーを追加
+    setTimeout(function() {
+        var prevBtn = document.querySelector('.nav-btn[data-bind*="previousMonth"]');
+        var nextBtn = document.querySelector('.nav-btn[data-bind*="nextMonth"]');
+        
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                self.previousMonth();
+            });
+        }
+        
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                self.nextMonth();
+            });
+        }
+    }, 1000);
 }
