@@ -13,7 +13,7 @@
 // load PHP 5.6+ specific code
 if (PHP_VERSION_ID >= 50600)
 {
-	// include "base56.php"; // File not found, commented out
+	include "base56.php";
 }
 
 /**

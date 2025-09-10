@@ -12,7 +12,7 @@
 
 namespace Fuel\Core;
 
-abstract class Controller_Rest extends \Fuel\Core\Controller
+abstract class Controller_Rest extends \Controller
 {
 	/**
 	 * @var  null|Response  the response object for this controller
@@ -77,7 +77,7 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 	{
 		parent::before();
 
-		$this->response = \Fuel\Core\Response::forge();
+		$this->response = \Response::forge();
 	}
 
 	public function after($response)
@@ -91,7 +91,7 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 
 		// If the response is a Response object, we will use their
 		// instead of ours.
-		if ( ! $response instanceof \Fuel\Core\Response)
+		if ( ! $response instanceof \Response)
 		{
 			$response = $this->response;
 		}
@@ -111,17 +111,17 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 	 */
 	public function router($resource, $arguments)
 	{
-		\Fuel\Core\Config::load('rest', true);
+		\Config::load('rest', true);
 
 		// If no (or an invalid) format is given, auto detect the format
 		if (is_null($this->format) or ! array_key_exists($this->format, $this->_supported_formats))
 		{
 			// auto-detect the format
-			$this->format = array_key_exists(\Fuel\Core\Input::extension(), $this->_supported_formats) ? \Fuel\Core\Input::extension() : $this->_detect_format();
+			$this->format = array_key_exists(\Input::extension(), $this->_supported_formats) ? \Input::extension() : $this->_detect_format();
 		}
 
 		// Get the configured auth method if none is defined
-		$this->auth === null and $this->auth = \Fuel\Core\Config::get('rest.auth');
+		$this->auth === null and $this->auth = \Config::get('rest.auth');
 
 		//Check method is authorized if required, and if we're authorized
 		if ($this->auth == 'basic')
@@ -134,7 +134,7 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 		}
 		elseif (method_exists($this, $this->auth))
 		{
-			if (($valid_login = $this->{$this->auth}()) instanceOf \Fuel\Core\Response)
+			if (($valid_login = $this->{$this->auth}()) instanceOf \Response)
 			{
 				return $valid_login;
 			}
@@ -148,7 +148,7 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 		if(empty($this->auth) or $valid_login)
 		{
 			// If they call user, go to $this->post_user();
-			$controller_method = strtolower(\Fuel\Core\Input::method()) . '_' . $resource;
+			$controller_method = strtolower(\Input::method()) . '_' . $resource;
 
 			// Fall back to action_ if no rest method is provided
 			if ( ! method_exists($this, $controller_method))
@@ -208,22 +208,22 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 			{
 				// Detect basenode
 				$xml_basenode = $this->xml_basenode;
-				$xml_basenode or $xml_basenode = \Fuel\Core\Config::get('rest.xml_basenode', 'xml');
+				$xml_basenode or $xml_basenode = \Config::get('rest.xml_basenode', 'xml');
 
 				// Set the XML response
-				$this->response->body(\Fuel\Core\Format::forge($data)->{'to_'.$this->format}(null, null, $xml_basenode));
+				$this->response->body(\Format::forge($data)->{'to_'.$this->format}(null, null, $xml_basenode));
 			}
 			else
 			{
 				// Set the formatted response
-				$this->response->body(\Fuel\Core\Format::forge($data)->{'to_'.$this->format}());
+				$this->response->body(\Format::forge($data)->{'to_'.$this->format}());
 			}
 		}
 
 		// Format not supported, but the output is an array or an object that can not be cast to string
 		elseif (is_array($data) or (is_object($data) and ! method_exists($data, '__toString')))
 		{
-			if (strpos(\Fuel\Core\Fuel::$env, \Fuel\Core\Fuel::PRODUCTION) === 0)
+			if (strpos(\Fuel::$env, \Fuel::PRODUCTION) === 0)
 			{
 				// not acceptable in production
 				if ($http_status == 200)
@@ -235,7 +235,7 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 			else
 			{
 				// convert it to json so we can at least read it while we're developing
-				$this->response->body('The requested REST method returned an array or object:<br /><br />'.\Fuel\Core\Format::forge($data)->to_json(null, true));
+				$this->response->body('The requested REST method returned an array or object:<br /><br />'.\Format::forge($data)->to_json(null, true));
 			}
 		}
 
@@ -278,13 +278,13 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 		}
 
 		// A format has been passed as an argument in the URL and it is supported
-		if (\Fuel\Core\Input::param('format') and array_key_exists(\Fuel\Core\Input::param('format'), $this->_supported_formats))
+		if (\Input::param('format') and array_key_exists(\Input::param('format'), $this->_supported_formats))
 		{
-			return \Fuel\Core\Input::param('format');
+			return \Input::param('format');
 		}
 
 		// Otherwise, check the HTTP_ACCEPT (if it exists and we are allowed)
-		if ($acceptable = \Fuel\Core\Input::server('HTTP_ACCEPT') and \Fuel\Core\Config::get('rest.ignore_http_accept') !== true)
+		if ($acceptable = \Input::server('HTTP_ACCEPT') and \Config::get('rest.ignore_http_accept') !== true)
 		{
 			// If anything is accepted, and we have a default, return that
 			if ($acceptable == '*/*' and ! empty($this->rest_format))
@@ -352,7 +352,7 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 		}
 
 		// Just use the default format
-		return \Fuel\Core\Config::get('rest.default_format');
+		return \Config::get('rest.default_format');
 	}
 
 	/**
@@ -364,7 +364,7 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 	 */
 	protected function _detect_lang()
 	{
-		if (!$lang = \Fuel\Core\Input::server('HTTP_ACCEPT_LANGUAGE'))
+		if (!$lang = \Input::server('HTTP_ACCEPT_LANGUAGE'))
 		{
 			return null;
 		}
@@ -399,7 +399,7 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 			return false;
 		}
 
-		$valid_logins = \Fuel\Core\Config::get('rest.valid_logins');
+		$valid_logins = \Config::get('rest.valid_logins');
 
 		if (!array_key_exists($username, $valid_logins))
 		{
@@ -421,18 +421,18 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 		$password = null;
 
 		// mod_php
-		if (\Fuel\Core\Input::server('PHP_AUTH_USER'))
+		if (\Input::server('PHP_AUTH_USER'))
 		{
-			$username = \Fuel\Core\Input::server('PHP_AUTH_USER');
-			$password = \Fuel\Core\Input::server('PHP_AUTH_PW');
+			$username = \Input::server('PHP_AUTH_USER');
+			$password = \Input::server('PHP_AUTH_PW');
 		}
 
 		// most other servers
-		elseif (\Fuel\Core\Input::server('HTTP_AUTHORIZATION'))
+		elseif (\Input::server('HTTP_AUTHORIZATION'))
 		{
-			if (strpos(strtolower(\Fuel\Core\Input::server('HTTP_AUTHORIZATION')), 'basic') === 0)
+			if (strpos(strtolower(\Input::server('HTTP_AUTHORIZATION')), 'basic') === 0)
 			{
-				list($username, $password) = explode(':', base64_decode(substr(\Fuel\Core\Input::server('HTTP_AUTHORIZATION'), 6)));
+				list($username, $password) = explode(':', base64_decode(substr(\Input::server('HTTP_AUTHORIZATION'), 6)));
 			}
 		}
 
@@ -452,13 +452,13 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 
 		// We need to test which server authentication variable to use
 		// because the PHP ISAPI module in IIS acts different from CGI
-		if (\Fuel\Core\Input::server('PHP_AUTH_DIGEST'))
+		if (\Input::server('PHP_AUTH_DIGEST'))
 		{
-			$digest_string = \Fuel\Core\Input::server('PHP_AUTH_DIGEST');
+			$digest_string = \Input::server('PHP_AUTH_DIGEST');
 		}
-		elseif (\Fuel\Core\Input::server('HTTP_AUTHORIZATION'))
+		elseif (\Input::server('HTTP_AUTHORIZATION'))
 		{
-			$digest_string = \Fuel\Core\Input::server('HTTP_AUTHORIZATION');
+			$digest_string = \Input::server('HTTP_AUTHORIZATION');
 		}
 		else
 		{
@@ -491,12 +491,12 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 		}
 
 		// validate the configured login/password
-		$valid_logins = \Fuel\Core\Config::get('rest.valid_logins');
+		$valid_logins = \Config::get('rest.valid_logins');
 		$valid_pass = $valid_logins[$digest['username']];
 
 		// This is the valid response expected
-		$A1 = md5($digest['username'] . ':' . \Fuel\Core\Config::get('rest.realm') . ':' . $valid_pass);
-		$A2 = md5(strtoupper(\Fuel\Core\Input::method()) . ':' . $digest['uri']);
+		$A1 = md5($digest['username'] . ':' . \Config::get('rest.realm') . ':' . $valid_pass);
+		$A2 = md5(strtoupper(\Input::method()) . ':' . $digest['uri']);
 		$valid_response = md5($A1 . ':' . $digest['nonce'] . ':' . $digest['nc'] . ':' . $digest['cnonce'] . ':' . $digest['qop'] . ':' . $A2);
 
 		if ($digest['response'] != $valid_response)
@@ -510,15 +510,15 @@ abstract class Controller_Rest extends \Fuel\Core\Controller
 	protected function _force_login($nonce = '')
 	{
 		// Get the configured auth method if none is defined
-		$this->auth === null and $this->auth = \Fuel\Core\Config::get('rest.auth');
+		$this->auth === null and $this->auth = \Config::get('rest.auth');
 
 		if ($this->auth == 'basic')
 		{
-			$this->response->set_header('WWW-Authenticate', 'Basic realm="'. \Fuel\Core\Config::get('rest.realm') . '"');
+			$this->response->set_header('WWW-Authenticate', 'Basic realm="'. \Config::get('rest.realm') . '"');
 		}
 		elseif ($this->auth == 'digest')
 		{
-			$this->response->set_header('WWW-Authenticate', 'Digest realm="' . \Fuel\Core\Config::get('rest.realm') . '", qop="auth", nonce="' . $nonce . '", opaque="' . md5(\Fuel\Core\Config::get('rest.realm')) . '"');
+			$this->response->set_header('WWW-Authenticate', 'Digest realm="' . \Config::get('rest.realm') . '", qop="auth", nonce="' . $nonce . '", opaque="' . md5(\Config::get('rest.realm')) . '"');
 		}
 	}
 
