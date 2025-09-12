@@ -14,14 +14,6 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
      * @param int $status HTTPステータスコード
      * @return \Fuel\Core\Response
      */
-    // protected function response($data, $status = 200)
-    // {
-    //     $response = new \Fuel\Core\Response();
-    //     $response->set_status($status);
-    //     $response->set_header('Content-Type', 'application/json; charset=utf-8');
-    //     $response->body = is_string($data) ? $data : json_encode($data, JSON_UNESCAPED_UNICODE);
-    //     return $response;
-    // }
 
     /**
      * シフト一覧取得 / シフト作成
@@ -29,20 +21,6 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
 
      public function get_index()
     {
-        // ---- debug: add ?debug=1 to see connection & row counts
-        if (\Fuel\Core\Input::get('debug')) {
-            $dbg1 = \Fuel\Core\DB::query("SELECT DATABASE() AS db")->execute()->current();
-            $dbg2 = \Fuel\Core\DB::query("SELECT COUNT(*) AS cnt FROM shifts")->execute()->current();
-            $dbg3 = \Fuel\Core\DB::query("SELECT COUNT(*) AS cnt FROM shift_assignments")->execute()->current();
-            return $this->response([
-                'debug' => [
-                    'db' => $dbg1 ? $dbg1['db'] : null,
-                    'shifts_count' => $dbg2 ? (int)$dbg2['cnt'] : null,
-                    'assignments_count' => $dbg3 ? (int)$dbg3['cnt'] : null,
-                ]
-            ]);
-        }
-        
         $rows = \Fuel\Core\DB::query("
             SELECT s.id, s.created_by, s.shift_date, s.start_time, s.end_time,
                    s.recruit_count, s.free_text, s.created_at, s.updated_at,
@@ -112,20 +90,12 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
     public function action_create()
     {
         try {
-            // デバッグ用：リクエストヘッダーとボディをログに出力
-            error_log('API Debug - Content-Type: ' . ($_SERVER['CONTENT_TYPE'] ?? 'not set'));
-            error_log('API Debug - Request method: ' . $_SERVER['REQUEST_METHOD']);
-            
             // JSONデータを取得
             $input = file_get_contents('php://input');
-            error_log('API Debug - Raw input: ' . $input);
-            
             $data = json_decode($input, true);
-            error_log('API Debug - JSON decode result: ' . var_export($data, true));
             
             // フォールバック：POSTデータも確認
             if (empty($data) && !empty($_POST)) {
-                error_log('API Debug - Using POST data as fallback');
                 $data = $_POST;
             }
             
@@ -136,10 +106,6 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             $end_time = Controller_Api_Common::validateTime($data['end_time'] ?? '');
             $free_text = Controller_Api_Common::sanitizeInput($data['free_text'] ?? '');
             $recruit_count = Controller_Api_Common::sanitizeInput($data['recruit_count'] ?? 1, 'int');
-            
-            // デバッグ用：最終的なデータをログに出力
-            error_log('API Debug - Final created_by: ' . var_export($created_by, true));
-            error_log('API Debug - Final data: ' . var_export($data, true));
 
             // バリデーション
             $errors = array();
