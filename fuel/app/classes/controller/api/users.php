@@ -98,9 +98,9 @@ class Controller_Api_Users extends \Fuel\Core\Controller
                 ORDER BY s.shift_date ASC, s.start_time ASC
             ");
             $stmt->execute([$id]);
-            $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $participations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $user['assignments'] = $assignments;
+            $user['participations'] = $participations;
 
             return $this->response(Controller_Api_Common::successResponse($user, 'ユーザー詳細を取得しました'));
 
@@ -283,13 +283,13 @@ class Controller_Api_Users extends \Fuel\Core\Controller
                 WHERE member_id = ? AND status = 'confirmed'
             ");
             $stmt->execute([$id]);
-            $assignment_count = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+            $participation_count = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
 
-            if ($assignment_count > 0) {
-                return $this->response(Controller_Api_Common::errorResponse('割り当て中のシフトがあるため削除できません', 409), 409);
+            if ($participation_count > 0) {
+                return $this->response(Controller_Api_Common::errorResponse('参加中のシフトがあるため削除できません', 409), 409);
             }
 
-            // ユーザーを削除（割り当て履歴は残す）
+            // ユーザーを削除（参加履歴は残す）
             $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
             $stmt->execute([$id]);
 

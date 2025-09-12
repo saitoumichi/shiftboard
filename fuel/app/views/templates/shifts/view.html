@@ -83,7 +83,7 @@
             <!-- 取消ボタン（参加時のみ表示） -->
             <button class="action-btn btn-cancel" 
                     data-bind="visible: shift() && isParticipating(), 
-                               click: function() { $root.cancelAssignment($root.shift().id); }">
+                               click: function() { $root.cancelParticipation($root.shift().id); }">
                 参加を取消
             </button>
             

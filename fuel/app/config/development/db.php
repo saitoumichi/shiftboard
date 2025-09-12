@@ -13,7 +13,7 @@ return [
     'table_prefix' => '',
     'charset'      => 'utf8mb4',
     'collation'    => 'utf8mb4_unicode_ci',
-    'profiling'    => true,
+    'profiling'    => false,
     'caching'      => false,
   ],
 ];

@@ -471,7 +471,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       };
       
       // 参加/取消の切り替え
-      vm.toggleAssignment = function() {
+      vm.toggleParticipation = function() {
           var shift = vm.shift();
           if (!shift) return;
           
@@ -481,7 +481,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           });
           
           if (isParticipating) {
-              vm.cancelAssignment(shift.id);
+              vm.cancelParticipation(shift.id);
           } else {
               vm.joinShift(shift.id);
           }
@@ -526,8 +526,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       };
       
       // シフト参加を取消
-      vm.cancelAssignment = function(shiftId) {
-          console.log('Canceling assignment for shift:', shiftId);
+      vm.cancelParticipation = function(shiftId) {
+          console.log('Canceling participation for shift:', shiftId);
           fetch('/api/shifts/' + shiftId + '/cancel', {
               method: 'POST',
               headers: {

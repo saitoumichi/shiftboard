@@ -1,7 +1,7 @@
 <?php
-class Model_Shifts_Assignment extends Orm\Model
+class Model_Shifts_Participation extends Orm\Model
 {
-    protected static $_table_name  = 'shifts_assignments';
+    protected static $_table_name  = 'shifts_participations';
     protected static $_primary_key = ['id'];
 
     protected static $_properties  = [

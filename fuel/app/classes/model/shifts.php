@@ -1,146 +1,347 @@
 <?php
 
-class Model_Shifts
+/**
+ * Shift Model
+ * 
+ * シフト管理のためのモデルクラス
+ * FuelPHPのORMを使用してshiftsテーブルを操作します
+ */
+class Model_Shifts extends \Orm\Model
 {
-    /** 一覧（未来のみ + 集計付き + ページング） */
-    public static function list_with_counts(array $opts = []): array
+    /**
+     * テーブル名
+     */
+    protected static $_table_name = 'shifts';
+    
+    /**
+     * プライマリキー
+     */
+    protected static $_primary_key = array('id');
+    
+    /**
+     * プロパティ定義
+     */
+    protected static $_properties = array(
+        'id',
+        'title',
+        'shift_date',
+        'start_time',
+        'end_time',
+        'slot_count',
+        'note',
+        'created_at',
+        'updated_at'
+    );
+    
+    /**
+     * データ型定義
+     */
+    protected static $_data_types = array(
+        'id' => 'int',
+        'title' => 'string',
+        'shift_date' => 'date',
+        'start_time' => 'time',
+        'end_time' => 'time',
+        'slot_count' => 'int',
+        'note' => 'string',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
+    );
+    
+    /**
+     * バリデーションルール
+     */
+    protected static $_validates = array(
+        'title' => array(
+            'required' => true,
+            'min_length' => array(1, 100),
+            'message' => 'タイトルは1文字以上100文字以内で入力してください'
+        ),
+        'shift_date' => array(
+            'required' => true,
+            'valid_date' => true,
+            'message' => '有効な日付を入力してください'
+        ),
+        'start_time' => array(
+            'required' => true,
+            'valid_time' => true,
+            'message' => '有効な開始時刻を入力してください'
+        ),
+        'end_time' => array(
+            'required' => true,
+            'valid_time' => true,
+            'message' => '有効な終了時刻を入力してください'
+        ),
+        'slot_count' => array(
+            'required' => true,
+            'min' => array(1),
+            'max' => array(100),
+            'message' => '定員は1人以上100人以下で入力してください'
+        )
+    );
+    
+    /**
+     * 観察者（オブザーバー）
+     */
+    protected static $_observers = array(
+        'Orm\\Observer_CreatedAt' => array(
+            'events' => array('before_insert'),
+            'mysql_timestamp' => true,
+            'property' => 'created_at'
+        ),
+        'Orm\\Observer_UpdatedAt' => array(
+            'events' => array('before_update'),
+            'mysql_timestamp' => true,
+            'property' => 'updated_at'
+        )
+    );
+    
+    /**
+     * リレーション定義
+     */
+    protected static $_has_many = array(
+        'assignments' => array(
+            'model_to' => 'Model_Shift_Assignments',
+            'key_from' => 'id',
+            'key_to' => 'shift_id',
+            'cascade_save' => true,
+            'cascade_delete' => true
+        )
+    );
+    
+    /**
+     * 新規シフト作成
+     * 
+     * @param array $data シフトデータ
+     * @return Model_Shifts|false 作成されたシフトオブジェクトまたはfalse
+     */
+    public static function create_shift($data)
     {
-        $page = max(1, (int)($opts['page'] ?? 1));
-        $per  = min(100, max(1, (int)($opts['per'] ?? 20)));
-        $off  = ($page - 1) * $per;
-        $only_open = !empty($opts['only_open']);
-
-        // 総数（未来のみ）
-        $total = \DB::query("SELECT COUNT(*) AS c FROM shifts WHERE shift_date >= CURDATE()")
-            ->execute()->current();
-        $total = (int)($total['c'] ?? 0);
-
-        // 本体
-        $sql = "
-          SELECT
-            s.id, s.created_by, s.shift_date, s.start_time, s.end_time,
-            s.recruit_count, s.free_text,
-            COALESCE(SUM(CASE WHEN sa.status <> 'cancelled' THEN 1 ELSE 0 END), 0) AS joined_count
-          FROM shifts s
-          LEFT JOIN shift_assignments sa ON sa.shift_id = s.id
-          WHERE s.shift_date >= CURDATE()
-          GROUP BY s.id, s.created_by, s.shift_date, s.start_time, s.end_time, s.recruit_count, s.free_text
-        ";
-        if ($only_open) {
-            $sql .= " HAVING COALESCE(SUM(CASE WHEN sa.status <> 'cancelled' THEN 1 ELSE 0 END), 0) < s.recruit_count ";
+        try {
+            $shift = static::forge();
+            $shift->title = $data['title'];
+            $shift->shift_date = $data['shift_date'];
+            $shift->start_time = $data['start_time'];
+            $shift->end_time = $data['end_time'];
+            $shift->slot_count = $data['slot_count'];
+            $shift->note = isset($data['note']) ? $data['note'] : '';
+            
+            if ($shift->save()) {
+                return $shift;
+            }
+            return false;
+        } catch (Exception $e) {
+            \Log::error('シフト作成エラー: ' . $e->getMessage());
+            return false;
         }
-        $sql .= " ORDER BY s.shift_date, s.start_time LIMIT :per OFFSET :off ";
-
-        $rows = \DB::query($sql)
-            ->parameters(['per' => $per, 'off' => $off])
-            ->execute()->as_array();
-
-        // 整形
-        $items = array_map(function($s){
-            $joined = (int)$s['joined_count'];
-            $cap    = (int)$s['recruit_count'];
-            return [
-                'id'            => (int)$s['id'],
-                'created_by'    => (int)$s['created_by'],
-                'shift_date'    => (string)$s['shift_date'],
-                'start_time'    => (string)$s['start_time'],
-                'end_time'      => (string)$s['end_time'],
-                'recruit_count' => $cap,
-                'joined_count'  => $joined,
-                'remaining'     => max($cap - $joined, 0),
-                'free_text'     => $s['free_text'] ?? null,
-            ];
-        }, $rows);
-
-        return ['items' => $items, 'page' => $page, 'per_page' => $per, 'total' => $total];
     }
-
-    /** 詳細（1件＋集計） */
-    public static function find_one(int $id): ?array
+    
+    /**
+     * 日付範囲でシフトを取得
+     * 
+     * @param string $start_date 開始日
+     * @param string $end_date 終了日
+     * @return array シフト一覧
+     */
+    public static function get_shifts_by_date_range($start_date, $end_date)
     {
-        $row = \DB::query("
-          SELECT
-            s.id, s.created_by, s.shift_date, s.start_time, s.end_time,
-            s.recruit_count, s.free_text,
-            COALESCE(SUM(CASE WHEN sa.status <> 'cancelled' THEN 1 ELSE 0 END), 0) AS joined_count
-          FROM shifts s
-          LEFT JOIN shift_assignments sa ON sa.shift_id = s.id
-          WHERE s.id = :id
-          GROUP BY s.id, s.created_by, s.shift_date, s.start_time, s.end_time, s.recruit_count, s.free_text
-        ")->parameters(['id' => $id])->execute()->current();
-
-        if (!$row) return null;
-
-        $joined = (int)$row['joined_count'];
-        $cap    = (int)$row['recruit_count'];
-        return [
-            'id'            => (int)$row['id'],
-            'created_by'    => (int)$row['created_by'],
-            'shift_date'    => (string)$row['shift_date'],
-            'start_time'    => (string)$row['start_time'],
-            'end_time'      => (string)$row['end_time'],
-            'recruit_count' => $cap,
-            'joined_count'  => $joined,
-            'remaining'     => max($cap - $joined, 0),
-            'free_text'     => $row['free_text'] ?? null,
-        ];
+        return static::query()
+            ->where('shift_date', '>=', $start_date)
+            ->where('shift_date', '<=', $end_date)
+            ->order_by('shift_date', 'asc')
+            ->order_by('start_time', 'asc')
+            ->get();
     }
-
-    /** バリデーション（最小） */
-    public static function validate(array $data): array
+    
+    /**
+     * 指定した月のシフトを取得
+     * 
+     * @param int $year 年
+     * @param int $month 月
+     * @return array シフト一覧
+     */
+    public static function get_shifts_by_month($year, $month)
     {
-        $errs = [];
-        if (empty($data['created_by']))   $errs[] = 'created_by is required';
-        if (empty($data['shift_date']))   $errs[] = 'shift_date is required';
-        if (empty($data['start_time']))   $errs[] = 'start_time is required';
-        if (empty($data['end_time']))     $errs[] = 'end_time is required';
-        if (!isset($data['recruit_count']) || (int)$data['recruit_count'] < 1) $errs[] = 'recruit_count >= 1';
-        return $errs;
+        $start_date = sprintf('%04d-%02d-01', $year, $month);
+        $end_date = date('Y-m-t', strtotime($start_date));
+        
+        return static::get_shifts_by_date_range($start_date, $end_date);
     }
-
-    /** 作成 */
-    public static function create(array $data): int
+    
+    /**
+     * 空きのあるシフトを取得
+     * 
+     * @return array 空きのあるシフト一覧
+     */
+    public static function get_available_shifts()
     {
-        $errs = self::validate($data);
-        if ($errs) {
-            throw new \InvalidArgumentException(implode(', ', $errs));
-        }
-        list($id,) = \DB::query("
-          INSERT INTO shifts (created_by, shift_date, start_time, end_time, recruit_count, free_text, created_at)
-          VALUES (:created_by, :shift_date, :start_time, :end_time, :recruit_count, :free_text, NOW())
-        ")->parameters([
-            'created_by'    => (int)$data['created_by'],
-            'shift_date'    => $data['shift_date'],
-            'start_time'    => $data['start_time'],
-            'end_time'      => $data['end_time'],
-            'recruit_count' => (int)$data['recruit_count'],
-            'free_text'     => $data['free_text'] ?? null,
-        ])->execute();
-        return (int)$id;
-    }
-
-    /** 更新 */
-    public static function update(int $id, array $data): bool
-    {
-        // 部分更新OK・必要なものだけ反映
-        $sets = []; $params = ['id' => $id];
-        foreach (['shift_date','start_time','end_time','recruit_count','free_text'] as $k) {
-            if (array_key_exists($k, $data)) {
-                $sets[] = "$k = :$k";
-                $params[$k] = $k === 'recruit_count' ? (int)$data[$k] : $data[$k];
+        $shifts = static::query()
+            ->order_by('shift_date', 'asc')
+            ->order_by('start_time', 'asc')
+            ->get();
+        
+        $available_shifts = array();
+        foreach ($shifts as $shift) {
+            if ($shift->has_available_slots()) {
+                $available_shifts[] = $shift;
             }
         }
-        if (!$sets) return false;
-
-        $sql = "UPDATE shifts SET ".implode(',', $sets).", updated_at = NOW() WHERE id = :id";
-        $res = \DB::query($sql)->parameters($params)->execute();
-        return (int)$res > 0;
+        
+        return $available_shifts;
     }
-
-    /** 削除（参加行もON DELETE CASCADE前提） */
-    public static function delete(int $id): bool
+    
+    /**
+     * ユーザーが参加しているシフトを取得
+     * 
+     * @param int $user_id ユーザーID
+     * @return array 参加シフト一覧
+     */
+    public static function get_user_shifts($user_id)
     {
-        $res = \DB::query("DELETE FROM shifts WHERE id = :id")->parameters(['id'=>$id])->execute();
-        return (int)$res > 0;
+        return static::query()
+            ->related('assignments')
+            ->where('assignments.user_id', $user_id)
+            ->where('assignments.status', '!=', 'cancelled')
+            ->order_by('shift_date', 'asc')
+            ->order_by('start_time', 'asc')
+            ->get();
+    }
+    
+    /**
+     * シフトに空きがあるかチェック
+     * 
+     * @return bool 空きがある場合はtrue
+     */
+    public function has_available_slots()
+    {
+        $assigned_count = $this->get_assigned_count();
+        return $assigned_count < $this->slot_count;
+    }
+    
+    /**
+     * 現在の割り当て数を取得
+     * 
+     * @return int 割り当て数
+     */
+    public function get_assigned_count()
+    {
+        return \Model_Shift_Assignments::query()
+            ->where('shift_id', $this->id)
+            ->where('status', '!=', 'cancelled')
+            ->count();
+    }
+    
+    /**
+     * 空き定員数を取得
+     * 
+     * @return int 空き定員数
+     */
+    public function get_available_slots()
+    {
+        return $this->slot_count - $this->get_assigned_count();
+    }
+    
+    /**
+     * 割り当て済みユーザー一覧を取得
+     * 
+     * @return array 割り当て済みユーザー一覧
+     */
+    public function get_assigned_users()
+    {
+        return \Model_Shift_Assignments::query()
+            ->related('user')
+            ->where('shift_id', $this->id)
+            ->where('status', '!=', 'cancelled')
+            ->get();
+    }
+    
+    /**
+     * ユーザーがこのシフトに参加しているかチェック
+     * 
+     * @param int $user_id ユーザーID
+     * @return bool 参加している場合はtrue
+     */
+    public function is_user_assigned($user_id)
+    {
+        return \Model_Shift_Assignments::query()
+            ->where('shift_id', $this->id)
+            ->where('user_id', $user_id)
+            ->where('status', '!=', 'cancelled')
+            ->count() > 0;
+    }
+    
+    /**
+     * シフトの詳細情報を配列で取得
+     * 
+     * @return array シフト詳細情報
+     */
+    public function to_array_with_assignments()
+    {
+        $data = $this->to_array();
+        $data['assigned_count'] = $this->get_assigned_count();
+        $data['available_slots'] = $this->get_available_slots();
+        $data['assigned_users'] = array();
+        
+        $assignments = $this->get_assigned_users();
+        foreach ($assignments as $assignment) {
+            $data['assigned_users'][] = array(
+                'id' => $assignment->user->id,
+                'name' => $assignment->user->name,
+                'status' => $assignment->status,
+                'assigned_at' => $assignment->created_at
+            );
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * シフトの統計情報を取得
+     * 
+     * @return array 統計情報
+     */
+    public function get_statistics()
+    {
+        return array(
+            'total_slots' => $this->slot_count,
+            'assigned_count' => $this->get_assigned_count(),
+            'available_slots' => $this->get_available_slots(),
+            'fill_rate' => $this->slot_count > 0 ? round(($this->get_assigned_count() / $this->slot_count) * 100, 1) : 0,
+            'is_full' => !$this->has_available_slots(),
+            'is_empty' => $this->get_assigned_count() == 0
+        );
+    }
+    
+    /**
+     * シフトの期間を文字列で取得
+     * 
+     * @return string 期間文字列
+     */
+    public function get_period_string()
+    {
+        return sprintf('%s %s - %s', 
+            $this->shift_date, 
+            $this->start_time, 
+            $this->end_time
+        );
+    }
+    
+    /**
+     * シフトのタイトルを生成（タイトルがない場合）
+     * 
+     * @return string 生成されたタイトル
+     */
+    public function generate_title()
+    {
+        if (!empty($this->title)) {
+            return $this->title;
+        }
+        
+        $date = new DateTime($this->shift_date);
+        return sprintf('%sのシフト (%s〜%s)', 
+            $date->format('n月j日'),
+            $this->start_time,
+            $this->end_time
+        );
     }
 }

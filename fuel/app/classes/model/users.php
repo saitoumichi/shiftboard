@@ -18,8 +18,8 @@ class Model_User extends Orm\Model
             'key_from' => 'id',
             'key_to'   => 'user_id',
         ],
-        'assignments' => [
-            'model_to' => 'Model_Shifts_Assignment',
+        'participations' => [
+            'model_to' => 'Model_Shifts_Participation',
             'key_from' => 'id',
             'key_to'   => 'user_id',
         ],
