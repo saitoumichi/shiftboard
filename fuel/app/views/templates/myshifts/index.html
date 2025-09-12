@@ -1,0 +1,73 @@
+<!-- ヘッダー -->
+<nav class="navbar">
+    <div class="navbar-content">
+        <a href="/shifts" class="navbar-brand">自分のシフト</a>
+        <div class="navbar-links">
+
+        </div>
+    </div>
+</nav>
+<!-- メインコンテンツ -->
+<div class="page-container">
+<div class="main-content">
+        <!-- 期間指定 -->
+        <div class="section-card">
+            <div class="section-header">
+                <span>期間指定</span>
+                <div class="nav-buttons">
+                    <a href="/shifts" class="nav-btn btn-back">戻る</a>
+                </div>
+            </div>
+            <div class="period-specification">
+                <div class="period-inputs">
+                    <input type="date" class="period-input" id="start-date" data-bind="value: startDate">
+                    <input type="date" class="period-input" id="end-date" data-bind="value: endDate">
+                </div>
+                
+                <div class="period-controls">
+                    <button class="period-btn" data-bind="click: setThisWeek">今週</button>
+                    <button class="period-btn" data-bind="click: setThisMonth">今月</button>
+                    <button class="period-btn" data-bind="click: setNextMonth">来月</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+        <!-- ナビゲーションバー -->
+        <div class="section-card">
+            <div class="navigation-bar">
+                <div class="screen-title">参加予定シフト一覧</div>
+            </div>
+            
+            <!-- シフト一覧 -->
+            <div class="shifts-list">
+                <!-- ローディング表示 -->
+                <div data-bind="visible: loading()" class="loading">
+                    読み込み中...
+                </div>
+                
+                <!-- シフト一覧 -->
+                <div data-bind="visible: !loading()">
+                    <!-- ko if: shifts().length > 0 -->
+                    <!-- ko foreach: shifts -->
+                    <div class="shift-item">
+                        <div class="shift-date-time" data-bind="text: $parent.displayDateTime($data)"></div>
+                        <div class="shift-slot-info" data-bind="text: $parent.slotInfo($data)"></div>
+                        <div class="shift-note" data-bind="text: ($data &amp;&amp; $data.note) ? $data.note : ''" style="margin-top: 8px; color: #666;"></div>
+                    </div>
+                    <!-- /ko -->
+                    <!-- /ko -->
+                    
+                    <!-- シフトが無い場合 -->
+                    <!-- ko if: shifts().length === 0 -->
+                    <div class="empty-state">
+                        <p>指定期間内にシフトがありません</p>
+                    </div>
+                    <!-- /ko -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>

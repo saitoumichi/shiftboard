@@ -1,0 +1,184 @@
+<!-- ナビゲーションバー -->
+<nav class="navbar">
+    <div class="navbar-content">
+        <a href="/shifts" class="navbar-brand">シフトボード</a>
+        <div class="navbar-links">
+
+        </div>
+    </div>
+</nav>
+
+<!-- ヘッダー -->
+<div class="header">
+<div class="container">
+    <div class="header-content">
+        <div class="header-left">
+            <div class="month-nav">
+                <button class="nav-btn" data-bind="click: $root.previousMonth"> ◀︎</button>
+                <span class="current-month" data-bind="text: currentMonth"></span>
+                <button class="nav-btn" data-bind="click: $root.nextMonth">▶︎ </button>
+            </div>
+            <div class="view-buttons">
+                <button class="view-btn active" data-bind="click: function() { $root.setView('month'); }">月</button>
+                <button class="view-btn" data-bind="click: function() { $root.setView('week'); }">週</button>
+                <button class="view-btn" data-bind="click: function() { $root.setView('day'); }">日</button>
+                <button class="view-btn" data-bind="click: function() { $root.setView('list'); }">リスト</button>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="/shifts/create" class="btn">シフト追加</a>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- アラート表示 -->
+<div class="alert" data-bind="visible: alertMessage">
+    <span data-bind="text: alertMessage"></span>
+</div>
+
+<!-- 動的アラートコンテナ -->
+<div id="alert-container"></div>
+
+<!-- メインコンテンツ -->
+<!-- 日表示 -->
+<div class="view-content day-view">
+    <div class="day-main-content">
+        <div class="day-calendar-section">
+            <div class="day-calendar-header">
+                
+            </div>
+            <!-- 日表示用テーブル -->
+            <table class="day-calendar-table">
+                <thead>
+                    <tr>
+                        <th>時間</th>
+                        <th>シフト情報</th>
+                        <th>参加者一覧</th>
+                        <th>定員状況</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="day-shifts-container">
+                    <!-- JavaScriptで動的に生成 -->
+                </tbody>
+            </table>
+            <!-- 自分のシフトボタン -->
+ <div style="text-align: center; margin: 20px 40px;">
+        <button class="btn my-shifts-btn" data-bind="click: goToMyShifts">自分のシフト</button>
+    </div>
+        </div>
+        
+        <!-- 日表示の募集中シフトセクション -->
+        <div class="day-recruitment-section">
+            <h3 class="shift-title">募集中のシフト</h3>
+            <div id="available-shifts-container-day"></div>
+            <div id="no-shifts-message-day" class="muted" style="display:none;">本日の募集中シフトはありません</div>
+        </div>
+        
+    </div>
+</div>
+
+<!-- 週表示 -->
+<div class="view-content week-view">
+    <div class="week-main-content">
+        <div class="week-calendar-section">
+            <div class="week-calendar-header">
+                <div class="week-nav">
+                    <span class="current-week" data-bind="text: currentWeek"></span>
+                </div>
+            </div>
+            <!-- 週表示用テーブル -->
+            <table class="week-calendar-table">
+<thead>
+                <tr>
+                    <th>Sun</th>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                    <th>Sat</th>
+                </tr>
+</thead>
+                <tbody id="week-grid-container">
+                    <!-- JavaScriptで動的に生成 -->
+                </tbody>
+            </table>
+            <!-- 自分のシフトボタン -->
+    <div style="text-align: center; margin: 20px 40px;">
+        <button class="btn my-shifts-btn" data-bind="click: goToMyShifts">自分のシフト</button>
+    </div>
+        </div>
+        
+        <!-- 週表示の募集中シフトセクション -->
+        <div class="week-recruitment-section">
+            <h3 class="shift-title">募集中のシフト</h3>
+            <div id="available-shifts-container-week"></div>
+            <div id="no-shifts-message-week" class="muted" style="display:none;">今週の募集中シフトはありません</div>
+        </div>
+        
+    </div>
+</div>
+
+<!-- 月表示 -->
+<div class="view-content month-view active">
+    <div class="month-main-content">
+        <div class="month-calendar-section">
+            <div class="month-calendar-header">
+                <div class="day-nav">
+                    <span class="current-month" data-bind="text: currentDay"></span>
+                </div>
+            </div>
+            
+            <!-- 月表示カレンダーテーブル -->
+            <table class="month-calendar-table">
+                <thead>
+                    <tr>
+                        <th>Mon</th>
+                        <th>Tue</th>
+                        <th>Wed</th>
+                        <th>Thu</th>
+                        <th>Fri</th>
+                        <th>Sat</th>
+                        <th>Sun</th>
+</tr>
+                </thead>
+                <tbody id="calendar-days-container">
+                    <!-- JavaScriptで動的に生成 -->
+</tbody>
+
+</table>
+    <!-- 自分のシフトボタン -->
+    <div style="text-align: center; margin: 20px 40px;">
+        <button class="btn my-shifts-btn" data-bind="click: goToMyShifts">自分のシフト</button>
+    </div>
+        </div>
+        
+        <!-- 月表示の募集中シフトセクション -->
+        <div class="month-recruitment-section">
+            <h3 class="shift-title">募集中のシフト</h3>
+            <div id="available-shifts-container"></div>
+            <div id="no-shifts-message" class="muted" style="display:none;">募集中のシフトはありません</div>
+        </div>
+        
+    </div>
+</div>
+
+<!-- リストビュー -->
+<div class="view-content list-view">
+    <div class="list-main-content">
+        <div class="shifts-list-container">
+            <div class="shifts-list-header">
+                <h3>募集中のシフト一覧</h3>
+            </div>
+            <div class="shifts-list-content">
+                <div id="available-shifts-container-list"></div>
+                <div id="no-shifts-message-list" class="muted" style="display:none;">募集中のシフトはありません</div>
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+    
+</div>

@@ -1,0 +1,29 @@
+# OS/IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Docker ローカル永続化
+docker/**/data/
+docker/**/mysql-data/
+
+# FuelPHP ランタイム生成物
+fuel/app/cache/
+fuel/app/logs/
+fuel/app/tmp/
+
+# 依存パッケージ（Composer/NPM）
+**/vendor/
+node_modules/
+
+# 環境変数ファイル
+.env
+.env.*
+# --- DB volumes (must not track) ---
+docker/mysql/data/
+docker/**/data/
+docker/**/mysql-data/
+
+# ビルド/生成物（必要なら）
+public/docs/
+fuelapp/
