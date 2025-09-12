@@ -28,32 +28,34 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
      */
 
      public function get_index()
-{
-    // ---- debug: add ?debug=1 to see connection & row counts
-    if (\Fuel\Core\Input::get('debug')) {
-        $dbg1 = \Fuel\Core\DB::query("SELECT DATABASE() AS db")->execute()->current();
-        $dbg2 = \Fuel\Core\DB::query("SELECT COUNT(*) AS cnt FROM shifts")->execute()->current();
-        $dbg3 = \Fuel\Core\DB::query("SELECT COUNT(*) AS cnt FROM shift_assignments")->execute()->current();
-        return $this->response([
-            'debug' => [
-                'db' => $dbg1 ? $dbg1['db'] : null,
-                'shifts_count' => $dbg2 ? (int)$dbg2['cnt'] : null,
-                'assignments_count' => $dbg3 ? (int)$dbg3['cnt'] : null,
-            ]
-        ]);
-    }
-    $rows = \Fuel\Core\DB::query("
-      SELECT s.id, s.shift_date, s.start_time, s.end_time,
-             s.recruit_count, s.free_text,
-             COUNT(CASE WHEN sa.status <> 'cancelled' THEN sa.user_id END) AS joined
-      FROM shifts s
-      LEFT JOIN shift_assignments sa ON sa.shift_id = s.id
-      GROUP BY s.id, s.shift_date, s.start_time, s.end_time, s.recruit_count, s.free_text
-      ORDER BY s.shift_date, s.start_time
-    ")->execute()->as_array();
+    {
+        // ---- debug: add ?debug=1 to see connection & row counts
+        if (\Fuel\Core\Input::get('debug')) {
+            $dbg1 = \Fuel\Core\DB::query("SELECT DATABASE() AS db")->execute()->current();
+            $dbg2 = \Fuel\Core\DB::query("SELECT COUNT(*) AS cnt FROM shifts")->execute()->current();
+            $dbg3 = \Fuel\Core\DB::query("SELECT COUNT(*) AS cnt FROM shift_assignments")->execute()->current();
+            return $this->response([
+                'debug' => [
+                    'db' => $dbg1 ? $dbg1['db'] : null,
+                    'shifts_count' => $dbg2 ? (int)$dbg2['cnt'] : null,
+                    'assignments_count' => $dbg3 ? (int)$dbg3['cnt'] : null,
+                ]
+            ]);
+        }
+        
+        $rows = \Fuel\Core\DB::query("
+            SELECT s.id, s.created_by, s.shift_date, s.start_time, s.end_time,
+                   s.recruit_count, s.free_text, s.created_at, s.updated_at,
+                   COUNT(CASE WHEN sa.status != 'cancelled' THEN sa.user_id END) AS joined_count
+            FROM shifts s
+            LEFT JOIN shift_assignments sa ON sa.shift_id = s.id
+            GROUP BY s.id, s.created_by, s.shift_date, s.start_time, s.end_time, 
+                     s.recruit_count, s.free_text, s.created_at, s.updated_at
+            ORDER BY s.shift_date, s.start_time
+        ")->execute()->as_array();
 
-    return $this->response(['items' => $rows]);
-}
+        return $this->response(['items' => $rows]);
+    }
 
     public function action_index()
     {
@@ -72,7 +74,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             $data = array();
             foreach ($shifts as $shift) {
                 // 割り当て者情報を取得（shift_assignmentsテーブルを使用）
-                $assignments = DB::select('u.name', 'sa.status')
+                $assignments = DB::select('u.name', 'sa.status', 'sa.self_word')
                     ->from('shift_assignments', 'sa')
                     ->join('users', 'INNER')
                     ->on('sa.user_id', '=', 'u.id')
@@ -85,7 +87,8 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
                 foreach ($assignments as $assignment) {
                     $assigned_users[] = array(
                         'name' => $assignment['name'],
-                        'status' => $assignment['status']
+                        'status' => $assignment['status'],
+                        'self_word' => $assignment['self_word']
                     );
                 }
 
@@ -127,21 +130,21 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             }
             
             // 入力データを取得・サニタイズ
-            $title = Controller_Api_Common::sanitizeInput($data['title'] ?? '');
+            $created_by = Controller_Api_Common::sanitizeInput($data['created_by'] ?? 1, 'int'); // デフォルトは1
             $shift_date = Controller_Api_Common::validateDate($data['shift_date'] ?? '');
             $start_time = Controller_Api_Common::validateTime($data['start_time'] ?? '');
             $end_time = Controller_Api_Common::validateTime($data['end_time'] ?? '');
-            $note = Controller_Api_Common::sanitizeInput($data['note'] ?? '');
-            $slot_count = Controller_Api_Common::sanitizeInput($data['slot_count'] ?? 1, 'int');
+            $free_text = Controller_Api_Common::sanitizeInput($data['free_text'] ?? '');
+            $recruit_count = Controller_Api_Common::sanitizeInput($data['recruit_count'] ?? 1, 'int');
             
             // デバッグ用：最終的なデータをログに出力
-            error_log('API Debug - Final title: ' . var_export($title, true));
+            error_log('API Debug - Final created_by: ' . var_export($created_by, true));
             error_log('API Debug - Final data: ' . var_export($data, true));
 
             // バリデーション
             $errors = array();
-            if (empty($title)) {
-                $errors[] = 'シフトタイトルを入力してください';
+            if (!$created_by || $created_by < 1) {
+                $errors[] = '作成者IDは1以上の整数である必要があります';
             }
             if (!$shift_date) {
                 $errors[] = '有効なシフト日付を入力してください（YYYY-MM-DD形式）';
@@ -152,7 +155,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             if (!$end_time) {
                 $errors[] = '有効な終了時刻を入力してください（HH:MM形式）';
             }
-            if (!$slot_count || $slot_count < 1) {
+            if (!$recruit_count || $recruit_count < 1) {
                 $errors[] = '募集人数は1以上の整数である必要があります';
             }
             
@@ -174,12 +177,12 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             // FuelPHPのDBクラスを使用してシフトを作成
             $shift_id = DB::insert('shifts')
                 ->set([
-                    'title' => $title,
+                    'created_by' => $created_by,
                     'shift_date' => $shift_date,
                     'start_time' => $start_time,
                     'end_time' => $end_time,
-                    'note' => $note,
-                    'slot_count' => $slot_count,
+                    'free_text' => $free_text,
+                    'recruit_count' => $recruit_count,
                     'created_at' => DB::expr('CURRENT_TIMESTAMP')
                 ])
                 ->execute();
@@ -229,7 +232,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
 
             if ($shift) {
                 // 割り当て者情報を取得（shift_assignmentsテーブルを使用）
-                $assignments = DB::select('u.name', 'sa.status')
+                $assignments = DB::select('u.name', 'sa.status', 'sa.self_word', 'sa.user_id')
                     ->from('shift_assignments', 'sa')
                     ->join('users', 'INNER')
                     ->on('sa.user_id', '=', 'u.id')
@@ -241,8 +244,10 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
                 $assigned_users = array();
                 foreach ($assignments as $assignment) {
                     $assigned_users[] = array(
+                        'user_id' => $assignment['user_id'],
                         'name' => $assignment['name'],
-                        'status' => $assignment['status']
+                        'status' => $assignment['status'],
+                        'self_word' => $assignment['self_word']
                     );
                 }
 
@@ -391,11 +396,12 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             }
 
             // 入力データを取得・サニタイズ
+            $created_by = Controller_Api_Common::sanitizeInput(\Fuel\Core\Input::post('created_by'), 'int');
             $shift_date = Controller_Api_Common::validateDate(\Fuel\Core\Input::post('shift_date'));
             $start_time = Controller_Api_Common::validateTime(\Fuel\Core\Input::post('start_time'));
             $end_time = Controller_Api_Common::validateTime(\Fuel\Core\Input::post('end_time'));
-            $note = Controller_Api_Common::sanitizeInput(\Fuel\Core\Input::post('note'));
-            $slot_count = Controller_Api_Common::sanitizeInput(\Fuel\Core\Input::post('slot_count'), 'int');
+            $free_text = Controller_Api_Common::sanitizeInput(\Fuel\Core\Input::post('free_text'));
+            $recruit_count = Controller_Api_Common::sanitizeInput(\Fuel\Core\Input::post('recruit_count'), 'int');
 
             // バリデーション
             $errors = array();
@@ -408,7 +414,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             if (!$end_time) {
                 $errors[] = '有効な終了時刻を入力してください（HH:MM形式）';
             }
-            if (!$slot_count || $slot_count < 1) {
+            if (!$recruit_count || $recruit_count < 1) {
                 $errors[] = '募集人数は1以上の整数である必要があります';
             }
             
@@ -437,18 +443,18 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             }
 
             // 新しい定員が現在の参加者数より少ない場合はエラー
-            if ($slot_count < $capacity['current_participants']) {
+            if ($recruit_count < $capacity['current_participants']) {
                 return $this->response(Controller_Api_Common::errorResponse('定員を現在の参加者数より少なくすることはできません', 400), 400);
             }
 
             // シフトを更新
             $stmt = $pdo->prepare("
                 UPDATE shifts 
-                SET shift_date = ?, start_time = ?, end_time = ?, note = ?, slot_count = ?, 
+                SET created_by = ?, shift_date = ?, start_time = ?, end_time = ?, free_text = ?, recruit_count = ?, 
                     updated_at = NOW()
                 WHERE id = ?
             ");
-            $stmt->execute([$shift_date, $start_time, $end_time, $note, $slot_count, $id]);
+            $stmt->execute([$created_by, $shift_date, $start_time, $end_time, $free_text, $recruit_count, $id]);
 
             // 更新されたシフトの情報を取得
             $stmt = $pdo->prepare("SELECT * FROM shifts WHERE id = ?");
@@ -458,7 +464,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             if ($shift) {
                 // 参加者情報を取得
                 $stmt = $pdo->prepare("
-                    SELECT u.name, sa.status 
+                    SELECT u.name, sa.status, sa.self_word, sa.user_id
                     FROM shift_assignments sa 
                     JOIN users u ON sa.user_id = u.id 
                     WHERE sa.shift_id = ? AND sa.status != 'cancelled'
@@ -469,8 +475,10 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
                 $assigned_users = array();
                 foreach ($assignments as $assignment) {
                     $assigned_users[] = array(
+                        'user_id' => $assignment['user_id'],
                         'name' => $assignment['name'],
-                        'status' => $assignment['status']
+                        'status' => $assignment['status'],
+                        'self_word' => $assignment['self_word']
                     );
                 }
 
