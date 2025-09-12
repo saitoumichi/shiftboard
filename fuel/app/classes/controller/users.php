@@ -3,7 +3,7 @@
 /**
  * メンバー管理用のコントローラー
  */
-class Controller_Members extends \Fuel\Core\Controller
+class Controller_Users extends \Fuel\Core\Controller
 {
     /**
      * メンバー一覧画面
@@ -15,7 +15,7 @@ class Controller_Members extends \Fuel\Core\Controller
             'subtitle' => '・ メンバーの一覧表示・管理'
         );
         
-        return \Fuel\Core\View::forge('members/index', $data);
+        return \Fuel\Core\View::forge('users/index', $data);
     }
     
     /**
@@ -28,7 +28,7 @@ class Controller_Members extends \Fuel\Core\Controller
             'subtitle' => '・ 新しいメンバーを追加'
         );
         
-        return \Fuel\Core\View::forge('members/create', $data);
+        return \Fuel\Core\View::forge('users/create', $data);
     }
     
     /**
@@ -46,6 +46,6 @@ class Controller_Members extends \Fuel\Core\Controller
             'member_id' => $id
         );
         
-        return \Fuel\Core\View::forge('members/view', $data);
+        return \Fuel\Core\View::forge('users/view', $data);
     }
 }

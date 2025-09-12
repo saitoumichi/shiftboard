@@ -1,65 +1,57 @@
 -- シフトボードアプリケーションのデータベーススキーマ
 -- このファイルは本番環境のデータベーススキーマを定義します
 
--- メンバーテーブル
-CREATE TABLE `members` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `role` enum('member','admin') NOT NULL DEFAULT 'member',
-  `color` char(7) DEFAULT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT '1',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- users
+CREATE TABLE users (
+  id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name       VARCHAR(100)    NOT NULL,
+  color      CHAR(7)         NULL,
+  created_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL           DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- シフトテーブル
-CREATE TABLE `shifts` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `shift_date` date NOT NULL,
-  `start_time` time NOT NULL,
-  `end_time` time NOT NULL,
-  `note` varchar(500) DEFAULT NULL,
-  `slot_count` int unsigned NOT NULL DEFAULT '1',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- shifts
+CREATE TABLE shifts (
+  id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id       BIGINT UNSIGNED NULL,              -- 作成者/オーナー（任意なら NULL 可）
+  shift_date    DATE            NOT NULL,
+  start_time    TIME            NOT NULL,
+  end_time      TIME            NOT NULL,
+  recruit_count INT  UNSIGNED   NOT NULL DEFAULT 1,
+  free_text     VARCHAR(500)    NULL,
+  created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP NULL           DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_shifts_date       (shift_date),
+  KEY idx_shifts_date_time  (shift_date, start_time),
+  KEY idx_shifts_user       (user_id),
+  CONSTRAINT fk_shifts_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  CONSTRAINT chk_time_order CHECK (start_time < end_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- シフト参加テーブル
-CREATE TABLE `shift_assignments` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `shift_id` bigint unsigned NOT NULL,
-  `member_id` bigint unsigned NOT NULL,
-  `status` enum('applied','confirmed','cancelled') NOT NULL DEFAULT 'confirmed',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UNIQUE_shift_member` (`shift_id`,`member_id`),
-  CONSTRAINT `shift_assignments_ibfk_1` FOREIGN KEY (`shift_id`) REFERENCES `shifts` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `shift_assignments_ibfk_2` FOREIGN KEY (`member_id`) REFERENCES `members` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- インデックスの追加（パフォーマンス向上のため）
-CREATE INDEX `idx_shifts_date` ON `shifts` (`shift_date`);
-CREATE INDEX `idx_shifts_date_time` ON `shifts` (`shift_date`, `start_time`);
-CREATE INDEX `idx_shift_assignments_member` ON `shift_assignments` (`member_id`);
-CREATE INDEX `idx_shift_assignments_status` ON `shift_assignments` (`status`);
-
--- サンプルデータの挿入（開発環境用）
-INSERT INTO `members` (`name`, `role`, `color`, `is_active`) VALUES
-('管理者', 'admin', '#FF6B6B', 1),
-('田中太郎', 'member', '#4ECDC4', 1),
-('佐藤花子', 'member', '#45B7D1', 1),
-('鈴木一郎', 'member', '#96CEB4', 1);
-
-INSERT INTO `shifts` (`shift_date`, `start_time`, `end_time`, `note`, `slot_count`) VALUES
-('2025-01-15', '09:00:00', '17:00:00', '平日シフト', 2),
-('2025-01-16', '10:00:00', '18:00:00', '平日シフト', 1),
-('2025-01-17', '09:00:00', '17:00:00', '平日シフト', 3);
-
-INSERT INTO `shift_assignments` (`shift_id`, `member_id`, `status`) VALUES
-(1, 2, 'confirmed'),
-(1, 3, 'confirmed'),
-(2, 2, 'confirmed'),
-(3, 3, 'confirmed'),
-(3, 4, 'confirmed');
+-- shift_assignments
+CREATE TABLE shift_assignments (
+  id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  shift_id   BIGINT UNSIGNED NOT NULL,
+  user_id    BIGINT UNSIGNED NOT NULL,
+  self_word  VARCHAR(500)    NULL,
+  status     ENUM('assigned','confirmed','cancelled') NOT NULL DEFAULT 'assigned',
+  created_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL           DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_shift_user (shift_id, user_id),  -- ★ 重複割り当て防止
+  KEY idx_assign_user    (user_id),
+  KEY idx_assign_status  (status),
+  CONSTRAINT fk_assign_shift
+    FOREIGN KEY (shift_id) REFERENCES shifts(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_assign_user
+    FOREIGN KEY (user_id)  REFERENCES users(id)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

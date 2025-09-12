@@ -2,9 +2,9 @@
 
 ## 提供されたスキーマとの整合性確認
 
-### 1. `members`テーブル
+### 1. `users`テーブル
 ```sql
-CREATE TABLE `members` (
+CREATE TABLE `users` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
   `role` enum('member','admin') NOT NULL DEFAULT 'member',
@@ -48,7 +48,7 @@ CREATE TABLE `shift_assignments` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `UNIQUE_shift_member` (`shift_id`,`member_id`),
   CONSTRAINT `shift_assignments_ibfk_1` FOREIGN KEY (`shift_id`) REFERENCES `shifts` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `shift_assignments_ibfk_2` FOREIGN KEY (`member_id`) REFERENCES `members` (`id`) ON DELETE CASCADE
+  CONSTRAINT `shift_assignments_ibfk_2` FOREIGN KEY (`member_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 ```
 

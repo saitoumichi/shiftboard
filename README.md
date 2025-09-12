@@ -1,38 +1,96 @@
-# FuelPHP
+# シフトボードシステム
 
-* Version: 1.9 [under development]
-* [Website](https://fuelphp.com/)
-* [Release Documentation](https://fuelphp.com/docs)
-* [Release API browser](https://fuelphp.com/api)
-* [Development branch Documentation](https://fuelphp.com/dev-docs)
-* [Development branch API browser](https://fuelphp.com/dev-api)
-* [Support Forum](https://forums.fuelphp.com) for comments, discussion and community support
+FuelPHPベースのシフト管理システムです。
 
-## Description
+## 概要
 
-FuelPHP is a fast, lightweight PHP 5.4+ framework. In an age where frameworks are a dime a dozen, we believe that FuelPHP will stand out in the crowd. It will do this by combining all the things you love about the great frameworks out there, while getting rid of the bad.
+このシステムは、シフトの作成・管理・参加を効率的に行うためのWebアプリケーションです。
 
-FuelPHP is fully PHP 7 compatible.
+## 技術スタック
 
-## More information
+- **バックエンド**: FuelPHP 1.9
+- **データベース**: MySQL 8.0
+- **フロントエンド**: HTML5, CSS3, JavaScript (jQuery, Knockout.js)
+- **開発環境**: Docker, Docker Compose
 
-For more detailed information, see the [development wiki](https://github.com/fuelphp/fuelphp/wiki).
+## データベース設計
 
-## Development Team
+### ERD図
 
-* Harro Verton - Project Manager, Developer ([http://wanwizard.eu/](http://wanwizard.eu/))
-* Steve West - Core Developer, ORM
-* Márk Sági-Kazár - Developer
+```mermaid
+erDiagram
+    users {
+        bigint_unsigned id PK "主キー"
+        varchar_100 name "ユーザー名"
+        char_7 colors "そのユーザーの色"
+        timestamp created_at "ユーザー情報登録日時"
+        timestamp updated_at "ユーザー情報更新日時"
+    }
+    
+    shifts {
+        bigint_unsigned id PK "主キー"
+        bigint_unsigned user_id FK "シフトに紐づくユーザー（users.idを参照）"
+        date shift_date "日付"
+        time start_time "開始時刻"
+        time end_time "終了時刻"
+        varchar_500 free_text "自由記述（やる気を書くとか）"
+        timestamp created_at "シフト登録日時"
+        timestamp updated_at "シフト更新日時"
+    }
+    
+    users ||--o{ shifts : "作成"
+```
 
-### Want to join?
+### テーブル詳細
 
-The FuelPHP development team is always looking for new team members, who are willing to help lift the framework to the next level, and have the commitment to not only produce awesome code, but also great documentation, and support to our users.
+#### users テーブル
+| カラム名 | データ型 | NULL許可 | デフォルト値 | 説明 |
+|---------|---------|---------|-------------|------|
+| id | bigint unsigned | NO | AUTO_INCREMENT | 主キー |
+| name | varchar(100) | NO | - | ユーザー名 |
+| colors | char(7) | YES | NULL | そのユーザーの色 |
+| created_at | timestamp | NO | CURRENT_TIMESTAMP | ユーザー情報登録日時 |
+| updated_at | timestamp | YES | NULL | ユーザー情報更新日時 |
 
-You can not apply for membership. Start by sending in pull-requests, work on outstanding feature requests or bugs, and become active in the #fuelphp IRC channel. If your skills are up to scratch, we will notice you, and will ask you to become a team member.
+#### shifts テーブル
+| カラム名 | データ型 | NULL許可 | デフォルト値 | 説明 |
+|---------|---------|---------|-------------|------|
+| id | bigint unsigned | NO | AUTO_INCREMENT | 主キー |
+| user_id | bigint unsigned | NO | - | シフトに紐づくユーザー（users.idを参照） |
+| shift_date | date | NO | - | 日付 |
+| start_time | time | NO | - | 開始時刻 |
+| end_time | time | NO | - | 終了時刻 |
+| free_text | varchar(500) | YES | NULL | 自由記述（やる気を書くとか） |
+| created_at | timestamp | NO | CURRENT_TIMESTAMP | シフト登録日時 |
+| updated_at | timestamp | YES | NULL | シフト更新日時 |
 
-### Alumni
+## セットアップ
 
-* Frank de Jonge - Developer ([http://frenky.net/](http://frenky.net/))
-* Jelmer Schreuder - Developer ([http://jelmerschreuder.nl/](http://jelmerschreuder.nl/))
-* Phil Sturgeon - Developer ([http://philsturgeon.co.uk](http://philsturgeon.co.uk))
-* Dan Horrigan - Founder, Developer ([http://dhorrigan.com](http://dhorrigan.com))
+### 前提条件
+- Docker
+- Docker Compose
+
+### 起動方法
+```bash
+# コンテナを起動
+docker-compose up -d
+
+# データベースの初期化
+docker-compose exec db mysql -u app -papp_pass shiftboard < fuel/app/data/schema.sql
+```
+
+### アクセス
+- アプリケーション: http://localhost:8081
+- phpMyAdmin: http://localhost:8082
+
+## 機能
+
+- シフトの作成・編集・削除
+- シフトの一覧表示（月・週・日表示）
+- シフトへの参加・キャンセル
+- ユーザー管理
+- レスポンシブデザイン対応
+
+## 開発状況
+
+現在、基本的なシフト管理機能は実装済みです。詳細な実装状況については、プロジェクト内の各ファイルを参照してください。

@@ -123,13 +123,13 @@
             font-weight: bold;
         }
         
-        .member-profile {
+        .user-profile {
             display: flex;
             align-items: center;
             margin-bottom: 20px;
         }
         
-        .member-avatar {
+        .user-avatar {
             width: 80px;
             height: 80px;
             border-radius: 50%;
@@ -142,13 +142,13 @@
             font-size: 32px;
         }
         
-        .member-info h2 {
+        .user-info h2 {
             margin: 0 0 10px 0;
             color: #333;
             font-size: 24px;
         }
         
-        .member-role {
+        .user-role {
             background: #e9ecef;
             color: #495057;
             padding: 4px 12px;
@@ -159,17 +159,17 @@
             margin-bottom: 10px;
         }
         
-        .member-role.admin {
+        .user-role.admin {
             background: #dc3545;
             color: white;
         }
         
-        .member-status {
+        .user-status {
             font-size: 14px;
             color: #6c757d;
         }
         
-        .member-stats {
+        .user-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 15px;
@@ -290,9 +290,9 @@
     
     <!-- アクションボタン -->
     <div class="action-buttons">
-        <button class="action-btn edit" data-bind="click: $root.editMember">編集</button>
-        <button class="action-btn delete" data-bind="click: $root.deleteMember">削除</button>
-        <a href="<?php echo \Fuel\Core\Uri::create('members'); ?>" class="action-btn back">メンバー一覧に戻る</a>
+        <button class="action-btn edit" data-bind="click: $root.editUser">編集</button>
+        <button class="action-btn delete" data-bind="click: $root.deleteUser">削除</button>
+        <a href="<?php echo \Fuel\Core\Uri::create('users'); ?>" class="action-btn back">ユーザー一覧に戻る</a>
     </div>
     
     <!-- アラート表示 -->
@@ -304,30 +304,30 @@
     <div class="main-content">
         <!-- 左セクション -->
         <div class="left-section">
-            <!-- メンバー情報 -->
+            <!-- ユーザー情報 -->
             <div class="section-card">
-                <div class="section-header">メンバー情報</div>
+                <div class="section-header">ユーザー情報</div>
                 
-                <div class="member-profile">
-                    <div class="member-avatar" data-bind="style: { backgroundColor: member().color || '#3498db' }">
-                        <span data-bind="text: member().name ? member().name.charAt(0).toUpperCase() : '?'"></span>
+                <div class="user-profile">
+                    <div class="user-avatar" data-bind="style: { backgroundColor: user().color || '#3498db' }">
+                        <span data-bind="text: user().name ? user().name.charAt(0).toUpperCase() : '?'"></span>
                     </div>
-                    <div class="member-info">
-                        <h2 data-bind="text: member().name || '読み込み中...'"></h2>
-                        <span class="member-role" data-bind="text: member().role === 'admin' ? '管理者' : 'メンバー', css: { admin: member().role === 'admin' }"></span>
-                        <div class="member-status">
-                            ステータス: <span data-bind="text: member().is_active ? 'アクティブ' : '非アクティブ'"></span>
+                    <div class="user-info">
+                        <h2 data-bind="text: user().name || '読み込み中...'"></h2>
+                        <span class="user-role" data-bind="text: user().role === 'admin' ? '管理者' : 'ユーザー', css: { admin: user().role === 'admin' }"></span>
+                        <div class="user-status">
+                            ステータス: <span data-bind="text: user().is_active ? 'アクティブ' : '非アクティブ'"></span>
                         </div>
                     </div>
                 </div>
                 
-                <div class="member-stats">
+                <div class="user-stats">
                     <div class="stat-card">
-                        <div class="stat-number" data-bind="text: member().shift_count || 0"></div>
+                        <div class="stat-number" data-bind="text: user().shift_count || 0"></div>
                         <div class="stat-label">参加シフト</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number" data-bind="text: member().is_active ? '○' : '×'"></div>
+                        <div class="stat-number" data-bind="text: user().is_active ? '○' : '×'"></div>
                         <div class="stat-label">ステータス</div>
                     </div>
                 </div>
@@ -341,7 +341,7 @@
                 <div class="section-header">参加シフト一覧</div>
                 
                 <div class="shifts-list">
-                    <!-- ko foreach: member().shifts -->
+                    <!-- ko foreach: user().shifts -->
                     <div class="shift-item">
                         <div class="shift-date" data-bind="text: shift_date"></div>
                         <div class="shift-time" data-bind="text: start_time + ' - ' + end_time"></div>
@@ -350,9 +350,9 @@
                     <!-- /ko -->
                     
                     <!-- 参加シフトがない場合 -->
-                    <div data-bind="visible: member().shifts && member().shifts.length === 0" class="empty-state">
+                    <div data-bind="visible: user().shifts && user().shifts.length === 0" class="empty-state">
                         <h3>参加シフトがありません</h3>
-                        <p>このメンバーはまだシフトに参加していません</p>
+                        <p>このユーザーはまだシフトに参加していません</p>
                     </div>
                 </div>
             </div>
@@ -366,17 +366,17 @@
     
     <!-- ナビゲーションヒント -->
     <div class="navigation-hint">
-        ・編集→メンバー情報変更<br>
-        ・削除→メンバー削除
+        ・編集→ユーザー情報変更<br>
+        ・削除→ユーザー削除
     </div>
     
     <script>
         // Knockout.js ViewModel
-        function MemberDetailViewModel() {
+        function UserDetailViewModel() {
             var self = this;
             
             // データ
-            self.member = ko.observable({});
+            self.user = ko.observable({});
             self.loading = ko.observable(false);
             
             // アラート表示
@@ -393,27 +393,27 @@
                 }, 5000);
             };
             
-            // メンバー詳細を取得
-            self.loadMemberDetail = function() {
+            // ユーザー詳細を取得
+            self.loadUserDetail = function() {
                 self.loading(true);
                 
-                // URLからメンバーIDを取得
+                // URLからユーザーIDを取得
                 var pathParts = window.location.pathname.split('/');
-                var memberId = pathParts[pathParts.length - 1];
+                var userId = pathParts[pathParts.length - 1];
                 
                 $.ajax({
-                    url: '<?php echo \Fuel\Core\Uri::create('api/members'); ?>/' + memberId,
+                    url: '<?php echo \Fuel\Core\Uri::create('api/users'); ?>/' + userId,
                     type: 'GET',
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
-                            self.member(response.data);
+                            self.user(response.data);
                         } else {
-                            self.showAlert('メンバー詳細の取得に失敗しました: ' + response.message, 'error');
+                            self.showAlert('ユーザー詳細の取得に失敗しました: ' + response.message, 'error');
                         }
                     },
                     error: function(xhr, status, error) {
-                        self.showAlert('メンバー詳細の取得に失敗しました', 'error');
+                        self.showAlert('ユーザー詳細の取得に失敗しました', 'error');
                         console.error('Error:', error);
                     },
                     complete: function() {
@@ -422,27 +422,27 @@
                 });
             };
             
-            // メンバー編集
-            self.editMember = function() {
-                var member = self.member();
-                if (!member) return;
+            // ユーザー編集
+            self.editUser = function() {
+                var user = self.user();
+                if (!user) return;
                 
-                var newName = prompt('名前:', member.name);
+                var newName = prompt('名前:', user.name);
                 if (!newName) return;
                 
-                var newRole = prompt('権限 (member/admin):', member.role);
+                var newRole = prompt('権限 (member/admin):', user.role);
                 if (!newRole || !['member', 'admin'].includes(newRole)) {
                     self.showAlert('権限はmemberまたはadminである必要があります', 'error');
                     return;
                 }
                 
-                var newColor = prompt('色 (#RRGGBB):', member.color);
+                var newColor = prompt('色 (#RRGGBB):', user.color);
                 if (!newColor) return;
                 
-                var newIsActive = confirm('アクティブ状態: ' + (member.is_active ? 'アクティブ' : '非アクティブ') + '\n\nアクティブにしますか？');
+                var newIsActive = confirm('アクティブ状態: ' + (user.is_active ? 'アクティブ' : '非アクティブ') + '\n\nアクティブにしますか？');
                 
                 $.ajax({
-                    url: '<?php echo \Fuel\Core\Uri::create('api/members'); ?>/' + member.id + '/update',
+                    url: '<?php echo \Fuel\Core\Uri::create('api/users'); ?>/' + user.id + '/update',
                     type: 'POST',
                     data: {
                         name: newName,
@@ -454,30 +454,30 @@
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
-                            self.showAlert('メンバーを更新しました', 'success');
-                            self.loadMemberDetail();
+                            self.showAlert('ユーザーを更新しました', 'success');
+                            self.loadUserDetail();
                         } else {
-                            self.showAlert('メンバーの更新に失敗しました: ' + response.message, 'error');
+                            self.showAlert('ユーザーの更新に失敗しました: ' + response.message, 'error');
                         }
                     },
                     error: function(xhr, status, error) {
-                        self.showAlert('メンバーの更新に失敗しました', 'error');
+                        self.showAlert('ユーザーの更新に失敗しました', 'error');
                         console.error('Error:', error);
                     }
                 });
             };
             
-            // メンバー削除
-            self.deleteMember = function() {
-                var member = self.member();
-                if (!member) return;
+            // ユーザー削除
+            self.deleteUser = function() {
+                var user = self.user();
+                if (!user) return;
                 
-                if (!confirm('メンバー「' + member.name + '」を削除しますか？\n\n注意: 参加シフトがある場合は削除できません。')) {
+                if (!confirm('ユーザー「' + user.name + '」を削除しますか？\n\n注意: 参加シフトがある場合は削除できません。')) {
                     return;
                 }
                 
                 $.ajax({
-                    url: '<?php echo \Fuel\Core\Uri::create('api/members'); ?>/' + member.id + '/delete',
+                    url: '<?php echo \Fuel\Core\Uri::create('api/users'); ?>/' + user.id + '/delete',
                     type: 'POST',
                     data: {
                         csrf_token: 'dummy_token'
@@ -485,28 +485,28 @@
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
-                            self.showAlert('メンバーを削除しました', 'success');
+                            self.showAlert('ユーザーを削除しました', 'success');
                             // 削除後は一覧画面に戻る
                             setTimeout(function() {
-                                window.location.href = '<?php echo \Fuel\Core\Uri::create('members'); ?>';
+                                window.location.href = '<?php echo \Fuel\Core\Uri::create('users'); ?>';
                             }, 1500);
                         } else {
-                            self.showAlert('メンバーの削除に失敗しました: ' + response.message, 'error');
+                            self.showAlert('ユーザーの削除に失敗しました: ' + response.message, 'error');
                         }
                     },
                     error: function(xhr, status, error) {
-                        self.showAlert('メンバーの削除に失敗しました', 'error');
+                        self.showAlert('ユーザーの削除に失敗しました', 'error');
                         console.error('Error:', error);
                     }
                 });
             };
             
             // 初期化
-            self.loadMemberDetail();
+            self.loadUserDetail();
         }
         
         // ViewModelを適用
-        ko.applyBindings(new MemberDetailViewModel());
+        ko.applyBindings(new UserDetailViewModel());
     </script>
 </body>
 </html>

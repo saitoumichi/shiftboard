@@ -7,8 +7,8 @@
     <!-- 共通CSS -->
     <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/common.css'); ?>">
     
-    <!-- メンバー作成ページ専用CSS -->
-    <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/members-create.css'); ?>">
+    <!-- ユーザー作成ページ専用CSS -->
+    <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/users-create.css'); ?>">
     
     <!-- Knockout.js -->
     <script src="<?php echo \Fuel\Core\Uri::create('js/knockout-min.js'); ?>"></script>
@@ -28,7 +28,7 @@
     
     <!-- アクションボタン -->
     <div class="action-buttons">
-        <a href="<?php echo \Fuel\Core\Uri::create('members'); ?>" class="action-btn back">メンバー一覧に戻る</a>
+        <a href="<?php echo \Fuel\Core\Uri::create('users'); ?>" class="action-btn back">ユーザー一覧に戻る</a>
     </div>
     
     <!-- アラート表示 -->
@@ -39,16 +39,16 @@
     <!-- メインコンテンツ -->
     <div class="main-content">
         <div class="form-card">
-            <form id="member-form">
+            <form id="user-form">
                 <div class="form-group">
                     <label class="form-label" for="name">名前 *</label>
-                    <input type="text" id="name" name="name" class="form-input" data-bind="value: name" placeholder="メンバー名を入力" required>
+                    <input type="text" id="name" name="name" class="form-input" data-bind="value: name" placeholder="ユーザー名を入力" required>
                 </div>
                 
                 <div class="form-group">
                     <label class="form-label" for="role">権限 *</label>
                     <select id="role" name="role" class="form-select" data-bind="value: role">
-                        <option value="member">メンバー</option>
+                        <option value="member">ユーザー</option>
                         <option value="admin">管理者</option>
                     </select>
                 </div>
@@ -67,7 +67,7 @@
                 </div>
                 
                 <button type="submit" class="submit-btn" data-bind="click: submitForm, disabled: loading">
-                    <span data-bind="visible: !loading()">メンバーを作成</span>
+                    <span data-bind="visible: !loading()">ユーザーを作成</span>
                     <span data-bind="visible: loading">作成中...</span>
                 </button>
             </form>
@@ -81,12 +81,12 @@
     
     <!-- ナビゲーションヒント -->
     <div class="navigation-hint">
-        ・必須項目を入力してメンバーを作成
+        ・必須項目を入力してユーザーを作成
     </div>
     
     <script>
         // Knockout.js ViewModel
-        function MemberCreateViewModel() {
+        function UserCreateViewModel() {
             var self = this;
             
             // データ
@@ -131,7 +131,7 @@
                 self.loading(true);
                 
                 $.ajax({
-                    url: '<?php echo \Fuel\Core\Uri::create('api/members'); ?>',
+                    url: '<?php echo \Fuel\Core\Uri::create('api/users'); ?>',
                     type: 'POST',
                     data: {
                         name: self.name(),
@@ -143,17 +143,17 @@
                     dataType: 'json',
                     success: function(response) {
                         if (response.success) {
-                            self.showAlert('メンバーを作成しました', 'success');
+                            self.showAlert('ユーザーを作成しました', 'success');
                             // 作成後は一覧画面に戻る
                             setTimeout(function() {
-                                window.location.href = '<?php echo \Fuel\Core\Uri::create('members'); ?>';
+                                window.location.href = '<?php echo \Fuel\Core\Uri::create('users'); ?>';
                             }, 1500);
                         } else {
-                            self.showAlert('メンバーの作成に失敗しました: ' + response.message, 'error');
+                            self.showAlert('ユーザーの作成に失敗しました: ' + response.message, 'error');
                         }
                     },
                     error: function(xhr, status, error) {
-                        self.showAlert('メンバーの作成に失敗しました', 'error');
+                        self.showAlert('ユーザーの作成に失敗しました', 'error');
                         console.error('Error:', error);
                     },
                     complete: function() {
@@ -164,7 +164,7 @@
         }
         
         // ViewModelを適用
-        ko.applyBindings(new MemberCreateViewModel());
+        ko.applyBindings(new UserCreateViewModel());
     </script>
 </body>
 </html>

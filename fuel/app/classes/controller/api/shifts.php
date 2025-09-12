@@ -4,8 +4,9 @@
  * API Shifts Controller
  * シフト管理用のAPIコントローラー
  */
-class Controller_Api_Shifts extends \Fuel\Core\Controller
+class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
 {
+    protected $format = 'json';
     /**
      * レスポンスを返す
      * 
@@ -13,18 +14,47 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
      * @param int $status HTTPステータスコード
      * @return \Fuel\Core\Response
      */
-    protected function response($data, $status = 200)
-    {
-        $response = new \Fuel\Core\Response();
-        $response->set_status($status);
-        $response->set_header('Content-Type', 'application/json; charset=utf-8');
-        $response->body = is_string($data) ? $data : json_encode($data, JSON_UNESCAPED_UNICODE);
-        return $response;
-    }
+    // protected function response($data, $status = 200)
+    // {
+    //     $response = new \Fuel\Core\Response();
+    //     $response->set_status($status);
+    //     $response->set_header('Content-Type', 'application/json; charset=utf-8');
+    //     $response->body = is_string($data) ? $data : json_encode($data, JSON_UNESCAPED_UNICODE);
+    //     return $response;
+    // }
 
     /**
      * シフト一覧取得 / シフト作成
      */
+
+     public function get_index()
+{
+    // ---- debug: add ?debug=1 to see connection & row counts
+    if (\Fuel\Core\Input::get('debug')) {
+        $dbg1 = \Fuel\Core\DB::query("SELECT DATABASE() AS db")->execute()->current();
+        $dbg2 = \Fuel\Core\DB::query("SELECT COUNT(*) AS cnt FROM shifts")->execute()->current();
+        $dbg3 = \Fuel\Core\DB::query("SELECT COUNT(*) AS cnt FROM shift_assignments")->execute()->current();
+        return $this->response([
+            'debug' => [
+                'db' => $dbg1 ? $dbg1['db'] : null,
+                'shifts_count' => $dbg2 ? (int)$dbg2['cnt'] : null,
+                'assignments_count' => $dbg3 ? (int)$dbg3['cnt'] : null,
+            ]
+        ]);
+    }
+    $rows = \Fuel\Core\DB::query("
+      SELECT s.id, s.shift_date, s.start_time, s.end_time,
+             s.recruit_count, s.free_text,
+             COUNT(CASE WHEN sa.status <> 'cancelled' THEN sa.user_id END) AS joined
+      FROM shifts s
+      LEFT JOIN shift_assignments sa ON sa.shift_id = s.id
+      GROUP BY s.id, s.shift_date, s.start_time, s.end_time, s.recruit_count, s.free_text
+      ORDER BY s.shift_date, s.start_time
+    ")->execute()->as_array();
+
+    return $this->response(['items' => $rows]);
+}
+
     public function action_index()
     {
         try {
@@ -32,25 +62,24 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
                 return $this->action_create();
             }
 
-            // データベース接続を取得
-            $pdo = Controller_Api_Common::getDbConnection();
-
-            // シフト一覧を取得
-            $stmt = $pdo->prepare("SELECT * FROM shifts ORDER BY shift_date ASC, start_time ASC");
-            $stmt->execute();
-            $shifts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // FuelPHPのDBクラスを使用してシフト一覧を取得
+            $shifts = DB::select()->from('shifts')
+                ->order_by('shift_date', 'ASC')
+                ->order_by('start_time', 'ASC')
+                ->execute()
+                ->as_array();
 
             $data = array();
             foreach ($shifts as $shift) {
-                // 参加者情報を取得
-                $stmt = $pdo->prepare("
-                    SELECT m.name, sa.status 
-                    FROM shift_assignments sa 
-                    JOIN members m ON sa.member_id = m.id 
-                    WHERE sa.shift_id = ? AND sa.status != 'cancelled'
-                ");
-                $stmt->execute([$shift['id']]);
-                $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                // 割り当て者情報を取得（shift_assignmentsテーブルを使用）
+                $assignments = DB::select('u.name', 'sa.status')
+                    ->from('shift_assignments', 'sa')
+                    ->join('users', 'INNER')
+                    ->on('sa.user_id', '=', 'u.id')
+                    ->where('sa.shift_id', $shift['id'])
+                    ->where('sa.status', '!=', 'cancelled')
+                    ->execute()
+                    ->as_array();
 
                 $assigned_users = array();
                 foreach ($assignments as $assignment) {
@@ -60,7 +89,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
                     );
                 }
 
-                // シフトデータに参加者情報を追加
+                // シフトデータに割り当て者情報を追加
                 $shift['assigned_users'] = $assigned_users;
                 
                 // 共通関数でフォーマット
@@ -142,22 +171,24 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
                 return $this->response(Controller_Api_Common::validationErrorResponse($errors), 400);
             }
 
-            // データベース接続を取得
-            $pdo = Controller_Api_Common::getDbConnection();
-
-            // シフトを作成
-            $stmt = $pdo->prepare("
-                INSERT INTO shifts (title, shift_date, start_time, end_time, note, slot_count, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, NOW())
-            ");
-            $stmt->execute([$title, $shift_date, $start_time, $end_time, $note, $slot_count]);
-
-            $shift_id = $pdo->lastInsertId();
+            // FuelPHPのDBクラスを使用してシフトを作成
+            $shift_id = DB::insert('shifts')
+                ->set([
+                    'title' => $title,
+                    'shift_date' => $shift_date,
+                    'start_time' => $start_time,
+                    'end_time' => $end_time,
+                    'note' => $note,
+                    'slot_count' => $slot_count,
+                    'created_at' => DB::expr('CURRENT_TIMESTAMP')
+                ])
+                ->execute();
 
             // 作成されたシフトの情報を取得
-            $stmt = $pdo->prepare("SELECT * FROM shifts WHERE id = ?");
-            $stmt->execute([$shift_id]);
-            $shift = $stmt->fetch(PDO::FETCH_ASSOC);
+            $shift = DB::select()->from('shifts')
+                ->where('id', $shift_id[0])
+                ->execute()
+                ->current();
 
             if ($shift) {
                 $shift['assigned_users'] = array();
@@ -190,24 +221,22 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
                 return $this->response(Controller_Api_Common::errorResponse('シフトが見つかりません', 404), 404);
             }
 
-            // データベース接続を取得
-            $pdo = Controller_Api_Common::getDbConnection();
-
-            // シフト詳細を取得
-            $stmt = $pdo->prepare("SELECT * FROM shifts WHERE id = ?");
-            $stmt->execute([$validId]);
-            $shift = $stmt->fetch(PDO::FETCH_ASSOC);
+            // FuelPHPのDBクラスを使用してシフト詳細を取得
+            $shift = DB::select()->from('shifts')
+                ->where('id', $validId)
+                ->execute()
+                ->current();
 
             if ($shift) {
-                // 参加者情報を取得
-                $stmt = $pdo->prepare("
-                    SELECT m.name, sa.status 
-                    FROM shift_assignments sa 
-                    JOIN members m ON sa.member_id = m.id 
-                    WHERE sa.shift_id = ? AND sa.status != 'cancelled'
-                ");
-                $stmt->execute([$validId]);
-                $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                // 割り当て者情報を取得（shift_assignmentsテーブルを使用）
+                $assignments = DB::select('u.name', 'sa.status')
+                    ->from('shift_assignments', 'sa')
+                    ->join('users', 'INNER')
+                    ->on('sa.user_id', '=', 'u.id')
+                    ->where('sa.shift_id', $validId)
+                    ->where('sa.status', '!=', 'cancelled')
+                    ->execute()
+                    ->as_array();
 
                 $assigned_users = array();
                 foreach ($assignments as $assignment) {
@@ -217,7 +246,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
                     );
                 }
 
-                // シフトデータに参加者情報を追加
+                // シフトデータに割り当て者情報を追加
                 $shift['assigned_users'] = $assigned_users;
                 
                 // 共通関数でフォーマット
@@ -274,7 +303,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
             // 既存のレコードがあるかチェック（cancelledも含む）
             $stmt = $pdo->prepare("
                 SELECT id, status FROM shift_assignments 
-                WHERE member_id = ? AND shift_id = ?
+                WHERE user_id = ? AND shift_id = ?
             ");
             $stmt->execute([$user_id, $validId]);
             $existing = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -290,7 +319,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
             } else {
                 // 既存のレコードがない場合は新規作成
                 $stmt = $pdo->prepare("
-                    INSERT INTO shift_assignments (member_id, shift_id, status, created_at) 
+                    INSERT INTO shift_assignments (user_id, shift_id, status, created_at) 
                     VALUES (?, ?, 'confirmed', NOW())
                 ");
                 $stmt->execute([$user_id, $validId]);
@@ -339,7 +368,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
             $stmt = $pdo->prepare("
                 UPDATE shift_assignments 
                 SET status = 'cancelled'
-                WHERE member_id = ? AND shift_id = ? AND status != 'cancelled'
+                WHERE user_id = ? AND shift_id = ? AND status != 'cancelled'
             ");
             $stmt->execute([$user_id, $validId]);
 
@@ -429,9 +458,9 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller
             if ($shift) {
                 // 参加者情報を取得
                 $stmt = $pdo->prepare("
-                    SELECT m.name, sa.status 
+                    SELECT u.name, sa.status 
                     FROM shift_assignments sa 
-                    JOIN members m ON sa.member_id = m.id 
+                    JOIN users u ON sa.user_id = u.id 
                     WHERE sa.shift_id = ? AND sa.status != 'cancelled'
                 ");
                 $stmt->execute([$id]);
