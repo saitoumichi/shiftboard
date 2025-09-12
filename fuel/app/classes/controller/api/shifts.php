@@ -1,27 +1,18 @@
 <?php
 
+use Fuel\Core\Controller_Rest;
+use Fuel\Core\DB;
+use Fuel\Core\Input;
+use Fuel\Core\Response;
 /**
  * API Shifts Controller
  * シフト管理用のAPIコントローラー
  */
-class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
+class Controller_Api_Shifts extends Controller_Rest
 {
-    protected $format = 'json';
-    /**
-     * レスポンスを返す
-     * 
-     * @param mixed $data レスポンスデータ
-     * @param int $status HTTPステータスコード
-     * @return \Fuel\Core\Response
-     */
-
-    /**
-     * シフト一覧取得 / シフト作成
-     */
-
      public function get_index()
     {
-        $rows = \Fuel\Core\DB::query("
+        $rows = DB::query("
             SELECT s.id, s.created_by, s.shift_date, s.start_time, s.end_time,
                    s.recruit_count, s.free_text, s.created_at, s.updated_at,
                    COUNT(CASE WHEN sa.status != 'cancelled' THEN sa.user_id END) AS joined_count
@@ -38,7 +29,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
     public function action_index()
     {
         try {
-            if (\Fuel\Core\Input::method() === 'POST') {
+            if (Input::method() === 'POST') {
                 return $this->action_create();
             }
 
