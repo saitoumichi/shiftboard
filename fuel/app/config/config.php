@@ -4,6 +4,7 @@ return [
     'base_url' => '/',
     'index_file' => false,
     'controller_prefix' => 'Controller_',
+    'environment' => Fuel::DEVELOPMENT,
     
     // 言語・ロケール設定
     'language' => 'ja',
