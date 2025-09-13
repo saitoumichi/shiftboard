@@ -5,13 +5,13 @@ class Create_users
 {
     public function up()
     {
-        \DBUtil::create_table('users', [
-            'id'         => ['type' => 'bigint', 'unsigned' => true, 'auto_increment' => true],
-            'name'       => ['type' => 'varchar', 'constraint' => 100],
-            'colors'     => ['type' => 'char', 'constraint' => 7, 'null' => true],
-            'created_at' => ['type' => 'timestamp', 'default' => \DB::expr('CURRENT_TIMESTAMP')],
-            'updated_at' => ['type' => 'timestamp', 'null' => true],
-        ], ['id'], false, 'InnoDB', 'utf8mb4');
+        \DBUtil::create_table('users', array(
+            'id' => array('constraint' => 11, 'type' => 'int', 'auto_increment' => true, 'unsigned' => true),
+            'name' => array('constraint' => 100, 'type' => 'varchar'),
+            'color' => array('constraint' => 7, 'type' => 'char', 'null' => true),
+            'created_at' => array('constraint' => 11, 'type' => 'int', 'unsigned' => true),
+            'updated_at' => array('constraint' => 11, 'type' => 'int', 'unsigned' => true, 'null' => true),
+        ), array('id'));
     }
 
     public function down()

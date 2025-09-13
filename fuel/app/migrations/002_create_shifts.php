@@ -5,33 +5,22 @@ class Create_shifts
 {
     public function up()
     {
-        \DBUtil::create_table('shifts', [
-            'id'            => ['type' => 'bigint', 'unsigned' => true, 'auto_increment' => true],
-            'user_id'       => ['type' => 'bigint', 'unsigned' => true, 'null' => true],
-            'shift_date'    => ['type' => 'date'],
-            'start_time'    => ['type' => 'time'],
-            'end_time'      => ['type' => 'time'],
-            'recruit_count' => ['type' => 'int', 'unsigned' => true, 'default' => 1],
-            'free_text'     => ['type' => 'varchar', 'constraint' => 500, 'null' => true],
-            'created_at'    => ['type' => 'timestamp', 'default' => \DB::expr('CURRENT_TIMESTAMP')],
-            'updated_at'    => ['type' => 'timestamp', 'null' => true],
-        ], ['id'], false, 'InnoDB', 'utf8mb4');
-
-        // インデックス & 外部キー
-        \DB::query("ALTER TABLE `shifts` ADD INDEX (`shift_date`)")->execute();
-        \DB::query("ALTER TABLE `shifts` ADD INDEX (`start_time`)")->execute();
-        \DB::query("ALTER TABLE `shifts` ADD INDEX (`end_time`)")->execute();
-        \DB::query("
-            ALTER TABLE `shifts`
-            ADD CONSTRAINT `fk_shifts_user`
-            FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
-            ON DELETE SET NULL
-        ")->execute();
+        \DBUtil::create_table('shifts', array(
+            'id' => array('constraint' => 11, 'type' => 'int', 'auto_increment' => true, 'unsigned' => true),
+            'created_by' => array('constraint' => 11, 'type' => 'int', 'unsigned' => true),
+            'shift_date' => array('type' => 'date'),
+            'start_time' => array('type' => 'time'),
+            'end_time' => array('type' => 'time'),
+            'recruit_count' => array('constraint' => 11, 'type' => 'int', 'unsigned' => true, 'default' => 1),
+            'free_text' => array('constraint' => 500, 'type' => 'varchar', 'null' => true),
+            'created_at' => array('constraint' => 11, 'type' => 'int', 'unsigned' => true),
+            'updated_at' => array('constraint' => 11, 'type' => 'int', 'unsigned' => true, 'null' => true),
+        ), array('id'));
+        \DBUtil::create_index('shifts', 'created_by', 'created_by');
     }
 
     public function down()
     {
-        \DB::query("ALTER TABLE `shifts` DROP FOREIGN KEY `fk_shifts_user`")->execute();
         \DBUtil::drop_table('shifts');
     }
 }
