@@ -1,92 +1,143 @@
 <?php
-class Model_Shifts_Participation extends Orm\Model
-{
-    protected static $_table_name  = 'shifts_participations';
-    protected static $_primary_key = ['id'];
 
-    protected static $_properties  = [
+class Model_Shift_Assignments extends \Orm\Model
+{
+    /**
+     * テーブル名
+     */
+    protected static $_table_name = 'shift_assignments';
+    
+    /**
+     * プライマリキー
+     */
+    protected static $_primary_key = array('id');
+    
+    /**
+     * プロパティ定義
+     */
+    protected static $_properties = array(
         'id',
-        'shift_id',
         'user_id',
+        'shift_id',
+        'status', // 'confirmed' or 'cancelled'
         'self_word',
-        'status',
         'created_at',
         'updated_at',
-    ];
-
-    protected static $_belongs_to = [
-        'shift' => [
-            'model_to' => 'Model_Shift',
+    );
+    
+    /**
+     * 観察者（オブザーバー）
+     */
+    protected static $_observers = array(
+        'Orm\\Observer_CreatedAt' => array(
+            'events' => array('before_insert'),
+            'mysql_timestamp' => true,
+            'property' => 'created_at'
+        ),
+    );
+    
+    /**
+     * リレーション定義
+     */
+    protected static $_belongs_to = array(
+        'shift' => array(
             'key_from' => 'shift_id',
-            'key_to'   => 'id',
-        ],
-        'user' => [
-            'model_to' => 'Model_User',
+            'model_to' => 'Model_Shifts',
+            'key_to' => 'id',
+            'cascade_save' => false,
+            'cascade_delete' => false,
+        ),
+        'user' => array(
             'key_from' => 'user_id',
-            'key_to'   => 'id',
-        ],
-    ];
+            'model_to' => 'Model_Users',
+            'key_to' => 'id',
+            'cascade_save' => false,
+            'cascade_delete' => false,
+        ),
+    );
 
-    protected static $_observers = [
-        'Orm\\Observer_Typing'   => ['events' => ['before_save']],
-        'Orm\\Observer_CreatedAt'=> ['events' => ['before_insert'], 'mysql_timestamp' => true],
-        'Orm\\Observer_UpdatedAt'=> ['events' => ['before_save'],   'mysql_timestamp' => true],
-    ];
-    // `Model_Shifts` クラス内に以下のメソッドを追加・修正
-    
     /**
-     * シフト一覧と参加者数を取得
-     * ORMを使用してJOIN操作を行う
+     * ユーザーがシフトに参加できるかチェックする
+     * @param int $user_id
+     * @param int $shift_id
+     * @return bool
      */
-    public static function get_all_with_assignments()
+    public static function can_join_shift($user_id, $shift_id)
     {
-        $rows = static::query()
-            ->select('t0.*', \DB::expr("COUNT(CASE WHEN t1.status != 'cancelled' THEN t1.user_id END) AS joined_count"))
-            ->related('assignments', [
-                'where' => [
-                    ['assignments.status', '!=', 'cancelled']
-                ],
-                'join_type' => 'left'
-            ])
-            ->group_by('t0.id')
-            ->order_by('shift_date', 'asc')
-            ->order_by('start_time', 'asc')
-            ->get();
-            
-        return array_map(function($row) {
-            $data = $row->to_array();
-            $data['joined_count'] = $data['joined_count'] ?? 0;
-            return $data;
-        }, $rows);
-    }
-    
-    /**
-     * シフト詳細と参加者情報を取得
-     */
-    public static function find_by_id_with_assignments($id)
-    {
-        $shift = static::find($id, [
-            'related' => ['assignments']
-        ]);
-        
-        if ($shift) {
-            $shift_data = $shift->to_array();
-            $assigned_users = [];
-            foreach ($shift->assignments as $assignment) {
-                if ($assignment->status !== 'cancelled') {
-                    // ここでユーザー情報を取得するために `Model_Shift_Assignments` のリレーションを利用する
-                    $user = \Model_Users::find($assignment->user_id);
-                    $assigned_users[] = [
-                        'user_id' => $user->id,
-                        'name' => $user->name,
-                        'status' => $assignment->status,
-                        'self_word' => $assignment->self_word
-                    ];
-                }
-            }
-            $shift_data['assigned_users'] = $assigned_users;
-            return $shift_data;
+        $shift = \Model_Shifts::find($shift_id);
+        if (!$shift) {
+            return false;
         }
-        return null;
+
+        $current_participants = static::query()
+            ->where('shift_id', $shift_id)
+            ->where('status', '!=', 'cancelled')
+            ->count();
+
+        // 既に定員に達しているか、既に参加しているか
+        if ($current_participants >= $shift->recruit_count || static::is_user_participating($user_id, $shift_id)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * ユーザーが既にシフトに参加しているかチェックする
+     * @param int $user_id
+     * @param int $shift_id
+     * @return bool
+     */
+    public static function is_user_participating($user_id, $shift_id)
+    {
+        return static::query()
+            ->where('user_id', $user_id)
+            ->where('shift_id', $shift_id)
+            ->where('status', '!=', 'cancelled')
+            ->count() > 0;
+    }
+
+    /**
+     * ユーザーをシフトに参加させる
+     * @param int $user_id
+     * @param int $shift_id
+     */
+    public static function join_shift($user_id, $shift_id)
+    {
+        $assignment = static::query()
+            ->where('user_id', $user_id)
+            ->where('shift_id', $shift_id)
+            ->get_one();
+
+        if ($assignment) {
+            $assignment->status = 'confirmed';
+            $assignment->save();
+        } else {
+            $assignment = static::forge([
+                'user_id' => $user_id,
+                'shift_id' => $shift_id,
+                'status' => 'confirmed',
+            ]);
+            $assignment->save();
+        }
+    }
+
+    /**
+     * ユーザーのシフト参加をキャンセルする
+     * @param int $user_id
+     * @param int $shift_id
+     */
+    public static function cancel_shift($user_id, $shift_id)
+    {
+        $assignment = static::query()
+            ->where('user_id', $user_id)
+            ->where('shift_id', $shift_id)
+            ->where('status', '!=', 'cancelled')
+            ->get_one();
+
+        if ($assignment) {
+            $assignment->status = 'cancelled';
+            $assignment->save();
+        }
     }
 }
