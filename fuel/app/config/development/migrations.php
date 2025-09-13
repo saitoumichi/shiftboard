@@ -2,7 +2,11 @@
 return array (
   'version' => array(  
     'app' => array(    
-      'default' => 0,
+      'default' => array(      
+        0 => '001_create_users',
+        1 => '002_create_shifts',
+        2 => '003_create_shift_assignments',
+      ),
     ),
     'module' => array(    
     ),

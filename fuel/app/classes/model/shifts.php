@@ -1,10 +1,5 @@
 <?php
 
-/**
- * Shift Model
- * * シフト管理のためのモデルクラス
- * FuelPHPのORMを使用してshiftsテーブルを操作します
- */
 class Model_Shifts extends \Orm\Model
 {
     /**
@@ -51,97 +46,105 @@ class Model_Shifts extends \Orm\Model
         )
     );
     
+
     /**
-     * バリデーションルールを定義
+     * 新規シフト作成用バリデーションルールを定義
      */
-    public static function validate($factory)
+    public static function validate_create($factory = 'create')
     {
         $val = \Validation::forge($factory);
         $val->add_field('created_by', '作成者ID', 'required|numeric_min[1]');
         $val->add_field('shift_date', 'シフト日付', 'required|valid_date[Y-m-d]');
-        $val->add_field('start_time', '開始時刻', 'required|valid_time');
-        $val->add_field('end_time', '終了時刻', 'required|valid_time');
-        $val->add_field('recruit_count', '募集人数', 'required|numeric_min[1]');
-        $val->add_field('free_text', '備考', 'max_length[255]');
+        $val->add_field('start_time', '開始時刻', 'required');
+        $val->add_field('end_time', '終了時刻', 'required');
+        $val->add_field('recruit_count', '募集人数', 'required|numeric_min[1]|numeric_max[100]');
+        $val->add_field('free_text', '備考', 'max_length[500]');
         
-        // 終了時刻が開始時刻より後であることのカスタムバリデーション
-        $val->add_callable(new \My_Validation_Rules());
-        $val->add('end_time')->add_rule('is_later_than_start_time', 'start_time');
+        // 開始時刻と終了時刻の論理チェック
+        $val->add_callable('Model_Shifts');
+        $val->add_rule('validate_time_order', 'start_time', 'end_time');
+
+        return $val;
+    }
+
+    /**
+     * シフト更新用バリデーションルールを定義
+     */
+    public static function validate_update($factory = 'update')
+    {
+        $val = \Validation::forge($factory);
+        $val->add_field('shift_date', 'シフト日付', 'valid_date[Y-m-d]');
+        $val->add_field('start_time', '開始時刻', '');
+        $val->add_field('end_time', '終了時刻', '');
+        $val->add_field('recruit_count', '募集人数', 'numeric_min[1]|numeric_max[100]');
+        $val->add_field('free_text', '備考', 'max_length[500]');
         
+        // 開始時刻と終了時刻の論理チェック
+        $val->add_callable('Model_Shifts');
+        $val->add_rule('validate_time_order', 'start_time', 'end_time');
+
         return $val;
     }
     
     /**
-     * リレーション定義
+     * カスタムバリデーションルール：終了時刻が開始時刻より後であることを確認
      */
-    protected static $_has_many = array(
-        'assignments' => array(
-            'key_from' => 'id',
-            'model_to' => 'Model_Shift_Assignments',
-            'key_to' => 'shift_id',
-            'cascade_save' => true,
-            'cascade_delete' => true,
-        ),
-    );
-
-    /**
-     * シフト一覧を参加者数付きで取得する
-     * @return array
-     */
-    public static function get_all_with_assignments()
+    public static function _validation_is_later_than_start_time($val, $field)
     {
-        $query = static::query();
-        $rows = $query
-            ->select('t0.*', \DB::expr("COUNT(CASE WHEN t1.status != 'cancelled' THEN t1.user_id END) AS joined_count"))
-            ->related('assignments', array('join_type' => 'left'))
-            ->group_by('t0.id')
-            ->order_by('shift_date', 'asc')
-            ->order_by('start_time', 'asc')
-            ->get();
-        
-        $result = [];
-        foreach ($rows as $row) {
-            $data = $row->to_array();
-            $data['joined_count'] = $data['joined_count'] ?? 0;
-            $result[] = $data;
+        // 既存のバリデーションロジック
+        if ($val && \Input::param($field) && $val <= \Input::param($field)) {
+            return false;
         }
-
-        return $result;
+        return true;
     }
 
     /**
-     * IDを指定してシフト詳細と参加者情報を取得する
-     * @param int $id
-     * @return array|null
+     * 新規シフト作成
      */
-    public static function find_by_id_with_assignments($id)
+    public static function create_shift(array $data)
+    {
+        $shift = static::forge($data);
+        if ($shift->save()) {
+            return $shift;
+        }
+        return false;
+    }
+
+    /**
+     * シフトを更新する
+     */
+    public static function update_shift($id, array $data)
     {
         $shift = static::find($id);
-
         if (!$shift) {
-            return null;
+            return false;
         }
-
-        $shift_data = $shift->to_array();
-
-        // 参加者情報を取得
-        $assignments = \Model_Shift_Assignments::query()
-            ->related('user')
-            ->where('shift_id', $id)
-            ->where('status', '!=', 'cancelled')
-            ->get();
-
-        $assigned_users = [];
-        foreach ($assignments as $assignment) {
-            $assigned_users[] = [
-                'user_id' => $assignment->user->id,
-                'name' => $assignment->user->name,
-                'status' => $assignment->status,
-                'self_word' => $assignment->self_word,
-            ];
+        
+        // 新しい募集人数が現在の参加者数を下回らないかチェック
+        if (isset($data['recruit_count'])) {
+            $current_participants = \Model_Shift_Assignments::count_participants_for_shift($id);
+            if ($data['recruit_count'] < $current_participants) {
+                throw new Exception('定員を現在の参加者数より少なくすることはできません');
+            }
         }
+        
+        $shift->set($data);
+        if ($shift->save()) {
+            return $shift;
+        }
+        return false;
+    }
 
-        $shift_data['assigned_users'] = $assigned_users;
-        return $shift_data;
+    /**
+     * シフトを削除する
+     */
+    public static function delete_shift($id)
+    {
+        $shift = static::find($id);
+        if ($shift) {
+            // cascade_delete設定により、関連するshift_assignmentsも自動的に削除される
+            return $shift->delete();
+        }
+        return false;
     }
 }

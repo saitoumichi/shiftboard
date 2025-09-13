@@ -140,4 +140,15 @@ class Model_Shift_Assignments extends \Orm\Model
             $assignment->save();
         }
     }
+
+        /**
+     * 指定されたシフトの現在の参加者数をカウントする
+     */
+    public static function count_participants_for_shift($shift_id)
+    {
+        return static::query()
+            ->where('shift_id', $shift_id)
+            ->where('status', '!=', 'cancelled')
+            ->count();
+    }
 }
