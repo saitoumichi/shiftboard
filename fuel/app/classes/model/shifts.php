@@ -23,12 +23,12 @@ class Model_Shifts extends \Orm\Model
      */
     protected static $_properties = array(
         'id',
-        'title',
+        'created_by', // DB: created_by を追加
         'shift_date',
         'start_time',
         'end_time',
-        'slot_count',
-        'note',
+        'recruit_count', // `slot_count`から変更
+        'free_text',     // `note`から変更
         'created_at',
         'updated_at'
     );
@@ -52,31 +52,20 @@ class Model_Shifts extends \Orm\Model
      * バリデーションルール
      */
     protected static $_validates = array(
-        'title' => array(
-            'required' => true,
-            'min_length' => array(1, 100),
-            'message' => 'タイトルは1文字以上100文字以内で入力してください'
-        ),
         'shift_date' => array(
             'required' => true,
-            'valid_date' => true,
-            'message' => '有効な日付を入力してください'
         ),
         'start_time' => array(
             'required' => true,
-            'valid_time' => true,
-            'message' => '有効な開始時刻を入力してください'
         ),
         'end_time' => array(
             'required' => true,
-            'valid_time' => true,
-            'message' => '有効な終了時刻を入力してください'
         ),
-        'slot_count' => array(
+        'recruit_count' => array(
             'required' => true,
             'min' => array(1),
             'max' => array(100),
-            'message' => '定員は1人以上100人以下で入力してください'
+            'message' => '募集人数は1人以上100人以下で入力してください'
         )
     );
     
@@ -119,12 +108,12 @@ class Model_Shifts extends \Orm\Model
     {
         try {
             $shift = static::forge();
-            $shift->title = $data['title'];
+            $shift->created_by = $data['created_by'];
             $shift->shift_date = $data['shift_date'];
             $shift->start_time = $data['start_time'];
             $shift->end_time = $data['end_time'];
-            $shift->slot_count = $data['slot_count'];
-            $shift->note = isset($data['note']) ? $data['note'] : '';
+            $shift->recruit_count = $data['recruit_count'];
+            $shift->free_text = isset($data['free_text']) ? $data['free_text'] : '';
             
             if ($shift->save()) {
                 return $shift;
@@ -343,5 +332,62 @@ class Model_Shifts extends \Orm\Model
             $this->start_time,
             $this->end_time
         );
+    }
+    // `Model_Shifts` クラス内に以下のメソッドを追加・修正
+    
+    /**
+     * シフト一覧と参加者数を取得
+     * ORMを使用してJOIN操作を行う
+     */
+    public static function get_all_with_assignments()
+    {
+        $rows = static::query()
+            ->select('t0.*', \DB::expr("COUNT(CASE WHEN t1.status != 'cancelled' THEN t1.user_id END) AS joined_count"))
+            ->related('assignments', [
+                'where' => [
+                    ['assignments.status', '!=', 'cancelled']
+                ],
+                'join_type' => 'left'
+            ])
+            ->group_by('t0.id')
+            ->order_by('shift_date', 'asc')
+            ->order_by('start_time', 'asc')
+            ->get();
+            
+        return array_map(function($row) {
+            $data = $row->to_array();
+            $data['joined_count'] = $data['joined_count'] ?? 0;
+            return $data;
+        }, $rows);
+    }
+    
+    /**
+     * シフト詳細と参加者情報を取得
+     */
+    public static function find_by_id_with_assignments($id)
+    {
+        $shift = static::find($id, [
+            'related' => ['assignments']
+        ]);
+        
+        if ($shift) {
+            $shift_data = $shift->to_array();
+            $assigned_users = [];
+            foreach ($shift->assignments as $assignment) {
+                if ($assignment->status !== 'cancelled') {
+                    // ここでユーザー情報を取得するために `Model_Shift_Assignments` のリレーションを利用する
+                    $user = \Model_Users::find($assignment->user_id);
+                    $assigned_users[] = [
+                        'user_id' => $user->id,
+                        'name' => $user->name,
+                        'status' => $assignment->status,
+                        'self_word' => $assignment->self_word
+                    ];
+                }
+            }
+            $shift_data['assigned_users'] = $assigned_users;
+            return $shift_data;
+        }
+        return null;
     }
 }
