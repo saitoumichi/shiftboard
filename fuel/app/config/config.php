@@ -64,7 +64,7 @@ return [
     // パッケージ・モジュール設定
     'module_paths' => [],
     'always_load' => [
-        'packages' => [],
+        'packages' => ['orm'],
         'modules' => [],
         'classes' => [],
         'config' => [],

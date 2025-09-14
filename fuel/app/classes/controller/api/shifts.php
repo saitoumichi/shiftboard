@@ -1,133 +1,96 @@
 <?php
 
-namespace Controller_Api; // 名前空間の追加
+use Fuel\Core\Input;
 
-/**
- * API Shifts Controller
- * シフト管理用のAPIコントローラー
- */
-class Controller_Shifts extends \Controller_Rest
+class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
 {
-    /**
-     * @var array レスポンスフォーマット
-     */
     protected $format = 'json';
 
-    /**
-     * 事前処理
-     */
-    public function before()
-    {
-        // 親クラスのbeforeメソッドを呼び出す
-        parent::before();
-
-        // 共通処理など、すべてのAction実行前に必要な処理をここに記述する
-        // 例：認証チェックなど
-    }
-
-    /**
-     * シフト一覧取得
-     * GET /api/shifts
-     */
+    // GET /api/shifts
     public function get_index()
     {
         try {
-            // モデルからシフト一覧と参加者数を取得
-            $shifts = \Model_Shifts::get_all_with_assignments();
-            return $this->response(['items' => $shifts]);
-        } catch (Exception $e) {
-            return $this->response(Controller_Api_Common::errorResponse('シフト一覧の取得に失敗しました: ' . $e->getMessage(), 500), 500);
+            // 完全FuelPHP方式（最終版）
+            // 設定を強制的に読み込み
+            \Config::load('db', true, true);
+            \Config::load('development/db', true, true);
+            
+            // データベース接続を強制的に初期化
+            \DB::instance()->disconnect();
+            \DB::instance()->connect();
+            
+            // 完全FuelPHP方式でシフトデータを取得
+            $shifts = \DB::select()->from('shifts')
+                ->order_by('shift_date', 'ASC')
+                ->order_by('start_time', 'ASC')
+                ->execute()
+                ->as_array();
+            
+            return $this->response(['ok' => true, 'items' => $shifts]);
+        } catch(Exception $e) {
+            return $this->response(['ok' => false, 'error' => $e->getMessage()], 500);
         }
     }
-    
-    /**
-     * シフト詳細取得
-     * GET /api/shifts/id
-     */
+
+    // GET /api/shifts/{id}
     public function get_show($id)
     {
-        try {
-            $shift = \Model_Shifts::find_by_id_with_assignments($id);
-            if (!$shift) {
-                return $this->response(Controller_Api_Common::errorResponse('シフトが見つかりません', 404), 404);
-            }
-            return $this->response(Controller_Api_Common::successResponse($shift, 'シフト詳細を取得しました'));
-        } catch (Exception $e) {
-            return $this->response(Controller_Api_Common::errorResponse('シフト詳細の取得に失敗しました: ' . $e->getMessage(), 500), 500);
-        }
+        $shift = \DB::select()->from('shifts')->where('id', $id)->execute()->current();
+        if (!$shift) return $this->response(['ok'=>false, 'error'=>'not_found'], 404);
+
+        $assignments = \DB::query("
+            SELECT sa.user_id, sa.status, sa.self_word, u.name, u.color
+            FROM shift_assignments sa
+            JOIN users u ON u.id = sa.user_id
+            WHERE sa.shift_id = :id AND sa.status != 'cancelled'
+            ORDER BY sa.created_at ASC
+        ")->parameters(['id'=>$id])->execute()->as_array();
+
+        $shift['assigned_users'] = $assignments;
+
+        return $this->response(['ok'=>true, 'item'=>$shift]);
     }
 
-    /**
-     * シフト作成
-     * POST /api/shifts
-     */
-    public function post_create()
+    // POST /api/shifts
+    public function post_index()
     {
-        try {
-            $input = \Input::post() ?: json_decode(file_get_contents('php://input'), true);
+        $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
 
-            // モデルに定義されたバリデーションルールを実行
-            $val = \Model_Shifts::validate_create();
-            if (!$val->run($input)) {
-                return $this->response(Controller_Api_Common::validationErrorResponse($val->errors()), 400);
-            }
-            
-            // モデルのメソッドを呼び出してシフトを作成
-            $shift = \Model_Shifts::create_shift($input);
-            if (!$shift) {
-                throw new Exception('シフトの作成に失敗しました');
-            }
+        list($id,) = \DB::insert('shifts')->set([
+            'created_by'    => (int)($data['created_by'] ?? 1),
+            'shift_date'    => $data['shift_date'] ?? null,
+            'start_time'    => $data['start_time'] ?? null,
+            'end_time'      => $data['end_time'] ?? null,
+            'recruit_count' => (int)($data['recruit_count'] ?? 1),
+            'free_text'     => $data['free_text'] ?? null,
+            'created_at'    => \DB::expr('CURRENT_TIMESTAMP'),
+        ])->execute();
 
-            // 作成されたシフトの詳細情報を取得して返す
-            $formatted_shift = \Model_Shifts::find_by_id_with_assignments($shift->id);
-            return $this->response(Controller_Api_Common::successResponse($formatted_shift, 'シフトを作成しました'));
-        } catch (Exception $e) {
-            return $this->response(Controller_Api_Common::errorResponse('シフトの作成に失敗しました: ' . $e->getMessage(), 500), 500);
-        }
+        return $this->response(['ok'=>true, 'id'=>$id], 201);
     }
-    
-    /**
-     * シフト更新
-     * PUT /api/shifts/id
-     */
+
+    // PUT /api/shifts/{id}
     public function put_update($id)
     {
-        try {
-            $input = \Input::put() ?: json_decode(file_get_contents('php://input'), true);
+        $data = json_decode(file_get_contents('php://input'), true) ?: [];
 
-            // モデルに定義されたバリデーションルールを実行
-            $val = \Model_Shifts::validate_update();
-            if (!$val->run($input)) {
-                return $this->response(Controller_Api_Common::validationErrorResponse($val->errors()), 400);
-            }
+        \DB::update('shifts')->set([
+            'shift_date'    => $data['shift_date'] ?? \DB::expr('shift_date'),
+            'start_time'    => $data['start_time'] ?? \DB::expr('start_time'),
+            'end_time'      => $data['end_time'] ?? \DB::expr('end_time'),
+            'recruit_count' => isset($data['recruit_count']) ? (int)$data['recruit_count'] : \DB::expr('recruit_count'),
+            'free_text'     => array_key_exists('free_text',$data) ? $data['free_text'] : \DB::expr('free_text'),
+            'updated_at'    => \DB::expr('CURRENT_TIMESTAMP'),
+        ])->where('id', $id)->execute();
 
-            // モデルのメソッドを呼び出してシフトを更新
-            $updated_shift = \Model_Shifts::update_shift($id, $input);
-            if (!$updated_shift) {
-                return $this->response(Controller_Api_Common::errorResponse('シフトが見つからないか、更新に失敗しました', 404), 404);
-            }
-
-            return $this->response(Controller_Api_Common::successResponse($updated_shift->to_array_with_assignments(), 'シフトを更新しました'));
-        } catch (Exception $e) {
-            return $this->response(Controller_Api_Common::errorResponse('シフトの更新に失敗しました: ' . $e->getMessage(), 500), 500);
-        }
+        return $this->response(['ok'=>true]);
     }
 
-    /**
-     * シフト削除
-     * DELETE /api/shifts/id
-     */
+    // DELETE /api/shifts/{id}
     public function delete_delete($id)
     {
-        try {
-            // モデルのメソッドを呼び出してシフトを削除
-            if (!\Model_Shifts::delete_shift($id)) {
-                return $this->response(Controller_Api_Common::errorResponse('シフトが見つからないか、削除に失敗しました', 404), 404);
-            }
-            
-            return $this->response(Controller_Api_Common::successResponse(null, 'シフトを削除しました'));
-        } catch (Exception $e) {
-            return $this->response(Controller_Api_Common::errorResponse('シフトの削除に失敗しました: ' . $e->getMessage(), 500), 500);
-        }
+        \DB::delete('shift_assignments')->where('shift_id', $id)->execute();
+        \DB::delete('shifts')->where('id', $id)->execute();
+        return $this->response(['ok'=>true]);
     }
 }
