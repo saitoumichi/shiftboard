@@ -94,3 +94,25 @@ docker-compose exec db mysql -u app -papp_pass shiftboard < fuel/app/data/schema
 ## 開発状況
 
 現在、基本的なシフト管理機能は実装済みです。詳細な実装状況については、プロジェクト内の各ファイルを参照してください。
+
+構成イメージ
+fuel/
+ ├ app/
+ │   ├ classes/
+ │   │   ├ controller/
+ │   │   │   ├ shifts.php      ← シフト管理用Controller
+ │   │   │   ├ users.php       ← ユーザー管理用Controller
+ │   │   │   └ myshifts.php    ← 自分のシフトController
+ │   │   └ model/
+ │   │       ├ shift.php       ← Shiftモデル
+ │   │       └ user.php        ← Userモデル
+ │   └ views/
+ │       ├ shifts/
+ │       │   ├ index.php       ← シフト一覧
+ │       │   ├ create.php      ← シフト登録フォーム
+ │       │   ├ view.php        ← シフト詳細
+ │       ├ users/
+ │       │   ├ index.php       ← ユーザー一覧
+ │       │   └ create.php      ← ユーザー登録
+ │       └ myshifts/
+ │           └ index.php       ← 自分のシフト

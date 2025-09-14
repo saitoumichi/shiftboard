@@ -1,13 +1,7 @@
 <?php
 
-/**
- * メンバー管理用のコントローラー
- */
 class Controller_Users extends \Fuel\Core\Controller
 {
-    /**
-     * メンバー一覧画面
-     */
     public function action_index()
     {
         $data = array(
@@ -17,10 +11,7 @@ class Controller_Users extends \Fuel\Core\Controller
         
         return \Fuel\Core\View::forge('users/index', $data);
     }
-    
-    /**
-     * メンバー作成画面
-     */
+
     public function action_create()
     {
         $data = array(
