@@ -9,26 +9,34 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
     // GET /api/shifts
     public function get_index()
     {
+        $db_connect_error = null;
+        $res = null;
+    
         try {
-            // 完全FuelPHP方式（最終版）
-            // 設定を強制的に読み込み
-            \Config::load('db', true, true);
-            \Config::load('development/db', true, true);
-            
-            // データベース接続を強制的に初期化
-            \DB::instance()->disconnect();
-            \DB::instance()->connect();
-            
-            // 完全FuelPHP方式でシフトデータを取得
-            $shifts = \DB::select()->from('shifts')
+            // 接続確認（軽いクエリでOK）
+            try {
+                $res = \DB::query('SELECT 1 AS ok')->execute()->current();
+            } catch (\Database_Exception $e) {
+                $db_connect_error = $e->getMessage();
+                // 接続エラーなら素直に 500
+                return $this->response(['ok' => false, 'error' => 'db_connect_failed', 'detail' => $db_connect_error], 500);
+            }
+    
+            // シフト一覧
+            $shifts = \DB::select()
+                ->from('shifts')
                 ->order_by('shift_date', 'ASC')
                 ->order_by('start_time', 'ASC')
                 ->execute()
                 ->as_array();
-            
-            return $this->response(['ok' => true, 'items' => $shifts]);
-        } catch(Exception $e) {
-            return $this->response(['ok' => false, 'error' => $e->getMessage()], 500);
+    
+            return $this->response(['ok' => true, 'items' => $shifts], 200);
+    
+        } catch (\Throwable $e) {
+            return $this->response(
+                ['ok' => false, 'error' => $e->getMessage()],
+                500
+            );
         }
     }
 
@@ -55,17 +63,29 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
     public function post_index()
     {
         $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
-
+    
+        // 必須チェック
+        $required = ['shift_date','start_time','end_time'];
+        foreach ($required as $k) {
+            if (empty($data[$k])) {
+                return $this->response(['ok'=>false,'error'=>"missing: {$k}"], 400);
+            }
+        }
+        $recruit = (int)($data['recruit_count'] ?? 1);
+        if ($recruit < 1) {
+            return $this->response(['ok'=>false,'error'=>'recruit_count must be >= 1'], 400);
+        }
+    
         list($id,) = \DB::insert('shifts')->set([
             'created_by'    => (int)($data['created_by'] ?? 1),
-            'shift_date'    => $data['shift_date'] ?? null,
-            'start_time'    => $data['start_time'] ?? null,
-            'end_time'      => $data['end_time'] ?? null,
-            'recruit_count' => (int)($data['recruit_count'] ?? 1),
+            'shift_date'    => $data['shift_date'],
+            'start_time'    => $data['start_time'],
+            'end_time'      => $data['end_time'],
+            'recruit_count' => $recruit,
             'free_text'     => $data['free_text'] ?? null,
             'created_at'    => \DB::expr('CURRENT_TIMESTAMP'),
         ])->execute();
-
+    
         return $this->response(['ok'=>true, 'id'=>$id], 201);
     }
 
@@ -89,8 +109,20 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
     // DELETE /api/shifts/{id}
     public function delete_delete($id)
     {
-        \DB::delete('shift_assignments')->where('shift_id', $id)->execute();
-        \DB::delete('shifts')->where('id', $id)->execute();
-        return $this->response(['ok'=>true]);
+        $exists = \DB::select('id')->from('shifts')->where('id',$id)->execute()->current();
+        if (!$exists) {
+            return $this->response(['ok'=>false,'error'=>'not_found'], 404);
+        }
+    
+        \DB::start_transaction();
+        try {
+            \DB::delete('shift_assignments')->where('shift_id', $id)->execute();
+            \DB::delete('shifts')->where('id', $id)->execute();
+            \DB::commit_transaction();
+            return $this->response(['ok'=>true], 200);
+        } catch (\Throwable $e) {
+            \DB::rollback_transaction();
+            return $this->response(['ok'=>false,'error'=>$e->getMessage()], 500);
+        }
     }
 }
