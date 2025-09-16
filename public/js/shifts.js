@@ -848,64 +848,59 @@ function ShiftViewModel() {
     
     // コメント入力モーダルを表示
     self.showCommentModal = function(shift) {
-        console.log('showCommentModal called with shift:', shift);
-        
-        var modal = document.getElementById('comment-modal');
-        var textarea = document.getElementById('comment-textarea');
-        var cancelBtn = document.getElementById('comment-cancel-btn');
-        var okBtn = document.getElementById('comment-ok-btn');
-        
-        console.log('Modal elements found:', {
-            modal: !!modal,
-            textarea: !!textarea,
-            cancelBtn: !!cancelBtn,
-            okBtn: !!okBtn
-        });
-        
-        if (!modal) {
-            console.error('comment-modal element not found!');
-            console.log('Available elements with "comment" in id:', 
-                Array.from(document.querySelectorAll('[id*="comment"]')).map(el => el.id));
-            console.log('All elements with id:', 
-                Array.from(document.querySelectorAll('[id]')).map(el => el.id));
-            return;
-        }
-        
-        // テキストエリアをクリア
-        if (textarea) {
-            textarea.value = '';
-        }
-        
-        // モーダルを表示
-        modal.style.display = 'flex';
-        console.log('Modal displayed');
+    console.log('showCommentModal called with shift:', shift);
+
+    var modal = document.getElementById('comment-modal');
+
+    // デバッグログの追加
+    console.log('Found modal element:', modal);
+
+    if (!modal) {
+        console.error('Error: Modal element with ID "comment-modal" was not found.');
+        return; // 要素が見つからない場合は処理を終了
+    }
+
+    var textarea = document.getElementById('comment-textarea');
+    var cancelBtn = document.getElementById('comment-cancel-btn');
+    var okBtn = document.getElementById('comment-ok-btn');
+
+    // テキストエリアをクリア
+    if (textarea) {
+        textarea.value = '';
+    }
+
+    // モーダルを表示
+    modal.style.display = 'flex';
+    console.log('Modal displayed');
+    if (textarea) {
         textarea.focus();
-        
-        // キャンセルボタンのイベント
-        cancelBtn.onclick = function() {
+    }
+
+    // キャンセルボタンのイベント
+    cancelBtn.onclick = function() {
+        modal.style.display = 'none';
+    };
+
+    // OKボタンのイベント
+    okBtn.onclick = function() {
+        var comment = textarea.value.trim();
+        self.submitJoinShift(shift, comment);
+        modal.style.display = 'none';
+    };
+
+    // エスケープキーでモーダルを閉じる
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
             modal.style.display = 'none';
-        };
-        
-        // OKボタンのイベント
-        okBtn.onclick = function() {
-            var comment = textarea.value.trim();
-            self.submitJoinShift(shift, comment);
+        }
+    });
+
+    // モーダル外クリックで閉じる
+    modal.onclick = function(e) {
+        if (e.target === modal) {
             modal.style.display = 'none';
-        };
-        
-        // エスケープキーでモーダルを閉じる
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                modal.style.display = 'none';
-            }
-        });
-        
-        // モーダル外クリックで閉じる
-        modal.onclick = function(e) {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        };
+        }
+    };
     };
     
     // シフト参加を実際に実行
