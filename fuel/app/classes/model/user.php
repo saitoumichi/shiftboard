@@ -12,7 +12,6 @@ class Model_User extends \Orm\Model
         'updated_at',
     );
 
-        // ユーザーが作成したシフト (1 : N)
         // ユーザー 1 : N 割り当て
         protected static $_has_many = [
             'created_shifts' => [
@@ -31,4 +30,14 @@ class Model_User extends \Orm\Model
             ],
         ];
 
+        protected static $_observers = [
+            'Orm\\Observer_CreatedAt' => [
+                'events'          => ['before_insert'],
+                'mysql_timestamp' => true, // 'Y-m-d H:i:s'
+            ],
+            'Orm\\Observer_UpdatedAt' => [
+                'events'          => ['before_update'],
+                'mysql_timestamp' => true,
+            ],
+        ];
 }

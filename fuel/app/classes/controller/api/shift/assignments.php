@@ -74,7 +74,8 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
                 'user_id' => $input['user_id'],
                 'status' => 'assigned',
                 'self_word' => $input['self_word'] ?? null,
-            ])->save();
+            ]);
+            $assignment->save();
 
             // 関連データを含めて再取得
             $assignment = \Model_Shift_Assignment::find($assignment->id, [
@@ -152,7 +153,8 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
                 'user_id' => $input['user_id'],
                 'status' => $input['status'] ?? 'assigned',
                 'self_word' => $input['self_word'] ?? null,
-            ])->save();
+            ]);
+            $assignment->save();
 
             // 関連データを含めて再取得
             $assignment = \Model_Shift_Assignment::find($assignment->id, [

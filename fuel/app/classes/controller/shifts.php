@@ -28,8 +28,8 @@ class Controller_Shifts extends \Fuel\Core\Controller
                 'shift_date'    => \Fuel\Core\Input::post('shift_date'),
                 'start_time'    => \Fuel\Core\Input::post('start_time'),
                 'end_time'      => \Fuel\Core\Input::post('end_time'),
-                'recruit_count' => (int)\Fuel\Core\Input::post('slot_count'),
-                'free_text'     => \Fuel\Core\Input::post('note'),
+                'recruit_count' => (int)\Fuel\Core\Input::post('recruit_count'),
+                'free_text'     => \Fuel\Core\Input::post('free_text'),
             ]);
             try {
                 $shift->save();
