@@ -14,22 +14,24 @@ $(document).ready(function() {
         e.preventDefault();
         
         var formData = {
-            title: $('#title').val(),
             shift_date: $('#shift_date').val(),
             start_time: $('#start_time').val(),
             end_time: $('#end_time').val(),
-            slot_count: Number($('#slot_count').val() || 1),
-            note: $('#note').val() || ''
+            recruit_count: Number($('#slot_count').val() || 1),
+            free_text: $('#note').val() || ''
         };
         
         // デバッグ用：送信データをコンソールに出力
         console.log('Form data being sent:', formData);
-        console.log('Title value:', $('#title').val());
-        console.log('Title element exists:', $('#title').length > 0);
         
         // バリデーション
-        if (!formData.title || !formData.shift_date || !formData.start_time || !formData.end_time) {
+        if (!formData.shift_date || !formData.start_time || !formData.end_time) {
             showAlert('すべての必須項目を入力してください。', 'error');
+            return;
+        }
+        
+        if (formData.recruit_count < 1) {
+            showAlert('募集人数は1以上で入力してください。', 'error');
             return;
         }
         
@@ -45,22 +47,22 @@ $(document).ready(function() {
             contentType: 'application/json',
             processData: false,
             data: JSON.stringify({
-              title: ($('#title').val() || '').trim(),              // ★これが必須
               shift_date: ($('#shift_date').val() || '').trim(),
               start_time: ($('#start_time').val() || '').trim(),
               end_time:   ($('#end_time').val() || '').trim(),
-              slot_count: Number($('#slot_count').val() || 1),
-              note:       ($('#note').val() || '').trim()
+              recruit_count: Number($('#slot_count').val() || 1),
+              free_text:   ($('#note').val() || '').trim()
             }),
             dataType: 'json',
             success: function(response) {
-                if (response.success) {
+                if (response.ok || response.success) {
                     showAlert('シフトが正常に作成されました。', 'success');
                     setTimeout(function() {
                         window.location.href = '/shifts';
                     }, 2000);
                 } else {
-                    showAlert('シフトの作成に失敗しました: ' + response.message, 'error');
+                    var errorMsg = response.message || response.error || '不明なエラー';
+                    showAlert('シフトの作成に失敗しました: ' + errorMsg, 'error');
                 }
             },
             error: function(xhr, status, error) {
@@ -68,10 +70,21 @@ $(document).ready(function() {
                 
                 try {
                     var response = JSON.parse(xhr.responseText);
+                    console.log('Error response:', response);
                     if (response.message) {
                         errorMessage = response.message;
+                    } else if (response.error) {
+                        errorMessage = response.error;
+                    } else if (response.errors) {
+                        // バリデーションエラーの場合
+                        var errorList = [];
+                        for (var field in response.errors) {
+                            errorList.push(field + ': ' + response.errors[field]);
+                        }
+                        errorMessage = errorList.join(', ');
                     }
                 } catch (e) {
+                    console.log('JSON parse error:', e);
                     // JSON解析に失敗した場合はデフォルトメッセージを使用
                 }
                 

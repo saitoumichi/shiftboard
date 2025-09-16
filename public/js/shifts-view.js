@@ -487,22 +487,94 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           }
       };
       
-      // シフト参加
-      vm.joinShift = function(shiftId) {
-          console.log('Joining shift:', shiftId);
-          console.log('Current shift data:', vm.shift());
+    // シフト参加
+    vm.joinShift = function(shiftId) {
+        console.log('joinShift called with shiftId:', shiftId);
+        // モーダルダイアログを表示
+        vm.showCommentModal(shiftId);
+    };
+      
+      // コメント入力モーダルを表示
+      vm.showCommentModal = function(shiftId) {
+          console.log('showCommentModal called with shiftId:', shiftId);
+          
+          var modal = document.getElementById('comment-modal');
+          var textarea = document.getElementById('comment-textarea');
+          var cancelBtn = document.getElementById('comment-cancel-btn');
+          var okBtn = document.getElementById('comment-ok-btn');
+          
+          console.log('Modal elements found:', {
+              modal: !!modal,
+              textarea: !!textarea,
+              cancelBtn: !!cancelBtn,
+              okBtn: !!okBtn
+          });
+          
+          if (!modal) {
+              console.error('comment-modal element not found!');
+              console.log('Available elements with "comment" in id:', 
+                  Array.from(document.querySelectorAll('[id*="comment"]')).map(el => el.id));
+              console.log('All elements with id:', 
+                  Array.from(document.querySelectorAll('[id]')).map(el => el.id));
+              return;
+          }
+          
+          // テキストエリアをクリア
+          if (textarea) {
+              textarea.value = '';
+          }
+          
+          // モーダルを表示
+          modal.style.display = 'flex';
+          console.log('Modal displayed');
+          textarea.focus();
+          
+          // キャンセルボタンのイベント
+          cancelBtn.onclick = function() {
+              modal.style.display = 'none';
+          };
+          
+          // OKボタンのイベント
+          okBtn.onclick = function() {
+              var comment = textarea.value.trim();
+              vm.submitJoinShift(shiftId, comment);
+              modal.style.display = 'none';
+          };
+          
+          // エスケープキーでモーダルを閉じる
+          document.addEventListener('keydown', function(e) {
+              if (e.key === 'Escape') {
+                  modal.style.display = 'none';
+              }
+          });
+          
+          // モーダル外クリックで閉じる
+          modal.onclick = function(e) {
+              if (e.target === modal) {
+                  modal.style.display = 'none';
+              }
+          };
+      };
+      
+      // シフト参加を実際に実行
+      vm.submitJoinShift = function(shiftId, comment) {
+          console.log('Joining shift:', shiftId, 'with comment:', comment);
           fetch('/api/shifts/' + shiftId + '/join', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
                   'Accept': 'application/json'
-              }
+              },
+              body: JSON.stringify({
+                  user_id: 1, // 仮のユーザーID
+                  self_word: comment
+              })
           })
           .then(function(response) {
               return response.json();
           })
           .then(function(data) {
-              if (data.success) {
+              if (data.ok || data.success) {
                   vm.showAlert('シフトに参加しました！', 'success');
                   vm.load(shiftId); // データを再読み込み
                   
@@ -516,7 +588,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                       window.location.href = '/my/shifts';
                   }, 1500);
               } else {
-                  vm.showAlert('参加に失敗しました: ' + data.message, 'error');
+                  vm.showAlert('参加に失敗しました: ' + (data.message || data.error), 'error');
               }
           })
           .catch(function(error) {

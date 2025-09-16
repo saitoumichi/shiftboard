@@ -30,13 +30,29 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
         $data = array_map(function($s){
             $assigned = isset($s->assignments) ? count($s->assignments) : 0;
             $slot     = (int)($s->recruit_count ?? 0);
+            
+            // 参加者情報を整形
+            $assigned_users = [];
+            if (isset($s->assignments) && is_array($s->assignments)) {
+                foreach ($s->assignments as $assignment) {
+                    $assigned_users[] = [
+                        'id' => (int)$assignment->id,
+                        'user_id' => (int)$assignment->user_id,
+                        'name' => $assignment->user ? $assignment->user->name : 'Unknown User',
+                        'status' => $assignment->status,
+                        'self_word' => $assignment->self_word,
+                        'color' => $assignment->user ? $assignment->user->color : '#000000'
+                    ];
+                }
+            }
+            
             return [
                 'id'              => (int)$s->id,
                 'shift_date'      => (string)$s->shift_date,
                 'start_time'      => substr((string)$s->start_time, 0, 5),
                 'end_time'        => substr((string)$s->end_time, 0, 5),
                 'slot_count'      => $slot,
-                'assigned_users'  => [],            // 必要なら実ユーザ配列に
+                'assigned_users'  => $assigned_users,
                 'assigned_count'  => $assigned,
                 'available_slots' => max($slot - $assigned, 0),
                 'note'            => (string)($s->free_text ?? ''),
@@ -45,6 +61,50 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
 
         return $this->response(['success' => true, 'data' => array_values($data)]);
     }
+
+        // 追加：GET /api/shifts/{id}
+        public function get_show($id = null)
+        {
+            if (!$id) {
+                return $this->response(['success' => false, 'error' => 'invalid_id'], 400);
+            }
+        
+            $shift = \Model_Shift::find($id, [
+                'related' => ['assignments' => ['related' => ['user']]],
+            ]);
+        
+            if (!$shift) {
+                return $this->response(['success' => false, 'error' => 'not_found'], 404);
+            }
+        
+            // 参加者情報を整形
+            $assigned_users = [];
+            if (isset($shift->assignments) && is_array($shift->assignments)) {
+                foreach ($shift->assignments as $assignment) {
+                    $assigned_users[] = [
+                        'id' => (int)$assignment->id,
+                        'user_id' => (int)$assignment->user_id,
+                        'name' => $assignment->user ? $assignment->user->name : 'Unknown User',
+                        'status' => $assignment->status,
+                        'self_word' => $assignment->self_word,
+                        'color' => $assignment->user ? $assignment->user->color : '#000000'
+                    ];
+                }
+            }
+            
+            $payload = $shift->to_array();
+            $payload['assigned_users'] = $assigned_users;
+            $payload['joined_count'] = count($assigned_users);
+            $payload['remaining'] = max((int)$shift->recruit_count - count($assigned_users), 0);
+            $payload['slot_count'] = (int)$shift->recruit_count;
+        
+            // ← success & data に統一
+            return $this->response([
+                'success' => true,
+                'data'    => $payload
+            ]);
+        }
+    
 
     // POST /api/shifts
     public function post_index()

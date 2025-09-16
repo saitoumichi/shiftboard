@@ -39,4 +39,25 @@ class Model_Shift extends \Orm\Model
         ],
     ];
 
+    public function joined_count(): int
+    {
+        // assignments が未ロードなら ORM が遅延ロードします
+        $count = 0;
+        foreach ($this->assignments as $a) {
+            if ($a->status !== 'cancelled') {
+                $count++;
+            }
+        }
+        return $count;
+    }
+
+    /**
+     * 残りの募集枠（0未満にならない）
+     */
+    public function remaining(): int
+    {
+        $recruit = (int) $this->recruit_count;
+        return max(0, $recruit - $this->joined_count());
+    }
+
 }

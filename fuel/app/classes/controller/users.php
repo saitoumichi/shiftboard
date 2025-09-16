@@ -14,12 +14,16 @@ class Controller_Users extends \Fuel\Core\Controller
 
     public function action_create() //メンバー作成
     {
+        // 既存ユーザーを取得
+        $users = \Model_User::find('all');
+        
         $data = array(
             'title' => 'メンバー作成',
-            'subtitle' => '・ 新しいメンバーを追加'
+            'subtitle' => '・ 新しいメンバーを追加',
+            'users' => $users
         );
         
-        return \Fuel\Core\View::forge('users/create');
+        return \Fuel\Core\Response::forge(\Fuel\Core\View::forge('users/create', $data));
     }
 
     public function action_view($id) //メンバー詳細
