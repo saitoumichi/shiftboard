@@ -783,7 +783,12 @@ function ShiftViewModel() {
                     console.log('Total shifts:', response.data.length);
 
                     // 正規化：型を数値に統一し、available_slots を算出
-                    var normalized = (response.data || []).map(function(shift) {
+                    var data = response.data || [];
+                    // 配列でない場合は配列に変換
+                    if (!Array.isArray(data)) {
+                        data = Array.from(data);
+                    }
+                    var normalized = data.map(function(shift) {
                         var assignedCount = Array.isArray(shift.assigned_users)
                             ? shift.assigned_users.length
                             : Number(shift.assigned_count ?? 0);

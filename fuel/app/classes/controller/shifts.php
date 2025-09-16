@@ -7,7 +7,7 @@ class Controller_Shifts extends \Fuel\Core\Controller
     {
         // 近い順に取得（今日以降）
         $shifts = \Model_Shift::query()
-            ->related('assignments')                 // 参加者を一括取得（N+1回避）
+            ->related('assignments')  // 参加者を一括取得（N+1回避）
             ->where('shift_date', '>=', date('Y-m-d'))
             ->order_by('shift_date', 'asc')
             ->order_by('start_time', 'asc')
@@ -53,11 +53,25 @@ class Controller_Shifts extends \Fuel\Core\Controller
         ]);
         if (!$shift) throw new \Fuel\Core\HttpNotFoundException;
 
+        // 現在のユーザーIDを取得（認証未実装のため仮の値）
+        $current_user_id = \Fuel\Core\Session::get('user_id', 1);
+        
+        // 既に参加しているかチェック
+        $already_joined = false;
+        foreach ($shift->assignments as $assignment) {
+            if ($assignment->user_id == $current_user_id) {
+                $already_joined = true;
+                break;
+            }
+        }
+
         return \Fuel\Core\Response::forge(\Fuel\Core\View::forge('shifts/view', [
             'shift'       => $shift,
             'assignments' => $shift->assignments,     // $a->user->name / color が使える
             'joined'      => $shift->joined_count(),
             'remaining'   => $shift->remaining(),
+            'current_user_id'=> $current_user_id,
+            'already_joined' => $already_joined,
         ]));
     }
 }

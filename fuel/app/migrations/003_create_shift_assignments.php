@@ -5,7 +5,7 @@ class Create_shift_assignments
 {
     public function up()
     {
-        \DBUtil::create_table('shift_assignments', array(
+        \Fuel\Core\DBUtil::create_table('shift_assignments', array(
             'id' => array('constraint' => 11, 'type' => 'int', 'auto_increment' => true, 'unsigned' => true),
             'shift_id' => array('constraint' => 11, 'type' => 'int', 'unsigned' => true),
             'user_id' => array('constraint' => 11, 'type' => 'int', 'unsigned' => true),
@@ -15,12 +15,12 @@ class Create_shift_assignments
             'updated_at' => array('constraint' => 11, 'type' => 'int', 'unsigned' => true, 'null' => true),
         ), array('id'));
 
-        \DBUtil::create_index('shift_assignments', 'shift_id', 'shift_id');
-        \DBUtil::create_index('shift_assignments', 'user_id', 'user_id');
+        \Fuel\Core\DBUtil::create_index('shift_assignments', 'shift_id', 'shift_id');
+        \Fuel\Core\DBUtil::create_index('shift_assignments', 'user_id', 'user_id');
     }
 
     public function down()
     {
-        \DBUtil::drop_table('shift_assignments');
+        \Fuel\Core\DBUtil::drop_table('shift_assignments');
     }
 }

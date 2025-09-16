@@ -4,108 +4,121 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
 {
     protected $format = 'json';
 
+    public function before()
+    {
+        parent::before();
+        // レスポンスは常にJSON
+        header('Content-Type: application/json; charset=UTF-8');
+    }
+
+    public function get_index()
+    {
+        $from = \Fuel\Core\Input::get('from');
+        $to   = \Fuel\Core\Input::get('to');
+
+        $q = \Model_Shift::query()
+            ->order_by('shift_date', 'asc')
+            ->order_by('start_time', 'asc')
+            ->related('assignments');
+
+        if ($from) $q->where('shift_date', '>=', $from);
+        if ($to)   $q->where('shift_date', '<=', $to);
+
+        $rows = $q->get();
+
+        // フロント（shifts.js）が期待する形に整形
+        $data = array_map(function($s){
+            $assigned = isset($s->assignments) ? count($s->assignments) : 0;
+            $slot     = (int)($s->recruit_count ?? 0);
+            return [
+                'id'              => (int)$s->id,
+                'shift_date'      => (string)$s->shift_date,
+                'start_time'      => substr((string)$s->start_time, 0, 5),
+                'end_time'        => substr((string)$s->end_time, 0, 5),
+                'slot_count'      => $slot,
+                'assigned_users'  => [],            // 必要なら実ユーザ配列に
+                'assigned_count'  => $assigned,
+                'available_slots' => max($slot - $assigned, 0),
+                'note'            => (string)($s->free_text ?? ''),
+            ];
+        }, $rows);
+
+        return $this->response(['success' => true, 'data' => array_values($data)]);
+    }
+
     // POST /api/shifts
     public function post_index()
     {
+        // JSON を安全に読む（x-www-form-urlencoded にもフォールバック）
+        $raw  = file_get_contents('php://input');
+        $json = json_decode($raw, true);
+        $in   = is_array($json) ? $json : \Fuel\Core\Input::post();
+
+        // created_by を必ずセット（認証があれば Auth::get('id') に置換）
+        $created_by = 1; // TODO: 認証実装後は \Auth::get('id') などに
+
+        // ---- Validation ----
+        $val = \Fuel\Core\Validation::forge();
+        $val->add('shift_date', 'Shift Date')
+            ->add_rule('required')
+            ->add_rule('match_pattern', '/^\d{4}-\d{2}-\d{2}$/'); // YYYY-MM-DD
+
+        $val->add('start_time', 'Start Time')
+            ->add_rule('required')
+            ->add_rule('match_pattern', '/^\d{2}:\d{2}$/'); // HH:MM
+
+        $val->add('end_time', 'End Time')
+            ->add_rule('required')
+            ->add_rule('match_pattern', '/^\d{2}:\d{2}$/');
+
+         $val->add('recruit_count', 'Recruit Count')
+             ->add_rule('required')
+             ->add_rule('valid_string', ['numeric'])
+             // ここを修正：引数は $value のみでOK
+             ->add_rule(function($value) {
+                 if (!is_numeric($value)) return false;
+                 return (int)$value >= 1; // 下限チェック
+             }, 'must be >= 1');
+
+        if ( ! $val->run($in)) {
+            // 422 Unprocessable Entity で返す
+            return $this->response([
+                'ok'     => false,
+                'errors' => $val->error()
+            ], 422);
+        }
+
+        // 追加の業務ルール: 時刻の前後関係
+        if (strtotime($in['end_time']) <= strtotime($in['start_time'])) {
+            return $this->response([
+                'ok'     => false,
+                'errors' => ['end_time' => 'must be later than start_time']
+            ], 422);
+        }
+
         try {
-            // JSONデータを取得
-            $input = json_decode(\Fuel\Core\Input::body(), true);
-            
-            if (!$input) {
-                return $this->response([
-                    'success' => false,
-                    'message' => '無効なJSONデータです',
-                ], 400);
-            }
-
-            $shift = \Model_Shift::forge([
-                'created_by'    => 1, // TODO: 認証導入後に置換
-                'shift_date'    => $input['shift_date'],
-                'start_time'    => $input['start_time'],
-                'end_time'      => $input['end_time'],
-                'recruit_count' => (int)$input['slot_count'],
-                'free_text'     => $input['note'],
+            // 保存
+            $shift = Model_Shift::forge([
+                'created_by'   => $created_by,
+                'shift_date'   => $in['shift_date'],
+                'start_time'   => $in['start_time'],
+                'end_time'     => $in['end_time'],
+                'recruit_count'=> (int)$in['recruit_count'],
+                'free_text'    => isset($in['free_text']) ? $in['free_text'] : null,
             ]);
-
             $shift->save();
 
             return $this->response([
-                'success' => true,
-                'message' => 'シフトが作成されました',
-                'data'    => $shift->to_array(),
+                'ok'    => true,
+                'shift' => $shift
             ], 201);
 
-        } catch (\Fuel\Core\Validation_Error $e) {
-            return $this->response([
-                'success' => false,
-                'message' => 'バリデーションエラー: ' . $e->get_message(),
-            ], 400);
-
         } catch (\Exception $e) {
+            // DBエラー（今回の created_by NULL など）はここで拾える
             return $this->response([
                 'success' => false,
-                'message' => 'シフトの作成に失敗しました: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    // GET /api/shifts
-    public function get_index()
-    {
-        try {
-            $shifts = \Model_Shift::query()
-                ->related('assignments')
-                ->where('shift_date', '>=', date('Y-m-d'))
-                ->order_by('shift_date', 'asc')
-                ->order_by('start_time', 'asc')
-                ->get();
-
-            return $this->response([
-                'success' => true,
-                'data'    => $shifts,
-            ]);
-
-        } catch (\Exception $e) {
-            return $this->response([
-                'success' => false,
-                'message' => 'シフトの取得に失敗しました: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    // GET /api/shifts/{id}
-    public function get_view($id = null)
-    {
-        if (!$id) {
-            return $this->response([
-                'success' => false,
-                'message' => 'シフトIDが必要です',
-            ], 400);
-        }
-
-        try {
-            $shift = \Model_Shift::find($id, [
-                'related' => [
-                    'assignments' => ['related' => ['user']]
-                ]
-            ]);
-
-            if (!$shift) {
-                return $this->response([
-                    'success' => false,
-                    'message' => 'シフトが見つかりません',
-                ], 404);
-            }
-
-            return $this->response([
-                'success' => true,
-                'data'    => $shift,
-            ]);
-
-        } catch (\Exception $e) {
-            return $this->response([
-                'success' => false,
-                'message' => 'シフトの取得に失敗しました: ' . $e->getMessage(),
+                'error'   => 'server_error',
+                'message' => $e->getMessage()
             ], 500);
         }
     }

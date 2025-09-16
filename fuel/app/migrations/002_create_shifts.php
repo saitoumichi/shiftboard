@@ -5,7 +5,7 @@ class Create_shifts
 {
     public function up()
     {
-        \DBUtil::create_table('shifts', array(
+        \Fuel\Core\DBUtil::create_table('shifts', array(
             'id' => array('constraint' => 11, 'type' => 'int', 'auto_increment' => true, 'unsigned' => true),
             'created_by' => array('constraint' => 11, 'type' => 'int', 'unsigned' => true),
             'shift_date' => array('type' => 'date'),
@@ -16,11 +16,11 @@ class Create_shifts
             'created_at' => array('constraint' => 11, 'type' => 'int', 'unsigned' => true),
             'updated_at' => array('constraint' => 11, 'type' => 'int', 'unsigned' => true, 'null' => true),
         ), array('id'));
-        \DBUtil::create_index('shifts', 'created_by', 'created_by');
+        \Fuel\Core\DBUtil::create_index('shifts', 'created_by', 'created_by');
     }
 
     public function down()
     {
-        \DBUtil::drop_table('shifts');
+        \Fuel\Core\DBUtil::drop_table('shifts');
     }
 }

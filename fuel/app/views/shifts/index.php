@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>シフト一覧 - ShiftBoard</title>
+    <title>シフト一覧</title>
     
     <!-- 共通CSS -->
     <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/common.css'); ?>">
