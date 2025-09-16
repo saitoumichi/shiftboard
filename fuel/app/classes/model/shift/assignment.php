@@ -14,6 +14,21 @@ class Model_Shift_Assignment extends \Orm\Model
         'updated_at',
     );
 
+    protected static $_observers = array(
+      'Orm\\Observer_CreatedAt' => array(
+          'events'           => array('before_insert'),
+          'mysql_timestamp'  => true,  // 'Y-m-d H:i:s' を自動セット
+      ),
+      'Orm\\Observer_UpdatedAt' => array(
+          'events'           => array('before_update'),
+          'mysql_timestamp'  => true,
+      ),
+  );
+
+  // デフォルト値（任意：status が null で入らないように）
+  protected static $_defaults = array(
+      'status' => 'assigned',
+  );
 
     // N : 1 ユーザー
     protected static $_belongs_to = [

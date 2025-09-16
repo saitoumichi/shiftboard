@@ -6,6 +6,9 @@ return [
   'users'         => 'users/index',
   'users/create'  => 'users/create',
   'users/(:num)'  => 'users/view/$1',
+  'shifts'  => 'shifts/index',
+  'shifts/create' => 'shifts/create',
+  'shifts/(:num)' => 'shifts/view/$1',
 
   // API
   'api/shifts'          => 'api/shifts/index',    // GET一覧 / POST作成

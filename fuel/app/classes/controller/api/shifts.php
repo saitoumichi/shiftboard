@@ -1,10 +1,6 @@
 <?php
-use Fuel\Core\Controller_Rest;
-use Fuel\Core\Input;
-use Fuel\Core\Validation;
-use Fuel\Core\Response;
 
-class Controller_Api_Shifts extends Controller_Rest
+class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
 {
     protected $format = 'json';
 
@@ -15,19 +11,54 @@ class Controller_Api_Shifts extends Controller_Rest
         header('Content-Type: application/json; charset=UTF-8');
     }
 
+    public function get_index()
+    {
+        $from = \Fuel\Core\Input::get('from');
+        $to   = \Fuel\Core\Input::get('to');
+
+        $q = \Model_Shift::query()
+            ->order_by('shift_date', 'asc')
+            ->order_by('start_time', 'asc')
+            ->related('assignments');
+
+        if ($from) $q->where('shift_date', '>=', $from);
+        if ($to)   $q->where('shift_date', '<=', $to);
+
+        $rows = $q->get();
+
+        // フロント（shifts.js）が期待する形に整形
+        $data = array_map(function($s){
+            $assigned = isset($s->assignments) ? count($s->assignments) : 0;
+            $slot     = (int)($s->recruit_count ?? 0);
+            return [
+                'id'              => (int)$s->id,
+                'shift_date'      => (string)$s->shift_date,
+                'start_time'      => substr((string)$s->start_time, 0, 5),
+                'end_time'        => substr((string)$s->end_time, 0, 5),
+                'slot_count'      => $slot,
+                'assigned_users'  => [],            // 必要なら実ユーザ配列に
+                'assigned_count'  => $assigned,
+                'available_slots' => max($slot - $assigned, 0),
+                'note'            => (string)($s->free_text ?? ''),
+            ];
+        }, $rows);
+
+        return $this->response(['success' => true, 'data' => array_values($data)]);
+    }
+
     // POST /api/shifts
     public function post_index()
     {
         // JSON を安全に読む（x-www-form-urlencoded にもフォールバック）
         $raw  = file_get_contents('php://input');
         $json = json_decode($raw, true);
-        $in   = is_array($json) ? $json : Input::post();
+        $in   = is_array($json) ? $json : \Fuel\Core\Input::post();
 
         // created_by を必ずセット（認証があれば Auth::get('id') に置換）
         $created_by = 1; // TODO: 認証実装後は \Auth::get('id') などに
 
         // ---- Validation ----
-        $val = Validation::forge();
+        $val = \Fuel\Core\Validation::forge();
         $val->add('shift_date', 'Shift Date')
             ->add_rule('required')
             ->add_rule('match_pattern', '/^\d{4}-\d{2}-\d{2}$/'); // YYYY-MM-DD
@@ -82,7 +113,7 @@ class Controller_Api_Shifts extends Controller_Rest
                 'shift' => $shift
             ], 201);
 
-        } catch (\Database_Exception $e) {
+        } catch (\Exception $e) {
             // DBエラー（今回の created_by NULL など）はここで拾える
             return $this->response([
                 'success' => false,

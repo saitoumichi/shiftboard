@@ -9,7 +9,7 @@ class Controller_Users extends \Fuel\Core\Controller
             'subtitle' => '・ メンバーの一覧表示・管理'
         );
         
-        return \Fuel\Core\View::forge('users/index', $data);
+        return \Fuel\Core\View::forge('users/index');
     }
 
     public function action_create() //メンバー作成
@@ -19,10 +19,10 @@ class Controller_Users extends \Fuel\Core\Controller
             'subtitle' => '・ 新しいメンバーを追加'
         );
         
-        return \Fuel\Core\View::forge('users/create', $data);
+        return \Fuel\Core\View::forge('users/create');
     }
 
-    public function action_view($id = null) //メンバー詳細
+    public function action_view($id) //メンバー詳細
     {
         if (!$id) {
             throw new \Fuel\Core\HttpNotFoundException('メンバーIDが指定されていません');
@@ -34,6 +34,6 @@ class Controller_Users extends \Fuel\Core\Controller
             'member_id' => $id
         );
         
-        return \Fuel\Core\View::forge('users/view', $data);
+        return \Fuel\Core\View::forge('users/view', ['id'=>$id]);
     }
 }
