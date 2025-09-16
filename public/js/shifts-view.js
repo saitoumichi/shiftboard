@@ -559,14 +559,20 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       // シフト参加を実際に実行
       vm.submitJoinShift = function(shiftId, comment) {
           console.log('Joining shift:', shiftId, 'with comment:', comment);
-          fetch('/api/shifts/' + shiftId + '/join', {
+          
+          // 現在のユーザーIDを取得（セッションから）
+          var currentUserId = 1; // 仮のユーザーID（認証実装時に置き換え）
+          
+          fetch('/api/shift_assignments/create', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
                   'Accept': 'application/json'
               },
               body: JSON.stringify({
-                  user_id: 1, // 仮のユーザーID
+                  shift_id: shiftId,
+                  user_id: currentUserId,
+                  status: 'assigned',
                   self_word: comment
               })
           })
@@ -574,8 +580,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               return response.json();
           })
           .then(function(data) {
-              if (data.ok || data.success) {
-                  vm.showAlert('シフトに参加しました！', 'success');
+              if (data.success) {
+                  vm.showAlert(data.message || 'シフトに参加しました！', 'success');
                   vm.load(shiftId); // データを再読み込み
                   
                   // 自分のシフトページのデータも更新
@@ -588,12 +594,37 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                       window.location.href = '/my/shifts';
                   }, 1500);
               } else {
-                  vm.showAlert('参加に失敗しました: ' + (data.message || data.error), 'error');
+                  // エラーメッセージを詳細に処理
+                  var errorMessage = '参加に失敗しました';
+                  if (data.message) {
+                      errorMessage = data.message;
+                  } else if (data.error) {
+                      switch (data.error) {
+                          case 'already_joined':
+                              errorMessage = '既にこのシフトに参加しています';
+                              break;
+                          case 'shift_full':
+                              errorMessage = 'このシフトの定員に達しています';
+                              break;
+                          case 'shift_not_found':
+                              errorMessage = '指定されたシフトが見つかりません';
+                              break;
+                          case 'user_not_found':
+                              errorMessage = '指定されたユーザーが見つかりません';
+                              break;
+                          case 'validation_failed':
+                              errorMessage = '入力内容に誤りがあります';
+                              break;
+                          default:
+                              errorMessage = data.error;
+                      }
+                  }
+                  vm.showAlert(errorMessage, 'error');
               }
           })
           .catch(function(error) {
               console.error('Join error:', error);
-              vm.showAlert('参加に失敗しました', 'error');
+              vm.showAlert('参加に失敗しました: ' + error.message, 'error');
           });
       };
       

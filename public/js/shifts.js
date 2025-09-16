@@ -910,12 +910,17 @@ function ShiftViewModel() {
     
     // シフト参加を実際に実行
     self.submitJoinShift = function(shift, comment) {
+        // 現在のユーザーIDを取得（セッションから）
+        var currentUserId = 1; // 仮のユーザーID（認証実装時に置き換え）
+        
         $.ajax({
-            url: '/api/shifts/' + shift.id + '/join',
+            url: '/api/shift_assignments/create',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                user_id: 1, // 仮のユーザーID
+                shift_id: shift.id,
+                user_id: currentUserId,
+                status: 'assigned',
                 self_word: comment
             }),
             success: function(response, status, xhr) {
@@ -923,8 +928,8 @@ function ShiftViewModel() {
                 try {
                     var data = typeof response === 'string' ? JSON.parse(response) : response;
                     
-                    if (data.ok || data.success) {
-                        self.showAlert('シフトに参加しました！自分のシフトページで確認できます。', 'success');
+                    if (data.success) {
+                        self.showAlert(data.message || 'シフトに参加しました！自分のシフトページで確認できます。', 'success');
                         self.loadShifts();
                         
                         // 自分のシフトページのデータも更新
@@ -944,18 +949,40 @@ function ShiftViewModel() {
                 var errorMessage = 'シフトの参加に失敗しました';
                 
                 // ステータスコード別の処理
-                if (xhr.status === 409) {
-                    // Conflictエラーの場合
-                    try {
-                        var response = JSON.parse(xhr.responseText);
-                        errorMessage = response.message || '既に参加しているか、定員に達しています';
-                    } catch (e) {
-                        errorMessage = '既に参加しているか、定員に達しています';
+                try {
+                    var response = JSON.parse(xhr.responseText);
+                    if (response.message) {
+                        errorMessage = response.message;
+                    } else if (response.error) {
+                        switch (response.error) {
+                            case 'already_joined':
+                                errorMessage = '既にこのシフトに参加しています';
+                                break;
+                            case 'shift_full':
+                                errorMessage = 'このシフトの定員に達しています';
+                                break;
+                            case 'shift_not_found':
+                                errorMessage = '指定されたシフトが見つかりません';
+                                break;
+                            case 'user_not_found':
+                                errorMessage = '指定されたユーザーが見つかりません';
+                                break;
+                            case 'validation_failed':
+                                errorMessage = '入力内容に誤りがあります';
+                                break;
+                            default:
+                                errorMessage = response.error;
+                        }
                     }
-                } else if (xhr.status === 404) {
-                    errorMessage = 'シフトが見つかりません';
-                } else if (xhr.status === 500) {
-                    errorMessage = 'サーバーエラーが発生しました';
+                } catch (e) {
+                    // JSON解析に失敗した場合のフォールバック
+                    if (xhr.status === 409) {
+                        errorMessage = '既に参加しているか、定員に達しています';
+                    } else if (xhr.status === 404) {
+                        errorMessage = 'シフトが見つかりません';
+                    } else if (xhr.status === 500) {
+                        errorMessage = 'サーバーエラーが発生しました';
+                    }
                 }
                 
                 // エラーメッセージを表示
@@ -1094,8 +1121,27 @@ function ShiftViewModel() {
             details.className = 'shift-list-details';
             details.textContent = shift.shift_date + ' ' + shift.start_time + '〜' + shift.end_time;
             
+            // 参加人数を表示
+            var status = document.createElement('div');
+            status.className = 'shift-list-status';
+            var joinedCount = shift.assigned_users ? shift.assigned_users.length : 0;
+            var slotCount = shift.slot_count || 0;
+            var availableSlots = slotCount - joinedCount;
+            var statusText = joinedCount + '/' + slotCount + '人';
+            
+            if (availableSlots === 0) {
+                statusText += ' (満員)';
+                status.style.color = '#d32f2f';
+                status.style.fontWeight = 'bold';
+            } else {
+                statusText += ' (空き: ' + availableSlots + '人)';
+                status.style.color = '#2e7d32';
+            }
+            status.textContent = statusText;
+            
             shiftInfo.appendChild(title);
             shiftInfo.appendChild(details);
+            shiftInfo.appendChild(status);
             
             var actions = document.createElement('div');
             actions.className = 'shift-list-actions';

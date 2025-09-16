@@ -99,6 +99,15 @@
                   data-bind="visible: shift() && !canParticipate() && !isParticipating()">
                 定員に達しています
             </span>
+            
+            <!-- 参加者一覧リンク -->
+            <div class="participants-link" style="margin-top: 15px;">
+                <a href="#" class="action-btn btn-participants" 
+                   data-bind="attr: { href: '/shifts/' + shift().id + '/participants' }, 
+                              visible: shift()">
+                    参加者一覧を見る
+                </a>
+            </div>
         </div>
         
         <div class="recruitment-times">

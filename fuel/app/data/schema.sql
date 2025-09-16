@@ -14,21 +14,21 @@ CREATE TABLE users (
 -- shifts
 CREATE TABLE shifts (
   id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  user_id       BIGINT UNSIGNED NULL,              -- 作成者/オーナー（任意なら NULL 可）
+  created_by    BIGINT UNSIGNED NOT NULL,              -- シフト作った人
   shift_date    DATE            NOT NULL,
   start_time    TIME            NOT NULL,
   end_time      TIME            NOT NULL,
-  recruit_count INT  UNSIGNED   NOT NULL DEFAULT 1,
-  free_text     VARCHAR(500)    NULL,
+  recruit_count INT  UNSIGNED   NOT NULL DEFAULT 1,    -- 募集人数
+  free_text     VARCHAR(500)    NULL,                   -- 自由記述（やる気を書くとか）
   created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP NULL           DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_shifts_date       (shift_date),
   KEY idx_shifts_date_time  (shift_date, start_time),
-  KEY idx_shifts_user       (user_id),
-  CONSTRAINT fk_shifts_user
-    FOREIGN KEY (user_id) REFERENCES users(id)
-    ON DELETE SET NULL
+  KEY idx_shifts_created_by (created_by),
+  CONSTRAINT fk_shifts_created_by
+    FOREIGN KEY (created_by) REFERENCES users(id)
+    ON DELETE RESTRICT
     ON UPDATE CASCADE,
   CONSTRAINT chk_time_order CHECK (start_time < end_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

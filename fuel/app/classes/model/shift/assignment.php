@@ -6,10 +6,10 @@ class Model_Shift_Assignment extends \Orm\Model
     protected static $_primary_key = array('id');
     protected static $_properties = array(
         'id',
-        'user_id',
-        'shift_id',
-        'status', // 'confirmed' or 'cancelled'
-        'self_word',
+        'shift_id',    // 参加するシフト(shifts.idを参照)
+        'user_id',     // 参加するユーザー(users.idを参照)
+        'status',      // 参加状況: 'assigned', 'confirmed', 'cancelled'
+        'self_word',   // 参加する際の一言
         'created_at',
         'updated_at',
     );
@@ -30,21 +30,22 @@ class Model_Shift_Assignment extends \Orm\Model
       'status' => 'assigned',
   );
 
-    // N : 1 ユーザー
+    // シフト割り当て N : 1 ユーザー
     protected static $_belongs_to = [
-      'user' => [
-          'key_from'   => 'user_id',
-          'model_to'   => 'Model_User',
-          'key_to'     => 'id',
-          'cascade_save'   => false,
-          'cascade_delete' => false,
-      ],
-      'shift' => [
-          'key_from'   => 'shift_id',
-          'model_to'   => 'Model_Shift',
-          'key_to'     => 'id',
-          'cascade_save'   => false,
-          'cascade_delete' => false,
-      ],
-  ];
+        'user' => [
+            'key_from'       => 'user_id',
+            'model_to'       => 'Model_User',
+            'key_to'         => 'id',
+            'cascade_save'   => false,
+            'cascade_delete' => false,
+        ],
+        // シフト割り当て N : 1 シフト
+        'shift' => [
+            'key_from'       => 'shift_id',
+            'model_to'       => 'Model_Shift',
+            'key_to'         => 'id',
+            'cascade_save'   => false,
+            'cascade_delete' => false,
+        ],
+    ];
 }
