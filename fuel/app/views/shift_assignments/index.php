@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>シフト割り当て管理 - ShiftBoard</title>
     <link rel="stylesheet" href="/assets/css/shifts.css">
-    <link rel="stylesheet" href="/assets/css/shift_assignments.css">
+    <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/shift_assignments.css'); ?>">
 </head>
 <body>
     <div class="container">
