@@ -66,10 +66,19 @@ $(document).ready(function() {
             error: function(xhr, status, error) {
                 var errorMessage = 'シフトの作成に失敗しました';
                 
+                try {
+                    var response = JSON.parse(xhr.responseText);
+                    if (response.message) {
+                        errorMessage = response.message;
+                    }
+                } catch (e) {
+                    // JSON解析に失敗した場合はデフォルトメッセージを使用
+                }
+                
                 if (xhr.status === 400) {
-                    errorMessage = '入力データに問題があります';
+                    errorMessage = '入力データに問題があります: ' + errorMessage;
                 } else if (xhr.status === 500) {
-                    errorMessage = 'サーバーエラーが発生しました';
+                    errorMessage = 'サーバーエラーが発生しました: ' + errorMessage;
                 }
                 
                 showAlert(errorMessage, 'error');

@@ -7,9 +7,9 @@ class Controller_Api_Users extends \Fuel\Core\Controller_Rest
     public function get_index()
     {
         $users = Model_User::find('all');
-return $this->response([
-    'ok'    => true,
-    'users' => $users,
-]);
+        return $this->response([
+            'ok' => true,
+            'users'    => $users,
+        ]);
     }
 }
