@@ -62,15 +62,17 @@ class Model_Shift_Assignment extends \Orm\Model
      */
     public static function exists_for_shift_and_user($shift_id, $user_id, $exclude_cancelled = true): bool
     {
-        $query = static::query()
-            ->where('shift_id', $shift_id)
-            ->where('user_id', $user_id);
-            
-        if ($exclude_cancelled) {
-            $query->where('status', '!=', 'cancelled');
-        }
-        
-        return $query->get_one() !== null;
+        $q = static::query()
+        ->where('shift_id', $shift_id)
+        ->where('user_id', $user_id);
+
+    if ($exclude_cancelled) {
+        $q->where_open()
+            ->where('status', '!=', 'cancelled')
+            ->or_where('status', null) // ← 重複チェックでも NULL をアクティブ扱い
+          ->where_close();
+    }
+    return $q->get_one() !== null;
     }
 
     /**
@@ -79,8 +81,11 @@ class Model_Shift_Assignment extends \Orm\Model
     public static function count_active_for_shift($shift_id): int
     {
         return static::query()
-            ->where('shift_id', $shift_id)
+        ->where('shift_id', (int)$shift_id)
+        ->where_open()
             ->where('status', '!=', 'cancelled')
-            ->count();
+            ->or_where('status', null)   // NULL も参加扱いにする
+        ->where_close()
+        ->count();
     }
 }
