@@ -68,11 +68,11 @@ class Controller_Shift_Assignment extends \Fuel\Core\Controller
                 // ORMのプロパティに沿って forge
                 $shift = \Model_Shift::forge([
                     'created_by'    => $current_user_id,
-                    'shift_date'    => \Fuel\Core\Input::post('shift_date'),
+                    'shift_id'    => \Fuel\Core\Input::post('shift_id'),
                     'start_time'    => \Fuel\Core\Input::post('start_time'),
                     'end_time'      => \Fuel\Core\Input::post('end_time'),
                     'recruit_count' => (int)\Fuel\Core\Input::post('recruit_count'),
-                    'free_text'     => \Fuel\Core\Input::post('note'),
+                    'self_word'     => \Fuel\Core\Input::post('self_word'),
                 ]);
             } else {
                 \Fuel\Core\Session::set_flash('error', '入力内容に誤りがあります');
