@@ -17,6 +17,17 @@ class Model_Shift extends \Orm\Model
         'updated_at'
     );
 
+    // シフト作成者への関連 (N : 1)
+    protected static $_belongs_to = [
+        'creator' => [
+            'key_from'   => 'created_by',
+            'model_to'   => 'Model_User',
+            'key_to'     => 'id',
+            'cascade_save'   => false,
+            'cascade_delete' => false,
+        ],
+    ];
+
     // シフト 1 : N 割り当て
     protected static $_has_many = [
         'assignments' => [

@@ -18,8 +18,8 @@ CREATE TABLE shifts (
   shift_date    DATE            NOT NULL,
   start_time    TIME            NOT NULL,
   end_time      TIME            NOT NULL,
-  recruit_count INT  UNSIGNED   NOT NULL DEFAULT 1,
-  free_text     VARCHAR(500)    NULL,
+  recruit_count INT  UNSIGNED   NOT NULL DEFAULT 1,    -- 募集人数
+  free_text     VARCHAR(500)    NULL,                   -- 自由記述（やる気を書くとか）
   created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP NULL           DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),

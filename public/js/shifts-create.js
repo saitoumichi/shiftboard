@@ -17,7 +17,7 @@ $(document).ready(function() {
             shift_date: $('#shift_date').val(),
             start_time: $('#start_time').val(),
             end_time: $('#end_time').val(),
-            recruit_count: Number($('#slot_count').val() || 1),
+            recruit_count: Number($('#recruit_count').val() || 1),
             free_text: $('#note').val() || ''
         };
         
@@ -50,7 +50,7 @@ $(document).ready(function() {
               shift_date: ($('#shift_date').val() || '').trim(),
               start_time: ($('#start_time').val() || '').trim(),
               end_time:   ($('#end_time').val() || '').trim(),
-              recruit_count: Number($('#slot_count').val() || 1),
+              recruit_count: Number($('#recruit_count').val() || 1),
               free_text:   ($('#note').val() || '').trim()
             }),
             dataType: 'json',
