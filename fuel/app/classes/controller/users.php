@@ -2,7 +2,7 @@
 
 class Controller_Users extends \Fuel\Core\Controller
 {
-    public function action_index()
+    public function action_index() //メンバー一覧
     {
         $data = array(
             'title' => 'メンバー管理',
@@ -12,7 +12,7 @@ class Controller_Users extends \Fuel\Core\Controller
         return \Fuel\Core\View::forge('users/index', $data);
     }
 
-    public function action_create()
+    public function action_create() //メンバー作成
     {
         $data = array(
             'title' => 'メンバー作成',
@@ -21,11 +21,8 @@ class Controller_Users extends \Fuel\Core\Controller
         
         return \Fuel\Core\View::forge('users/create', $data);
     }
-    
-    /**
-     * メンバー詳細画面
-     */
-    public function action_view($id = null)
+
+    public function action_view($id = null) //メンバー詳細
     {
         if (!$id) {
             throw new \Fuel\Core\HttpNotFoundException('メンバーIDが指定されていません');

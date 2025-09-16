@@ -1,96 +1,112 @@
 <?php
 
-use Fuel\Core\Input;
-
 class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
 {
     protected $format = 'json';
+
+    // POST /api/shifts
+    public function post_index()
+    {
+        try {
+            // JSONデータを取得
+            $input = json_decode(\Fuel\Core\Input::body(), true);
+            
+            if (!$input) {
+                return $this->response([
+                    'success' => false,
+                    'message' => '無効なJSONデータです',
+                ], 400);
+            }
+
+            $shift = \Model_Shift::forge([
+                'created_by'    => 1, // TODO: 認証導入後に置換
+                'shift_date'    => $input['shift_date'],
+                'start_time'    => $input['start_time'],
+                'end_time'      => $input['end_time'],
+                'recruit_count' => (int)$input['slot_count'],
+                'free_text'     => $input['note'],
+            ]);
+
+            $shift->save();
+
+            return $this->response([
+                'success' => true,
+                'message' => 'シフトが作成されました',
+                'data'    => $shift->to_array(),
+            ], 201);
+
+        } catch (\Fuel\Core\Validation_Error $e) {
+            return $this->response([
+                'success' => false,
+                'message' => 'バリデーションエラー: ' . $e->get_message(),
+            ], 400);
+
+        } catch (\Exception $e) {
+            return $this->response([
+                'success' => false,
+                'message' => 'シフトの作成に失敗しました: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 
     // GET /api/shifts
     public function get_index()
     {
         try {
-            // 完全FuelPHP方式（最終版）
-            // 設定を強制的に読み込み
-            \Config::load('db', true, true);
-            \Config::load('development/db', true, true);
-            
-            // データベース接続を強制的に初期化
-            \DB::instance()->disconnect();
-            \DB::instance()->connect();
-            
-            // 完全FuelPHP方式でシフトデータを取得
-            $shifts = \DB::select()->from('shifts')
-                ->order_by('shift_date', 'ASC')
-                ->order_by('start_time', 'ASC')
-                ->execute()
-                ->as_array();
-            
-            return $this->response(['ok' => true, 'items' => $shifts]);
-        } catch(Exception $e) {
-            return $this->response(['ok' => false, 'error' => $e->getMessage()], 500);
+            $shifts = \Model_Shift::query()
+                ->related('assignments')
+                ->where('shift_date', '>=', date('Y-m-d'))
+                ->order_by('shift_date', 'asc')
+                ->order_by('start_time', 'asc')
+                ->get();
+
+            return $this->response([
+                'success' => true,
+                'data'    => $shifts,
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response([
+                'success' => false,
+                'message' => 'シフトの取得に失敗しました: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
     // GET /api/shifts/{id}
-    public function get_show($id)
+    public function get_view($id = null)
     {
-        $shift = \DB::select()->from('shifts')->where('id', $id)->execute()->current();
-        if (!$shift) return $this->response(['ok'=>false, 'error'=>'not_found'], 404);
+        if (!$id) {
+            return $this->response([
+                'success' => false,
+                'message' => 'シフトIDが必要です',
+            ], 400);
+        }
 
-        $assignments = \DB::query("
-            SELECT sa.user_id, sa.status, sa.self_word, u.name, u.color
-            FROM shift_assignments sa
-            JOIN users u ON u.id = sa.user_id
-            WHERE sa.shift_id = :id AND sa.status != 'cancelled'
-            ORDER BY sa.created_at ASC
-        ")->parameters(['id'=>$id])->execute()->as_array();
+        try {
+            $shift = \Model_Shift::find($id, [
+                'related' => [
+                    'assignments' => ['related' => ['user']]
+                ]
+            ]);
 
-        $shift['assigned_users'] = $assignments;
+            if (!$shift) {
+                return $this->response([
+                    'success' => false,
+                    'message' => 'シフトが見つかりません',
+                ], 404);
+            }
 
-        return $this->response(['ok'=>true, 'item'=>$shift]);
-    }
+            return $this->response([
+                'success' => true,
+                'data'    => $shift,
+            ]);
 
-    // POST /api/shifts
-    public function post_index()
-    {
-        $data = json_decode(file_get_contents('php://input'), true) ?: $_POST;
-
-        list($id,) = \DB::insert('shifts')->set([
-            'created_by'    => (int)($data['created_by'] ?? 1),
-            'shift_date'    => $data['shift_date'] ?? null,
-            'start_time'    => $data['start_time'] ?? null,
-            'end_time'      => $data['end_time'] ?? null,
-            'recruit_count' => (int)($data['recruit_count'] ?? 1),
-            'free_text'     => $data['free_text'] ?? null,
-            'created_at'    => \DB::expr('CURRENT_TIMESTAMP'),
-        ])->execute();
-
-        return $this->response(['ok'=>true, 'id'=>$id], 201);
-    }
-
-    // PUT /api/shifts/{id}
-    public function put_update($id)
-    {
-        $data = json_decode(file_get_contents('php://input'), true) ?: [];
-
-        \DB::update('shifts')->set([
-            'shift_date'    => $data['shift_date'] ?? \DB::expr('shift_date'),
-            'start_time'    => $data['start_time'] ?? \DB::expr('start_time'),
-            'end_time'      => $data['end_time'] ?? \DB::expr('end_time'),
-            'recruit_count' => isset($data['recruit_count']) ? (int)$data['recruit_count'] : \DB::expr('recruit_count'),
-            'free_text'     => array_key_exists('free_text',$data) ? $data['free_text'] : \DB::expr('free_text'),
-            'updated_at'    => \DB::expr('CURRENT_TIMESTAMP'),
-        ])->where('id', $id)->execute();
-
-        return $this->response(['ok'=>true]);
-    }
-
-    // DELETE /api/shifts/{id}
-    public function delete_delete($id)
-    {
-        \DB::delete('shift_assignments')->where('shift_id', $id)->execute();
-        \DB::delete('shifts')->where('id', $id)->execute();
-        return $this->response(['ok'=>true]);
+        } catch (\Exception $e) {
+            return $this->response([
+                'success' => false,
+                'message' => 'シフトの取得に失敗しました: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

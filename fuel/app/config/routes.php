@@ -12,4 +12,5 @@ return [
   'api/shifts/(:num)'   => 'api/shifts/show/$1',  // GET詳細 / PUT更新 / DELETE削除
   'api/users'           => 'api/users/index',     // GET一覧 / POST作成
   'api/users/(:num)'    => 'api/users/show/$1',   // GET詳細 / PUT更新 / DELETE削除
+  'api/debug/db-test' => 'api/debug/db_test',
 ];

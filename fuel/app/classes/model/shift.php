@@ -1,6 +1,6 @@
 <?php
 
-class Model_Shifts extends \Orm\Model
+class Model_Shift extends \Orm\Model
 {
     protected static $_table_name = 'shifts';
     protected static $_primary_key = array('id');
@@ -15,5 +15,15 @@ class Model_Shifts extends \Orm\Model
         'free_text',
         'created_at',
         'updated_at'
+    );
+
+    protected static $_has_many = array(
+        'assignments' => array(
+            'key_from' => 'id',
+            'model_to' => 'Model_Shift_Assignment',
+            'key_to' => 'shift_id',
+            'cascade_save' => true,
+            'cascade_delete' => false,
+        )
     );
 }

@@ -3,8 +3,8 @@ return [
   'default' => [
     'type'       => 'mysqli',
     'connection' => [
-      'hostname'   => 'shiftboard-db-1',
-      'port'       => '3306',
+      'hostname'   => '127.0.0.1',
+      'port'       => '13306',
       'database'   => 'shiftboard',
       'username'   => 'app',
       'password'   => 'app_pass',
@@ -12,8 +12,7 @@ return [
     ],
     'table_prefix' => '',
     'charset'      => 'utf8mb4',
-    'collation'    => 'utf8mb4_unicode_ci',
+    'enable_cache' => true,
     'profiling'    => false,
-    'caching'      => false,
   ],
 ];
