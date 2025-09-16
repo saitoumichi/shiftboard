@@ -33,6 +33,8 @@ public function post_join($shift_id)
     $in   = is_array($json) ? $json : \Fuel\Core\Input::post();
 
     $user_id = (int)($in['user_id'] ?? 1); // 認証未実装なら仮
+    $self_word = isset($in['self_word']) ? trim($in['self_word']) : null; // コメントを取得
+    
     try {
         // 重複参加チェック
         $existing = \Model_Shift_Assignment::query()
@@ -49,6 +51,7 @@ public function post_join($shift_id)
             'shift_id' => (int)$shift_id,
             'user_id'  => $user_id,
             'status'   => 'assigned', //デフォルト値を追加
+            'self_word' => $self_word, // コメントを保存
         ]);
         $assign->save();
 
@@ -81,4 +84,5 @@ public function post_cancel($shift_id)
         return $this->response(['ok'=>false, 'error'=>'server_error', 'message'=>$e->getMessage()], 500);
     }
 }
+
 }

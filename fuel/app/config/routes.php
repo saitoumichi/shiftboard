@@ -6,6 +6,8 @@ return [
   'users'         => 'users/index',
   'users/create'  => 'users/create',
   'users/(:num)'  => 'users/view/$1',
+  'my/shifts' => 'shift/assignment/my_assignments',
+  'myshifts'  => 'shift/assignment/my_assignments',
   'shifts'  => 'shifts/index',
   'shifts/create' => 'shifts/create',
   'shifts/(:num)' => 'shifts/view/$1',

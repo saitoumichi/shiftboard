@@ -539,7 +539,12 @@ function ShiftViewModel() {
                 } else {
                     var participantsHtml = '';
                     shift.assigned_users.forEach(function(user) {
-                        participantsHtml += '<div class="participant-item">' + user.name + ' (' + user.status + ')</div>';
+                        participantsHtml += '<div class="participant-item">';
+                        participantsHtml += '<div class="participant-name">' + user.name + ' (' + user.status + ')</div>';
+                        if (user.self_word && user.self_word.trim() !== '') {
+                            participantsHtml += '<div class="participant-comment">' + user.self_word + '</div>';
+                        }
+                        participantsHtml += '</div>';
                     });
                     participantsCell.innerHTML = participantsHtml;
                 }
@@ -836,18 +841,89 @@ function ShiftViewModel() {
     
     // シフト参加
     self.joinShift = function(shift) {
+        console.log('joinShift called with shift:', shift);
+        // モーダルダイアログを表示
+        self.showCommentModal(shift);
+    };
+    
+    // コメント入力モーダルを表示
+    self.showCommentModal = function(shift) {
+        console.log('showCommentModal called with shift:', shift);
+        
+        var modal = document.getElementById('comment-modal');
+        var textarea = document.getElementById('comment-textarea');
+        var cancelBtn = document.getElementById('comment-cancel-btn');
+        var okBtn = document.getElementById('comment-ok-btn');
+        
+        console.log('Modal elements found:', {
+            modal: !!modal,
+            textarea: !!textarea,
+            cancelBtn: !!cancelBtn,
+            okBtn: !!okBtn
+        });
+        
+        if (!modal) {
+            console.error('comment-modal element not found!');
+            console.log('Available elements with "comment" in id:', 
+                Array.from(document.querySelectorAll('[id*="comment"]')).map(el => el.id));
+            console.log('All elements with id:', 
+                Array.from(document.querySelectorAll('[id]')).map(el => el.id));
+            return;
+        }
+        
+        // テキストエリアをクリア
+        if (textarea) {
+            textarea.value = '';
+        }
+        
+        // モーダルを表示
+        modal.style.display = 'flex';
+        console.log('Modal displayed');
+        textarea.focus();
+        
+        // キャンセルボタンのイベント
+        cancelBtn.onclick = function() {
+            modal.style.display = 'none';
+        };
+        
+        // OKボタンのイベント
+        okBtn.onclick = function() {
+            var comment = textarea.value.trim();
+            self.submitJoinShift(shift, comment);
+            modal.style.display = 'none';
+        };
+        
+        // エスケープキーでモーダルを閉じる
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                modal.style.display = 'none';
+            }
+        });
+        
+        // モーダル外クリックで閉じる
+        modal.onclick = function(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+    };
+    
+    // シフト参加を実際に実行
+    self.submitJoinShift = function(shift, comment) {
         $.ajax({
             url: '/api/shifts/' + shift.id + '/join',
             type: 'POST',
-            data: {
-                csrf_token: 'dummy_token' // 簡易実装
-            },
+            contentType: 'application/json',
+            data: JSON.stringify({
+                user_id: 1, // 仮のユーザーID
+                self_word: comment
+            }),
             success: function(response, status, xhr) {
                 // 成功レスポンス
                 try {
                     var data = typeof response === 'string' ? JSON.parse(response) : response;
                     
-                    if (data.success) {
+                    if (data.ok || data.success) {
                         self.showAlert('シフトに参加しました！自分のシフトページで確認できます。', 'success');
                         self.loadShifts();
                         
@@ -856,7 +932,7 @@ function ShiftViewModel() {
                             window.refreshMyShifts();
                         }
                     } else {
-                        self.showAlert('シフトの参加に失敗しました: ' + data.message, 'error');
+                        self.showAlert('シフトの参加に失敗しました: ' + (data.message || data.error), 'error');
                     }
                 } catch (e) {
                     self.showAlert('シフトの参加に失敗しました', 'error');
