@@ -17,13 +17,26 @@ class Model_Shift extends \Orm\Model
         'updated_at'
     );
 
-    protected static $_has_many = array(
-        'assignments' => array(
-            'key_from' => 'id',
-            'model_to' => 'Model_Shift_Assignment',
-            'key_to' => 'shift_id',
-            'cascade_save' => true,
+    // シフト 1 : N 割り当て
+    protected static $_has_many = [
+        'assignments' => [
+            'key_from'   => 'id',
+            'model_to'   => 'Model_Shift_Assignment',
+            'key_to'     => 'shift_id',
+            'cascade_save'   => false,
             'cascade_delete' => false,
-        )
-    );
+        ],
+    ];
+
+    protected static $_observers = [
+        'Orm\\Observer_CreatedAt' => [
+            'events' => ['before_insert'],
+            'mysql_timestamp' => true,   // DATETIME/TIMESTAMP を自動セット
+        ],
+        'Orm\\Observer_UpdatedAt' => [
+            'events' => ['before_update'],
+            'mysql_timestamp' => true,
+        ],
+    ];
+
 }
