@@ -52,14 +52,11 @@ class Model_Shift extends \Orm\Model
 
     public function joined_count(): int
     {
-        // assignments が未ロードなら ORM が遅延ロードします
-        $count = 0;
-        foreach ($this->assignments as $a) {
-            if ($a->status !== 'cancelled') {
-                $count++;
-            }
-        }
-        return $count;
+        // ORMのクエリビルダーを使用して効率的にカウント
+        return \Model_Shift_Assignment::query()
+            ->where('shift_id', $this->id)
+            ->where('status', '!=', 'cancelled')
+            ->count();
     }
 
     /**

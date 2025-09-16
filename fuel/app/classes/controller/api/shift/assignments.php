@@ -25,67 +25,32 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
      */
     public function post_index()
     {
-        $raw = file_get_contents('php://input');
-        $json = json_decode($raw, true);
-        $input = is_array($json) ? $json : \Fuel\Core\Input::post();
+        $input = $this->get_input_data();
 
         // バリデーション
-        $validation = \Fuel\Core\Validation::forge();
-        $validation->add('shift_id', 'シフトID')
-            ->add_rule('required')
-            ->add_rule('valid_string', ['numeric'])
-            ->add_rule('numeric_min', 1);
-        $validation->add('user_id', 'ユーザーID')
-            ->add_rule('required')
-            ->add_rule('valid_string', ['numeric'])
-            ->add_rule('numeric_min', 1);
-        $validation->add('self_word', 'コメント')
-            ->add_rule('max_length', 500);
-
-        if (!$validation->run($input)) {
-            $errors = array();
-            foreach ($validation->error() as $field => $error) {
-                $errors[$field] = $error->get_message();
-            }
+        if (!$this->validate_input($input)) {
             return $this->response([
                 'success' => false,
                 'error' => 'validation_failed',
-                'errors' => $errors
+                'errors' => $this->get_validation_errors()
             ], 400);
         }
 
-        $shift_id = (int)$input['shift_id'];
-        $user_id = (int)$input['user_id'];
-        $self_word = isset($input['self_word']) ? trim($input['self_word']) : null;
-
         try {
-            // シフトの存在確認
-            $shift = \Model_Shift::find($shift_id);
-            if (!$shift) {
-                return $this->response([
-                    'success' => false,
-                    'error' => 'shift_not_found',
-                    'message' => '指定されたシフトが見つかりません'
-                ], 404);
-            }
+            // シフトとユーザーの存在確認（ORMの関連を使用）
+            $shift = \Model_Shift::find($input['shift_id']);
+            $user = \Model_User::find($input['user_id']);
 
-            // ユーザーの存在確認
-            $user = \Model_User::find($user_id);
-            if (!$user) {
+            if (!$shift || !$user) {
                 return $this->response([
                     'success' => false,
-                    'error' => 'user_not_found',
-                    'message' => '指定されたユーザーが見つかりません'
+                    'error' => $shift ? 'user_not_found' : 'shift_not_found',
+                    'message' => $shift ? '指定されたユーザーが見つかりません' : '指定されたシフトが見つかりません'
                 ], 404);
             }
 
             // 重複参加チェック
-            $existing = \Model_Shift_Assignment::query()
-                ->where('shift_id', $shift_id)
-                ->where('user_id', $user_id)
-                ->get_one();
-            
-            if ($existing) {
+            if ($this->is_duplicate_assignment($input['shift_id'], $input['user_id'])) {
                 return $this->response([
                     'success' => false,
                     'error' => 'already_joined',
@@ -94,32 +59,24 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
             }
 
             // 定員チェック
-            $current_count = $shift->joined_count();
-            $recruit_count = (int)$shift->recruit_count;
-            if ($current_count >= $recruit_count) {
+            if ($this->is_shift_full($shift)) {
                 return $this->response([
                     'success' => false,
                     'error' => 'shift_full',
                     'message' => 'このシフトの定員に達しています',
-                    'details' => [
-                        'current_count' => $current_count,
-                        'recruit_count' => $recruit_count,
-                        'remaining' => max(0, $recruit_count - $current_count)
-                    ]
+                    'details' => $this->get_capacity_details($shift)
                 ], 409);
             }
 
-            // 新しい割り当てを作成
+            // 新しい割り当てを作成（ORMのforgeとsaveを使用）
             $assignment = \Model_Shift_Assignment::forge([
-                'shift_id' => $shift_id,
-                'user_id' => $user_id,
+                'shift_id' => $input['shift_id'],
+                'user_id' => $input['user_id'],
                 'status' => 'assigned',
-                'self_word' => $self_word,
-            ]);
+                'self_word' => $input['self_word'] ?? null,
+            ])->save();
 
-            $assignment->save();
-
-            // 作成された割り当ての詳細情報を取得
+            // 関連データを含めて再取得
             $assignment = \Model_Shift_Assignment::find($assignment->id, [
                 'related' => ['user', 'shift']
             ]);
@@ -127,17 +84,7 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
             return $this->response([
                 'success' => true,
                 'message' => 'シフトへの参加が完了しました',
-                'data' => [
-                    'id' => (int)$assignment->id,
-                    'shift_id' => (int)$assignment->shift_id,
-                    'user_id' => (int)$assignment->user_id,
-                    'user_name' => $assignment->user ? $assignment->user->name : 'Unknown User',
-                    'user_color' => $assignment->user ? $assignment->user->color : '#000000',
-                    'status' => $assignment->status,
-                    'self_word' => $assignment->self_word,
-                    'created_at' => $assignment->created_at,
-                    'updated_at' => $assignment->updated_at
-                ]
+                'data' => $this->format_assignment_data($assignment)
             ], 201);
 
         } catch (\Exception $e) {
@@ -155,11 +102,155 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
      */
     public function post_create()
     {
+        $input = $this->get_input_data();
+
+        // 拡張バリデーション（ステータスを含む）
+        if (!$this->validate_create_input($input)) {
+            return $this->response([
+                'success' => false,
+                'error' => 'validation_failed',
+                'message' => '入力内容に誤りがあります',
+                'errors' => $this->get_validation_errors()
+            ], 400);
+        }
+
+        try {
+            // シフトとユーザーの存在確認
+            $shift = \Model_Shift::find($input['shift_id']);
+            $user = \Model_User::find($input['user_id']);
+
+            if (!$shift || !$user) {
+                return $this->response([
+                    'success' => false,
+                    'error' => $shift ? 'user_not_found' : 'shift_not_found',
+                    'message' => $shift ? '指定されたユーザーが見つかりません' : '指定されたシフトが見つかりません'
+                ], 404);
+            }
+
+            // 重複参加チェック（キャンセル済みは除く）
+            if ($this->is_duplicate_assignment_active($input['shift_id'], $input['user_id'])) {
+                return $this->response([
+                    'success' => false,
+                    'error' => 'already_joined',
+                    'message' => '既にこのシフトに参加しています'
+                ], 409);
+            }
+
+            // 定員チェック（キャンセル済みは除く）
+            if ($input['status'] !== 'cancelled' && $this->is_shift_full($shift)) {
+                return $this->response([
+                    'success' => false,
+                    'error' => 'shift_full',
+                    'message' => 'このシフトの定員に達しています',
+                    'details' => $this->get_capacity_details($shift)
+                ], 409);
+            }
+
+            // 新しい割り当てを作成
+            $assignment = \Model_Shift_Assignment::forge([
+                'shift_id' => $input['shift_id'],
+                'user_id' => $input['user_id'],
+                'status' => $input['status'] ?? 'assigned',
+                'self_word' => $input['self_word'] ?? null,
+            ])->save();
+
+            // 関連データを含めて再取得
+            $assignment = \Model_Shift_Assignment::find($assignment->id, [
+                'related' => ['user', 'shift']
+            ]);
+
+            return $this->response([
+                'success' => true,
+                'message' => 'シフト割り当てが正常に作成されました',
+                'data' => $this->format_assignment_data_with_shift($assignment)
+            ], 201);
+
+        } catch (\Exception $e) {
+            return $this->response([
+                'success' => false,
+                'error' => 'server_error',
+                'message' => 'サーバーエラーが発生しました: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * 入力データを取得
+     */
+    private function get_input_data()
+    {
         $raw = file_get_contents('php://input');
         $json = json_decode($raw, true);
-        $input = is_array($json) ? $json : \Fuel\Core\Input::post();
+        return is_array($json) ? $json : \Fuel\Core\Input::post();
+    }
 
-        // バリデーション
+    /**
+     * 入力データのバリデーション
+     */
+    private function validate_input($input)
+    {
+        $validation = \Fuel\Core\Validation::forge();
+        $validation->add('shift_id', 'シフトID')
+            ->add_rule('required')
+            ->add_rule('valid_string', ['numeric'])
+            ->add_rule('numeric_min', 1);
+        $validation->add('user_id', 'ユーザーID')
+            ->add_rule('required')
+            ->add_rule('valid_string', ['numeric'])
+            ->add_rule('numeric_min', 1);
+        $validation->add('self_word', 'コメント')
+            ->add_rule('max_length', 500);
+
+        return $validation->run($input);
+    }
+
+    /**
+     * バリデーションエラーを取得
+     */
+    private function get_validation_errors()
+    {
+        $errors = array();
+        foreach (\Fuel\Core\Validation::instance()->error() as $field => $error) {
+            $errors[$field] = $error->get_message();
+        }
+        return $errors;
+    }
+
+    /**
+     * 重複参加チェック
+     */
+    private function is_duplicate_assignment($shift_id, $user_id)
+    {
+        return \Model_Shift_Assignment::exists_for_shift_and_user($shift_id, $user_id, false);
+    }
+
+    /**
+     * 定員チェック
+     */
+    private function is_shift_full($shift)
+    {
+        return $shift->joined_count() >= $shift->recruit_count;
+    }
+
+    /**
+     * 定員詳細情報を取得
+     */
+    private function get_capacity_details($shift)
+    {
+        $current_count = $shift->joined_count();
+        $recruit_count = (int)$shift->recruit_count;
+        return [
+            'current_count' => $current_count,
+            'recruit_count' => $recruit_count,
+            'remaining' => max(0, $recruit_count - $current_count)
+        ];
+    }
+
+    /**
+     * 拡張バリデーション（ステータスを含む）
+     */
+    private function validate_create_input($input)
+    {
         $validation = \Fuel\Core\Validation::forge();
         $validation->add('shift_id', 'シフトID')
             ->add_rule('required')
@@ -174,127 +265,48 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
         $validation->add('self_word', 'コメント')
             ->add_rule('max_length', 500);
 
-        if (!$validation->run($input)) {
-            $errors = array();
-            foreach ($validation->error() as $field => $error) {
-                $errors[$field] = $error->get_message();
-            }
-            return $this->response([
-                'success' => false,
-                'error' => 'validation_failed',
-                'message' => '入力内容に誤りがあります',
-                'errors' => $errors
-            ], 400);
-        }
+        return $validation->run($input);
+    }
 
-        $shift_id = (int)$input['shift_id'];
-        $user_id = (int)$input['user_id'];
-        $status = isset($input['status']) ? $input['status'] : 'assigned';
-        $self_word = isset($input['self_word']) ? trim($input['self_word']) : null;
+    /**
+     * アクティブな重複参加チェック（キャンセル済みは除く）
+     */
+    private function is_duplicate_assignment_active($shift_id, $user_id)
+    {
+        return \Model_Shift_Assignment::exists_for_shift_and_user($shift_id, $user_id, true);
+    }
 
-        try {
-            // シフトの存在確認
-            $shift = \Model_Shift::find($shift_id);
-            if (!$shift) {
-                return $this->response([
-                    'success' => false,
-                    'error' => 'shift_not_found',
-                    'message' => '指定されたシフトが見つかりません'
-                ], 404);
-            }
+    /**
+     * 割り当てデータをフォーマット
+     */
+    private function format_assignment_data($assignment)
+    {
+        return [
+            'id' => (int)$assignment->id,
+            'shift_id' => (int)$assignment->shift_id,
+            'user_id' => (int)$assignment->user_id,
+            'user_name' => $assignment->user ? $assignment->user->name : 'Unknown User',
+            'user_color' => $assignment->user ? $assignment->user->color : '#000000',
+            'status' => $assignment->status,
+            'self_word' => $assignment->self_word,
+            'created_at' => $assignment->created_at,
+            'updated_at' => $assignment->updated_at
+        ];
+    }
 
-            // ユーザーの存在確認
-            $user = \Model_User::find($user_id);
-            if (!$user) {
-                return $this->response([
-                    'success' => false,
-                    'error' => 'user_not_found',
-                    'message' => '指定されたユーザーが見つかりません'
-                ], 404);
-            }
-
-            // 重複参加チェック（キャンセル済みは除く）
-            $existing = \Model_Shift_Assignment::query()
-                ->where('shift_id', $shift_id)
-                ->where('user_id', $user_id)
-                ->where('status', '!=', 'cancelled')
-                ->get_one();
-            
-            if ($existing) {
-                return $this->response([
-                    'success' => false,
-                    'error' => 'already_joined',
-                    'message' => '既にこのシフトに参加しています',
-                    'existing_assignment' => [
-                        'id' => (int)$existing->id,
-                        'status' => $existing->status,
-                        'created_at' => $existing->created_at
-                    ]
-                ], 409);
-            }
-
-            // 定員チェック（キャンセル済みは除く）
-            if ($status !== 'cancelled') {
-                $current_count = $shift->joined_count();
-                $recruit_count = (int)$shift->recruit_count;
-                if ($current_count >= $recruit_count) {
-                    return $this->response([
-                        'success' => false,
-                        'error' => 'shift_full',
-                        'message' => 'このシフトの定員に達しています',
-                        'details' => [
-                            'current_count' => $current_count,
-                            'recruit_count' => $recruit_count,
-                            'remaining' => max(0, $recruit_count - $current_count)
-                        ]
-                    ], 409);
-                }
-            }
-
-            // 新しい割り当てを作成
-            $assignment = \Model_Shift_Assignment::forge([
-                'shift_id' => $shift_id,
-                'user_id' => $user_id,
-                'status' => $status,
-                'self_word' => $self_word,
-            ]);
-
-            $assignment->save();
-
-            // 作成された割り当ての詳細情報を取得
-            $assignment = \Model_Shift_Assignment::find($assignment->id, [
-                'related' => ['user', 'shift']
-            ]);
-
-            return $this->response([
-                'success' => true,
-                'message' => 'シフト割り当てが正常に作成されました',
-                'data' => [
-                    'id' => (int)$assignment->id,
-                    'shift_id' => (int)$assignment->shift_id,
-                    'user_id' => (int)$assignment->user_id,
-                    'user_name' => $assignment->user ? $assignment->user->name : 'Unknown User',
-                    'user_color' => $assignment->user ? $assignment->user->color : '#000000',
-                    'status' => $assignment->status,
-                    'self_word' => $assignment->self_word,
-                    'created_at' => $assignment->created_at,
-                    'updated_at' => $assignment->updated_at,
-                    'shift_info' => [
-                        'shift_date' => $assignment->shift ? $assignment->shift->shift_date : null,
-                        'start_time' => $assignment->shift ? $assignment->shift->start_time : null,
-                        'end_time' => $assignment->shift ? $assignment->shift->end_time : null,
-                        'recruit_count' => $assignment->shift ? (int)$assignment->shift->recruit_count : null
-                    ]
-                ]
-            ], 201);
-
-        } catch (\Exception $e) {
-            return $this->response([
-                'success' => false,
-                'error' => 'server_error',
-                'message' => 'サーバーエラーが発生しました: ' . $e->getMessage()
-            ], 500);
-        }
+    /**
+     * シフト情報を含む割り当てデータをフォーマット
+     */
+    private function format_assignment_data_with_shift($assignment)
+    {
+        $data = $this->format_assignment_data($assignment);
+        $data['shift_info'] = [
+            'shift_date' => $assignment->shift ? $assignment->shift->shift_date : null,
+            'start_time' => $assignment->shift ? $assignment->shift->start_time : null,
+            'end_time' => $assignment->shift ? $assignment->shift->end_time : null,
+            'recruit_count' => $assignment->shift ? (int)$assignment->shift->recruit_count : null
+        ];
+        return $data;
     }
 
     public function before()

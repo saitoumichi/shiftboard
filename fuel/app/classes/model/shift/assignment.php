@@ -48,4 +48,39 @@ class Model_Shift_Assignment extends \Orm\Model
             'cascade_delete' => false,
         ],
     ];
+
+    /**
+     * アクティブな割り当てかどうか（キャンセル済みでない）
+     */
+    public function is_active(): bool
+    {
+        return $this->status !== 'cancelled';
+    }
+
+    /**
+     * 特定のシフトとユーザーの重複割り当てをチェック
+     */
+    public static function exists_for_shift_and_user($shift_id, $user_id, $exclude_cancelled = true): bool
+    {
+        $query = static::query()
+            ->where('shift_id', $shift_id)
+            ->where('user_id', $user_id);
+            
+        if ($exclude_cancelled) {
+            $query->where('status', '!=', 'cancelled');
+        }
+        
+        return $query->get_one() !== null;
+    }
+
+    /**
+     * 特定のシフトのアクティブな割り当て数を取得
+     */
+    public static function count_active_for_shift($shift_id): int
+    {
+        return static::query()
+            ->where('shift_id', $shift_id)
+            ->where('status', '!=', 'cancelled')
+            ->count();
+    }
 }
