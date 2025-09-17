@@ -61,7 +61,7 @@ $(document).ready(function() {
             }),
             dataType: 'json',
             success: function(response) {
-                if (response.ok || response.success) {
+                if (response.ok || response.ok) {
                     showAlert('シフトが正常に作成されました。', 'success');
                     setTimeout(function() {
                         window.location.href = '/shifts';

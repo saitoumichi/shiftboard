@@ -617,7 +617,7 @@ shiftBlock.addEventListener('mouseout', function() {
                         participantsHtml += '<div class="participant-item">';
                         participantsHtml += '<div class="participant-name">' + user.name + ' (' + user.status + ')</div>';
                         if (user.self_word && user.self_word.trim() !== '') {
-                            participantsHtml += '<div class="participant-comment">' + user.self_word + '</div>';
+                            participantsHtml += '<div class="participant-comment" style="font-style: italic; color: #666; font-size: 0.9em; margin-top: 2px;">' + user.self_word + '</div>';
                         }
                         participantsHtml += '</div>';
                     });
@@ -851,11 +851,11 @@ shiftBlock.addEventListener('mouseout', function() {
         
         $.ajax({
             url: `${API}/shifts`,
-            data: { start: self._from, end: self._to, mine: 0, user_id: uid },
+            data: { from: self._from, to: self._to, mine: 0, user_id: uid },
             type: 'GET',
             dataType: 'json',
             success: function(response) {
-                if (response.success) {
+                if (response.ok) {
                     console.log('=== API response ===');
                     console.log('Full response:', response);
                     console.log('Total shifts:', response.data.length);
@@ -975,89 +975,42 @@ shiftBlock.addEventListener('mouseout', function() {
         }
     };
     };
-    
+
     // シフト参加を実際に実行
     self.submitJoinShift = function(shift, comment) {
+        console.log('Joining shift:', shift.id, 'with comment:', comment);
+        
         // 現在のユーザーIDを取得（セッションから）
-        var currentUserId = 1; // 仮のユーザーID（認証実装時に置き換え）
+        var currentUserId = window.CURRENT_USER_ID || 1;
         
         const API = window.API_BASE || '/api';
-        
-        $.ajax({
-            url: `${API}/shifts/${shift.id}/join`,
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
+        fetch(`${API}/shifts/${shift.id}/join`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
                 shift_id: shift.id,
                 user_id: currentUserId,
                 status: 'assigned',
                 self_word: comment
-            }),
-            success: function(response, status, xhr) {
-                // 成功レスポンス
-                try {
-                    var data = typeof response === 'string' ? JSON.parse(response) : response;
-                    
-                    if (data.success) {
-                        self.showAlert(data.message || 'シフトに参加しました！自分のシフトページで確認できます。', 'success');
-                        self.loadShifts();
-                        
-                        // 自分のシフトページのデータも更新
-                        if (typeof window.refreshMyShifts === 'function') {
-                            window.refreshMyShifts();
-                        }
-                    } else {
-                        self.showAlert('シフトの参加に失敗しました: ' + (data.message || data.error), 'error');
-                    }
-                } catch (e) {
-                    self.showAlert('シフトの参加に失敗しました', 'error');
-                    console.error('JSON Parse Error:', e);
-                }
-            },
-            error: function(xhr, status, error) {
-                // エラーメッセージを初期化
-                var errorMessage = 'シフトの参加に失敗しました';
-                
-                // ステータスコード別の処理
-                try {
-                    var response = JSON.parse(xhr.responseText);
-                    if (response.message) {
-                        errorMessage = response.message;
-                    } else if (response.error) {
-                        switch (response.error) {
-                            case 'already_joined':
-                                errorMessage = '既にこのシフトに参加しています';
-                                break;
-                            case 'shift_full':
-                                errorMessage = 'このシフトの定員に達しています';
-                                break;
-                            case 'shift_not_found':
-                                errorMessage = '指定されたシフトが見つかりません';
-                                break;
-                            case 'user_not_found':
-                                errorMessage = '指定されたユーザーが見つかりません';
-                                break;
-                            case 'validation_failed':
-                                errorMessage = '入力内容に誤りがあります';
-                                break;
-                            default:
-                                errorMessage = response.error;
-                        }
-                    }
-                } catch (e) {
-                    // JSON解析に失敗した場合のフォールバック
-                    if (xhr.status === 409) {
-                        errorMessage = '既に参加しているか、定員に達しています';
-                    } else if (xhr.status === 404) {
-                        errorMessage = 'シフトが見つかりません';
-                    } else if (xhr.status === 500) {
-                        errorMessage = 'サーバーエラーが発生しました';
-                    }
-                }
-                
-                // エラーメッセージを表示
-                self.showAlert(errorMessage, 'error');
+            })
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.ok) {
+                alert('シフトに参加しました！');
+                self.loadShifts(); // データを再読み込み
+            } else {
+                alert('参加に失敗しました: ' + (data.message || 'エラーが発生しました'));
             }
+        })
+        .catch(function(error) {
+            console.error('Join error:', error);
+            alert('参加に失敗しました: ' + error.message);
         });
     };
     
@@ -1147,7 +1100,7 @@ shiftBlock.addEventListener('mouseout', function() {
             success: function(response) {
                 console.log('All shifts API response:', response);
                 
-                if (response.success && response.data) {
+                if (response.ok && response.data) {
                     var shifts = response.data;
                     console.log('All shifts loaded:', shifts.length);
                     self.renderShiftsList(shifts);

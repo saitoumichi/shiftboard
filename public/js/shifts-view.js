@@ -109,12 +109,19 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               return false;
           }
           
-          // 現在のユーザーを特定（仮の実装）
-          var currentUser = 'Alice'; // 仮のユーザー名
-          var result = Array.isArray(s.assigned_users) && s.assigned_users.some(u => u.name === currentUser);
+          // 現在のユーザーIDを取得
+          var currentUserId = window.CURRENT_USER_ID || 0;
+          if (!currentUserId) {
+              console.log('isParticipating: no current user ID');
+              return false;
+          }
+          
+          var result = Array.isArray(s.assigned_users) && s.assigned_users.some(function(u) {
+              return u.user_id === currentUserId || u.id === currentUserId;
+          });
           
           console.log('isParticipating calculation:', {
-              currentUser: currentUser,
+              currentUserId: currentUserId,
               assigned_users: s.assigned_users,
               result: result
           });
@@ -511,14 +518,13 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
         $.ajax({
             url: `${API}/shifts/${shift.id}/cancel`,
             type: 'POST',
-            data: {
-                csrf_token: 'dummy_token'
-            },
+            contentType: 'application/json; charset=UTF-8',
+            data: JSON.stringify({ user_id: window.CURRENT_USER_ID }),
             success: function(response) {
                 try {
                     var data = typeof response === 'string' ? JSON.parse(response) : response;
                     
-                    if (data.success) {
+                    if (data.ok) {
                         alert('シフトの参加を取り消しました');
                         vm.loadShiftDetail();
                     } else {
@@ -631,9 +637,9 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               return response.json();
           })
           .then(function(data) {
-              if (data.success) {
+              if (data.ok) {
                   vm.showAlert(data.message || 'シフトに参加しました！', 'success');
-                  vm.load(shiftId); // データを再読み込み
+                  vm.loadShiftDetail(); // データを再読み込み
                   
                   // 自分のシフトページのデータも更新
                   if (typeof window.refreshMyShifts === 'function') {
@@ -694,9 +700,9 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               return response.json();
           })
           .then(function(data) {
-              if (data.success) {
+              if (data.ok) {
                   vm.showAlert('シフト参加を取消しました', 'success');
-                  vm.load(shiftId); // データを再読み込み
+                  vm.loadShiftDetail(); // データを再読み込み
                   
                   // 自分のシフトページのデータも更新
                   if (typeof window.refreshMyShifts === 'function') {

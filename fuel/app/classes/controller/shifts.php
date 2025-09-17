@@ -49,9 +49,11 @@ class Controller_Shifts extends \Fuel\Core\Controller
 
     public function action_my() //自分のシフト
     {
-        $this->require_login();
-        $v = View::forge('shifts/my');
-        $v->set('current_user_id', (int)Session::get('user_id'), false);
-        return Response::forge($v);
+        if ( ! \Fuel\Core\Session::get('user_id')) {
+            \Fuel\Core\Response::redirect('users/login');
+        }
+        $v = \Fuel\Core\View::forge('shifts/my');
+        $v->set('current_user_id', (int)\Fuel\Core\Session::get('user_id'), false);
+        return \Fuel\Core\Response::forge($v);
     }
 }

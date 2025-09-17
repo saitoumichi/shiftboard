@@ -21,6 +21,8 @@
     <!-- jQuery -->
     <script src="<?= Uri::create('js/jquery-3.6.0.min.js') ?>"></script>
     
+    <script src="<?= Uri::create('js/knockout-min.js') ?>"></script>
+
     <!-- 共通JavaScript -->
     <script src="<?= Uri::create('js/common.js') ?>"></script>
 </head>
@@ -66,7 +68,7 @@
                 },
                 dataType: 'json',
                 success: function(response) {
-                    if (response.success && response.data) {
+                    if (response.ok && response.data) {
                         renderMyShifts(response.data);
                     } else {
                         showNoShiftsMessage();
@@ -113,6 +115,16 @@
                 statusDiv.className = 'shift-status';
                 statusDiv.textContent = '参加中';
                 
+                // コメント表示（あれば）
+                var commentDiv = document.createElement('div');
+                commentDiv.className = 'shift-comment';
+                if (shift.self_word && shift.self_word.trim()) {
+                    commentDiv.textContent = 'コメント: ' + shift.self_word;
+                    commentDiv.style.cssText = 'font-style: italic; color: #666; margin-top: 4px; font-size: 0.9em;';
+                } else {
+                    commentDiv.style.display = 'none';
+                }
+                
                 var actionsDiv = document.createElement('div');
                 actionsDiv.className = 'shift-actions';
                 
@@ -138,6 +150,7 @@
                 shiftItem.appendChild(dateDiv);
                 shiftItem.appendChild(timeDiv);
                 shiftItem.appendChild(statusDiv);
+                shiftItem.appendChild(commentDiv);
                 shiftItem.appendChild(actionsDiv);
                 
                 container.appendChild(shiftItem);
@@ -157,12 +170,11 @@
             $.ajax({
                 url: window.API_BASE + '/shifts/' + shiftId + '/cancel',
                 type: 'POST',
-                data: {
-                    csrf_token: 'dummy_token'
-                },
+                contentType: 'application/json; charset=UTF-8',
+                data: JSON.stringify({ user_id: window.CURRENT_USER_ID }),
                 dataType: 'json',
                 success: function(response) {
-                    if (response.success) {
+                    if (response.ok) {
                         alert('シフトの参加を取り消しました');
                         loadMyShifts(); // 一覧を再読み込み
                     } else {

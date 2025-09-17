@@ -15,6 +15,8 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
     {
         $from = \Fuel\Core\Input::get('from');
         $to   = \Fuel\Core\Input::get('to');
+        $mine = \Fuel\Core\Input::get('mine');
+        $user_id = \Fuel\Core\Input::get('user_id');
 
         $q = \Model_Shift::query()
             ->order_by('shift_date', 'asc')
@@ -24,10 +26,15 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
         if ($from) $q->where('shift_date', '>=', $from);
         if ($to)   $q->where('shift_date', '<=', $to);
 
+        // 自分のシフトのみを取得する場合
+        if ($mine && $user_id) {
+            $q->where('assignments.user_id', $user_id);
+        }
+
         $rows = $q->get();
 
         // フロント（shifts.js）が期待する形に整形
-        $data = array_map(function($s){
+        $data = array_map(function($s) use ($mine, $user_id) {
             $assigned = isset($s->assignments) ? count($s->assignments) : 0;
             $slot     = (int)($s->recruit_count ?? 0);
             
@@ -46,6 +53,17 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
                 }
             }
             
+            // 自分のシフトの場合、自分のコメントをシフトレベルでも追加
+            $self_word = null;
+            if ($mine && $user_id && isset($s->assignments)) {
+                foreach ($s->assignments as $assignment) {
+                    if ($assignment->user_id == $user_id) {
+                        $self_word = $assignment->self_word;
+                        break;
+                    }
+                }
+            }
+            
             return [
                 'id'              => (int)$s->id,
                 'shift_date'      => (string)$s->shift_date,
@@ -56,17 +74,18 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
                 'assigned_count'  => $assigned,
                 'available_slots' => max($slot - $assigned, 0),
                 'note'            => (string)($s->free_text ?? ''),
+                'self_word'       => $self_word, // 自分のコメントを追加
             ];
         }, $rows);
 
-        return $this->response(['success' => true, 'data' => array_values($data)]);
+        return $this->response(['ok' => true, 'data' => array_values($data)]);
     }
 
         // 追加：GET /api/shifts/{id}
         public function get_show($id = null)
         {
             if (!$id) {
-                return $this->response(['success' => false, 'error' => 'invalid_id'], 400);
+                return $this->response(['ok' => false, 'error' => 'invalid_id'], 400);
             }
         
             $shift = \Model_Shift::find($id, [
@@ -74,7 +93,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             ]);
         
             if (!$shift) {
-                return $this->response(['success' => false, 'error' => 'not_found'], 404);
+                return $this->response(['ok' => false, 'error' => 'not_found'], 404);
             }
         
             // 参加者情報を整形
@@ -98,9 +117,9 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             $payload['remaining'] = max((int)$shift->recruit_count - count($assigned_users), 0);
             $payload['slot_count'] = (int)$shift->recruit_count;
         
-            // ← success & data に統一
+            // ← ok & data に統一
             return $this->response([
-                'success' => true,
+                'ok' => true,
                 'data'    => $payload
             ]);
         }
@@ -176,7 +195,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
         } catch (\Exception $e) {
             // DBエラー（今回の created_by NULL など）はここで拾える
             return $this->response([
-                'success' => false,
+                'ok' => false,
                 'error'   => 'server_error',
                 'message' => $e->getMessage()
             ], 500);
