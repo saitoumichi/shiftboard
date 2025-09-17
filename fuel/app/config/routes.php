@@ -1,12 +1,14 @@
 <?php
 return [
   // UI（表示系）
-  '_root_'            => 'users/create',        // トップ＝ログイン/一覧（未ログインならログイン画面を出す）
+  '_root_'            => 'shifts/index',       // トップ＝ログイン/一覧（未ログインならログイン画面を出す）
   'shifts'            => 'shifts/index',
   'shifts/create'     => 'shifts/create',
   'shifts/(:num)'     => 'shifts/view/$1',
-  'users/create'      => 'users/create',
+  'users/create'  => 'users/create',  // 新規登録
   'my/shifts'         => 'shifts/my',           // 自分のシフト一覧（必要なら）
+  'users/login'   => 'users/login',
+  'users/logout'  => 'users/logout',
 
   // API（JSON）
   'api/shifts'                    => 'api/shifts/index',       // GET一覧 / POST作成
@@ -16,5 +18,5 @@ return [
   'api/shift_assignments'         => 'api/shift_assignments/index',     // GET一覧
   'api/users'                     => 'api/users/index',        // GET/POST
   'api/users/(:num)'              => 'api/users/show/$1',      // GET/PUT/DELETE
-  'api/debug/db-test'             => 'api/debug/db_test',
+  'api/debug/db-test'           => 'api/debug/db_test',
 ];

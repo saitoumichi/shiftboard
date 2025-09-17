@@ -1,3 +1,4 @@
+<?php use Fuel\Core\Uri; ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,7 +6,7 @@
     <title>シフト参加者一覧 - ShiftBoard</title>
     
     <!-- 共通CSS -->
-    <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/common.css'); ?>">
+    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>">
     
     <!-- 参加者一覧専用CSS -->
     <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/shift_assignments.css'); ?>">

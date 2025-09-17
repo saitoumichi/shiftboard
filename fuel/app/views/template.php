@@ -1,13 +1,15 @@
+<?php use Fuel\Core\Uri; ?>
 <!doctype html>
 <html lang="ja">
 <head>
     <meta charset="utf-8">
     <title><?= isset($title) ? $title : 'シフトボード' ?></title>
-    <link rel="stylesheet" href="<?= \Fuel\Core\Uri::create('assets/css/common.css') ?>">
+    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>">
     </head>
 <body style="font-family: system-ui, sans-serif; padding: 24px">
     <?php
-        $user = \Controller_Users::get_logged_in_user();
+        $user_id = \Fuel\Core\Session::get('user_id');
+        $user = $user_id ? \Model_User::find($user_id) : null;
     ?>
 
     <div class="header">

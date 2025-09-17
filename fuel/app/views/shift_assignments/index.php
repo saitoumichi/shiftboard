@@ -1,3 +1,4 @@
+<?php use Fuel\Core\Uri; ?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -6,9 +7,9 @@
     <title>シフト割り当て管理 - ShiftBoard</title>
     
     <!-- ベースURL設定 -->
-    <script>window.APP_BASE="<?php echo \Fuel\Core\Uri::base(false); ?>";</script>
+    <script>window.APP_BASE="<?php echo Uri::base(false); ?>";</script>
     
-    <link rel="stylesheet" href="/assets/css/shifts.css">
+    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>">
     <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/shift_assignments.css'); ?>">
 </head>
 <body>

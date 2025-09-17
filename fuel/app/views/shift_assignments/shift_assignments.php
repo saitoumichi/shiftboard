@@ -1,10 +1,11 @@
+<?php use Fuel\Core\Uri; ?>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <title>自分のシフト</title>
-    <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/common.css'); ?>">
-</head>
+    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>">
+    </head>
 <body>
     <h1>自分のシフト</h1>
 
