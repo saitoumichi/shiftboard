@@ -1,43 +1,52 @@
 <?php
 
-class Controller_Users extends \Fuel\Core\Controller
+use Fuel\Core\Session;
+use Fuel\Core\Controller;
+use Fuel\Core\View;
+use Fuel\Core\Response;
+use Fuel\Core\Input;
+
+class Controller_Users extends Controller
 {
-    public function action_index() //メンバー一覧
+    public function action_index()
     {
-        $data = array(
-            'title' => 'メンバー管理',
-            'subtitle' => '・ メンバーの一覧表示・管理'
-        );
-        
-        return \Fuel\Core\View::forge('users/index');
+        // 任意：ユーザー一覧（管理用）
+        $users = Model_User::find('all');
+        $v = View::forge('users/index');
+        $v->set('users', $users, false);
+        return Response::forge($v);
     }
 
-    public function action_create() //メンバー作成
-    {
-        // 既存ユーザーを取得
-        $users = \Model_User::find('all');
-        
-        $data = array(
-            'title' => 'メンバー作成',
-            'subtitle' => '・ 新しいメンバーを追加',
-            'users' => $users
-        );
-        
-        return \Fuel\Core\Response::forge(\Fuel\Core\View::forge('users/create', $data));
-    }
-
-    public function action_view($id) //メンバー詳細
-    {
-        if (!$id) {
-            throw new \Fuel\Core\HttpNotFoundException('メンバーIDが指定されていません');
+    // ログイン POST 受付（/users/create からでも /auth/login からでもOK）
+        public function action_login()
+        {
+            if (Input::method() !== 'POST') {
+                return Response::redirect('shifts');
+            }
+            $name  = trim((string)Input::post('name'));
+            $color = trim((string)Input::post('color', '#000000'));
+            if ($name === '') {
+                Session::set_flash('error', '名前を入力してください');
+                return Response::redirect('shifts');
+            }
+    
+            // 既存検索 or 新規作成
+            $user = Model_User::query()->where('name', $name)->get_one();
+            if (!$user) {
+                $user = Model_User::forge(['name'=>$name, 'color'=>$color]);
+                $user->save();
+            } else {
+                // 色を更新したい時だけ
+                if ($color) { $user->color = $color; $user->save(); }
+            }
+    
+            Session::set('user_id', $user->id);   // ←ココがポイント
+            return Response::redirect('shifts');  // 一覧へ
         }
-        
-        $data = array(
-            'title' => 'メンバー詳細',
-            'subtitle' => '・ メンバーの詳細情報と参加シフト',
-            'member_id' => $id
-        );
-        
-        return \Fuel\Core\View::forge('users/view', ['id'=>$id]);
+    
+        public function action_logout()
+        {
+            Session::delete('user_id');
+            return Response::redirect('shifts');
+        }
     }
-}

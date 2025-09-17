@@ -1,5 +1,11 @@
 // シフト作成ページ用JavaScript
 
+// 未ログインガード
+if (!window.CURRENT_USER_ID) {
+  alert('ログインが必要です');
+  location.href = '/';
+}
+
 $(document).ready(function() {
     // URLパラメータから日付を取得
     var urlParams = new URLSearchParams(window.location.search);
@@ -42,7 +48,7 @@ $(document).ready(function() {
         
         // AJAX送信
         $.ajax({
-            url: '/api/shifts',
+            url: `${window.API_BASE}/shifts`,
             method: 'POST',
             contentType: 'application/json',
             processData: false,

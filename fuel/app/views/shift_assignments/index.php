@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>シフト割り当て管理 - ShiftBoard</title>
+    
+    <!-- ベースURL設定 -->
+    <script>window.APP_BASE="<?php echo \Fuel\Core\Uri::base(false); ?>";</script>
+    
     <link rel="stylesheet" href="/assets/css/shifts.css">
     <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/shift_assignments.css'); ?>">
 </head>

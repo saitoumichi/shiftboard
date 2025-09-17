@@ -10,8 +10,11 @@
     <!-- シフト作成ページ専用CSS -->
     <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/shifts-create.css'); ?>">
     
-    <!-- jQuery for AJAX -->
+    <!-- jQuery -->
     <script src="<?php echo \Fuel\Core\Uri::create('js/jquery-3.6.0.min.js'); ?>"></script>
+    
+    <!-- ベースURL設定 -->
+    <script>window.APP_BASE="<?php echo \Fuel\Core\Uri::base(false); ?>";</script>
     
     <!-- 共通JavaScript -->
     <script src="<?php echo \Fuel\Core\Uri::create('js/common.js'); ?>"></script>

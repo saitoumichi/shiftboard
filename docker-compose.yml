@@ -1,30 +1,29 @@
 services:
-  web:
-    build: ./docker/php
+  db:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: shiftboard
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app_pass
+      MYSQL_ROOT_PASSWORD: root_pass
     ports:
-      - "8081:80"
+      - "13306:3306"
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    environment:
+      FUEL_ENV: docker
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: shiftboard
+      DB_USERNAME: app
+      DB_PASSWORD: app_pass
     volumes:
       - ./:/var/www/html
     depends_on:
       - db
-
-  db:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: shiftboard
-      MYSQL_USER: app
-      MYSQL_PASSWORD: app_pass
-      TZ: Asia/Tokyo
     ports:
-      - "13306:3306"
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_0900_ai_ci
-      - --skip-character-set-client-handshake
-      - --default-time-zone=+09:00
-      - --sql-mode=STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
-    volumes:
-      - db-data:/var/lib/mysql
-volumes:
-  db-data:
+      - "8081:80"
