@@ -22,11 +22,14 @@ class Controller_Shifts extends \Fuel\Core\Controller
     public function action_index()  //未ログインならusers/loginが返るはず！（ログイン済みならそのまま）
     {
         $uid = Session::get('user_id');
+        error_log('shifts/index - セッションuser_id: ' . ($uid ?: 'null'));
         if (!$uid) {
+            error_log('shifts/index - 未ログインのためログイン画面にリダイレクト');
             return Response::forge(View::forge('users/login')); // 未ログイン→ログイン画面
         }
         $v = View::forge('shifts/index');
         $v->set('current_user_id', (int)Session::get('user_id'), false); // ← ここが超重要
+        error_log('shifts/index - current_user_idを設定: ' . (int)Session::get('user_id'));
         return Response::forge($v);
     }
 

@@ -180,21 +180,14 @@
     </div>
 </div>
 
-<!-- コメント入力モーダル -->
-<div id="comment-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-dialog">
-        <div class="modal-header">
-            <h3>一言を入力</h3>
-        </div>
-        <div class="modal-body">
-            <textarea id="comment-textarea" placeholder="参加するシフトについて一言コメントを入力してください..." rows="4"></textarea>
-        </div>
-        <div class="modal-footer">
-            <button id="comment-cancel-btn" class="btn btn-secondary">キャンセル</button>
-            <button id="comment-ok-btn" class="btn btn-primary">OK</button>
+<!-- 参加コメント用モーダル -->
+<div id="comment-modal" class="modal-overlay">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+        <h3 style="margin:0 0 8px;">参加時のひとこと（任意）</h3>
+        <textarea id="comment-textarea" rows="4" style="width:100%;" placeholder="例：頑張ります！"></textarea>
+        <div style="margin-top:12px; text-align:right;">
+            <button id="comment-cancel-btn" type="button">キャンセル</button>
+            <button id="comment-ok-btn" type="button">参加する</button>
         </div>
     </div>
-</div>
-    </div>
-    
 </div>

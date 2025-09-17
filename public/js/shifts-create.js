@@ -1,10 +1,29 @@
 // シフト作成ページ用JavaScript
 
-// 未ログインガード
-if (!window.CURRENT_USER_ID) {
-  alert('ログインが必要です');
-  location.href = '/';
-}
+// 未ログインガード（即リダイレクトは削除）
+// 代わりに、DOM後に"操作を無効化"するだけ
+document.addEventListener('DOMContentLoaded', function () {
+  var uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
+  console.log('CURRENT_USER_ID (create):', uid);
+  if (!uid) {
+    console.warn('未ログイン：操作を無効化');
+    // フォーム送信ボタンを無効化（存在すれば）
+    var submitBtn = document.querySelector('input[type="submit"], button[type="submit"]');
+    if (submitBtn) { 
+      submitBtn.disabled = true; 
+      submitBtn.title = 'ログインが必要です'; 
+    }
+    // ここで location.href に飛ばさない
+  } else {
+    console.log('ログイン済み：ボタンを有効化');
+    // ログイン済みの場合はボタンを有効化
+    var submitBtn = document.querySelector('input[type="submit"], button[type="submit"]');
+    if (submitBtn) { 
+      submitBtn.disabled = false; 
+      submitBtn.title = ''; 
+    }
+  }
+});
 
 $(document).ready(function() {
     // URLパラメータから日付を取得
@@ -29,6 +48,7 @@ $(document).ready(function() {
         
         // デバッグ用：送信データをコンソールに出力
         console.log('Form data being sent:', formData);
+        console.log('CURRENT_USER_ID:', window.CURRENT_USER_ID);
         
         // バリデーション
         if (!formData.shift_date || !formData.start_time || !formData.end_time) {
@@ -61,9 +81,12 @@ $(document).ready(function() {
             }),
             dataType: 'json',
             success: function(response) {
+                console.log('Shift creation response:', response);
                 if (response.ok || response.ok) {
                     showAlert('シフトが正常に作成されました。', 'success');
+                    console.log('Redirecting to /shifts in 2 seconds...');
                     setTimeout(function() {
+                        console.log('Redirecting now...');
                         window.location.href = '/shifts';
                     }, 2000);
                 } else {

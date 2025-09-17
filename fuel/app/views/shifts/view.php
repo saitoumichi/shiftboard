@@ -31,10 +31,10 @@
     </script>
     
     <!-- 共通JavaScript -->
-    <script src="<?= Uri::create('js/common.js') ?>"></script>
+    <script src="<?= Uri::create('js/common.js') ?>" defer></script>
     
     <!-- シフト詳細ページ専用JavaScript -->
-    <script src="<?= Uri::create('js/shifts-view.js') ?>"></script>
+    <script src="<?= Uri::create('js/shifts-view.js') ?>" defer></script>
 </head>
 <body>
     <!-- HTMLテンプレートを読み込み -->

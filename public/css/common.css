@@ -592,3 +592,28 @@ a:focus {
         box-shadow: var(--box-shadow);
     }
 }
+
+/* モーダルスタイル - 共通 */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.show {
+  display: flex !important;  /* inline で display:none があっても勝てる */
+}
+
+.modal-dialog {
+  background: #fff;
+  border-radius: 8px;
+  max-width: 520px;
+  width: 92%;
+  max-height: 80vh;
+  overflow: auto;
+  padding: 16px;
+}
