@@ -19,12 +19,12 @@
     <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>">
     
     <!-- jQuery -->
-    <script src="<?= Uri::create('js/jquery-3.6.0.min.js') ?>"></script>
+    <script src="<?= Uri::create('js/jquery-3.6.0.min.js') ?>" defer></script>
     
-    <script src="<?= Uri::create('js/knockout-min.js') ?>"></script>
+    <script src="<?= Uri::create('js/knockout-min.js') ?>" defer></script>
 
     <!-- 共通JavaScript -->
-    <script src="<?= Uri::create('js/common.js') ?>"></script>
+    <script src="<?= Uri::create('js/common.js') ?>" defer></script>
 </head>
 <body>
     <div class="page-container">

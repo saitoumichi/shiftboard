@@ -1,10 +1,23 @@
 // シフト詳細ページ用JavaScript
 
-// 未ログインガード
-if (!window.CURRENT_USER_ID) {
-  alert('ログインが必要です');
-  location.href = '/';
-}
+// 未ログインガード（即リダイレクトは削除）
+// 代わりに、DOM後に"操作を無効化"するだけ
+document.addEventListener('DOMContentLoaded', function () {
+  var uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
+  console.log('CURRENT_USER_ID (view):', uid);
+  if (!uid) {
+    console.warn('未ログイン：操作を無効化');
+    // 参加・取消ボタンを無効化（存在すれば）
+    var btns = document.querySelectorAll('.btn-participate, .btn-cancel');
+    btns.forEach(b => { b.disabled = true; b.title = 'ログインが必要です'; });
+    // ここで location.href に飛ばさない
+  } else {
+    console.log('ログイン済み：ボタンを有効化');
+    // ログイン済みの場合はボタンを有効化
+    var btns = document.querySelectorAll('.btn-participate, .btn-cancel');
+    btns.forEach(b => { b.disabled = false; b.title = ''; });
+  }
+});
 
 // 1) KO の互換（古い Knockout の場合）
 if (window.ko && typeof ko.pureComputed !== 'function') {
@@ -242,6 +255,9 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                     mainContent.style.opacity = '1';
                     console.log('Main content shown manually');
                   }
+                  
+                  // Knockout.jsのバインディングも更新
+                  self.isReady(true);
                   
                   // シフト詳細を手動で更新
                   var shiftTitleElement = root.querySelector('.shift-title');
@@ -552,12 +568,14 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       
       // コメント入力モーダルを表示
       vm.showCommentModal = function(shift) {
+          console.log('=== showCommentModal 開始 ===');
           console.log('showCommentModal called with shift:', shift);
           
-          var modal = document.getElementById('comment-modal');
-          var textarea = document.getElementById('comment-textarea');
-          var cancelBtn = document.getElementById('comment-cancel-btn');
-          var okBtn = document.getElementById('comment-ok-btn');
+          var modal = document.getElementById('comment-modal-view');
+          console.log('モーダル要素取得結果:', modal);
+          var textarea = document.getElementById('comment-textarea-view');
+          var cancelBtn = document.getElementById('comment-cancel-btn-view');
+          var okBtn = document.getElementById('comment-ok-btn-view');
           
           console.log('Modal elements found:', {
               modal: !!modal,
@@ -567,7 +585,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           });
           
           if (!modal) {
-              console.error('comment-modal element not found!');
+              console.error('comment-modal-view element not found!');
               console.log('Available elements with "comment" in id:', 
                   Array.from(document.querySelectorAll('[id*="comment"]')).map(el => el.id));
               console.log('All elements with id:', 
@@ -580,34 +598,48 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               textarea.value = '';
           }
           
-          // モーダルを表示
-          modal.style.display = 'flex';
+          // モーダルを表示（クラス管理のみ）
+          console.log('モーダル表示前のクラス:', modal.className);
+          modal.classList.add('show');
+          console.log('モーダル表示後のクラス:', modal.className);
           console.log('Modal displayed');
+          
+          // デバッグ用即席チェック
+          console.log('=== デバッグチェック（詳細ページ） ===');
+          console.log('1. モーダル要素存在チェック:', document.getElementById('comment-modal-view') ? 'OK' : 'NG');
+          console.log('2. 計算されたdisplay:', getComputedStyle(document.getElementById('comment-modal-view')).display);
+          console.log('3. z-index:', getComputedStyle(document.getElementById('comment-modal-view')).zIndex);
+          console.log('4. position:', getComputedStyle(document.getElementById('comment-modal-view')).position);
+          console.log('5. visibility:', getComputedStyle(document.getElementById('comment-modal-view')).visibility);
+          console.log('6. opacity:', getComputedStyle(document.getElementById('comment-modal-view')).opacity);
+          console.log('7. transform:', getComputedStyle(document.getElementById('comment-modal-view')).transform);
+          console.log('=====================================');
+          
           textarea.focus();
           
           // キャンセルボタンのイベント
           cancelBtn.onclick = function() {
-              modal.style.display = 'none';
+              modal.classList.remove('show');
           };
           
           // OKボタンのイベント
           okBtn.onclick = function() {
               var comment = textarea.value.trim();
               vm.submitJoinShift(shift, comment);
-              modal.style.display = 'none';
+              modal.classList.remove('show');
           };
           
           // エスケープキーでモーダルを閉じる
           document.addEventListener('keydown', function(e) {
               if (e.key === 'Escape') {
-                  modal.style.display = 'none';
+                  modal.classList.remove('show');
               }
           });
           
           // モーダル外クリックで閉じる
           modal.onclick = function(e) {
               if (e.target === modal) {
-                  modal.style.display = 'none';
+                  modal.classList.remove('show');
               }
           };
       };
@@ -646,10 +678,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                       window.refreshMyShifts();
                   }
                   
-                  // 自分のシフトページにリダイレクト
-                  setTimeout(function() {
-                      window.location.href = '/my/shifts';
-                  }, 1500);
+                  // 詳細ページに留まる（自動遷移を削除）
               } else {
                   // エラーメッセージを詳細に処理
                   var errorMessage = '参加に失敗しました';
@@ -709,10 +738,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                       window.refreshMyShifts();
                   }
                   
-                  // 自分のシフトページにリダイレクト
-                  setTimeout(function() {
-                      window.location.href = '/my/shifts';
-                  }, 1500);
+                  // 詳細ページに留まる（自動遷移を削除）
               } else {
                   vm.showAlert('取消に失敗しました: ' + data.message, 'error');
               }

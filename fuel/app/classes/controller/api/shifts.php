@@ -133,8 +133,8 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
         $json = json_decode($raw, true);
         $in   = is_array($json) ? $json : \Fuel\Core\Input::post();
 
-        // created_by を必ずセット（認証があれば Auth::get('id') に置換）
-        $created_by = 1; // TODO: 認証実装後は \Auth::get('id') などに
+        // created_by を必ずセット（セッションから取得）
+        $created_by = \Fuel\Core\Session::get('user_id', 1);
 
         // ---- Validation ----
         $val = \Fuel\Core\Validation::forge();

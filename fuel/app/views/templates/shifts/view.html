@@ -11,36 +11,6 @@
         読み込み中...
     </div>
 
-    <!-- <div style="background: yellow; padding: 10px; margin: 10px;">
-        <div>
-            <strong>Loading状態:</strong> <span data-bind="text: loading() ? 'true' : 'false'"></span><br>
-            <strong>isReady状態:</strong> <span data-bind="text: isReady() ? 'true' : 'false'"></span><br>
-            <strong>Shiftデータ:</strong> <span data-bind="text: shift() ? 'あり' : 'なし'"></span><br>
-            <strong>Shift ID:</strong> <span data-bind="text: shift() && shift().id || 'なし'"></span><br>
-            <strong>Shift日付:</strong> <span data-bind="text: shift() && shift().shift_date || 'なし'"></span><br>
-            <strong>Error:</strong> <span data-bind="text: error() ? error() : ''"></span>
-        </div>
-
-        <hr>
-
-        <div data-bind="visible: isReady()">
-            <h1 data-bind="text: shiftTitle()"></h1>
-            <p>
-                <span data-bind="text: shiftDate()"></span>
-                <span data-bind="text: shiftTime()"></span>
-            </p>
-        </div>
-
-        <pre data-bind="text: 'Debug: ' + (shift() ? 'Data loaded' : 'No data')"></pre>
-        
-        <div style="background: lightblue; padding: 10px; margin: 10px;" data-bind="visible: isReady()">
-            <h3>テスト表示</h3>
-            <p>シフトタイトル: <span data-bind="text: shiftTitle()"></span></p>
-            <p>シフト日付: <span data-bind="text: shiftDate()"></span></p>
-            <p>シフト時間: <span data-bind="text: shiftTime()"></span></p>
-            <p>参加者数: <span data-bind="text: participants().length"></span></p>
-        </div>
-    </div> -->
 
     <div data-bind="visible: isReady()" class="main-content">
     <div class="left-section">
@@ -83,7 +53,8 @@
             <!-- 参加ボタン（未参加時のみ表示） -->
             <button class="action-btn btn-participate" 
                     data-bind="visible: shift() && !isParticipating() && canParticipate(), 
-                               click: function() { $root.joinShift($root.shift()); }">
+                               click: function() { console.log('参加ボタンクリック！'); $root.joinShift($root.shift()); }"
+                    onclick="console.log('直接クリックイベント！');">
                 参加する
             </button>
             
@@ -121,18 +92,14 @@
     </div>
     </div>
     
-    <!-- コメント入力モーダル -->
-    <div id="comment-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-dialog">
-            <div class="modal-header">
-                <h3>一言を入力</h3>
-            </div>
-            <div class="modal-body">
-                <textarea id="comment-textarea" placeholder="参加するシフトについて一言コメントを入力してください..." rows="4"></textarea>
-            </div>
-            <div class="modal-footer">
-                <button id="comment-cancel-btn" class="btn btn-secondary">キャンセル</button>
-                <button id="comment-ok-btn" class="btn btn-primary">OK</button>
+    <!-- 詳細ページ用モーダル -->
+    <div id="comment-modal-view" class="modal-overlay">
+        <div class="modal-dialog" onclick="event.stopPropagation()">
+            <h3 style="margin:0 0 8px;">ひとこと</h3>
+            <textarea id="comment-textarea-view" rows="4" style="width:100%;"></textarea>
+            <div style="margin-top:12px; text-align:right;">
+                <button id="comment-cancel-btn-view" type="button">キャンセル</button>
+                <button id="comment-ok-btn-view" type="button">OK</button>
             </div>
         </div>
     </div>
