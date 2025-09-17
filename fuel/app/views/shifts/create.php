@@ -17,6 +17,16 @@
     <!-- ベースURL設定 -->
     <script>window.APP_BASE="<?= Uri::base(false) ?>";</script>
     
+    <!-- ユーザーIDとAPIベースURL設定 -->
+    <meta name="current-user-id" content="<?= (int)($current_user_id ?? 0) ?>">
+    <meta name="api-base" content="/api">
+    <script>
+        window.API_BASE = '/api';
+        window.CURRENT_USER_ID = Number(
+            document.querySelector('meta[name="current-user-id"]')?.content || 0
+        );
+    </script>
+    
     <!-- 共通JavaScript -->
     <script src="<?= Uri::create('js/common.js') ?>"></script>
     

@@ -16,6 +16,7 @@ function ShiftViewModel() {
     var self = this;
     
     // データ
+    self.filter = ko.observable('all'); // 'all', 'open', 'full', 'mine'
     self.currentDate = ko.observable(new Date());
     self.currentView = ko.observable('month');
     self.shifts = ko.observableArray([]);
@@ -24,6 +25,32 @@ function ShiftViewModel() {
     self.loading = ko.observable(false);
     self.alertMessage = ko.observable('');
     self.alertType = ko.observable('');
+    
+    // 計算プロパティ：フィルタリングされたシフト一覧
+    self.filteredShifts = ko.computed(function() {
+        var allShifts = self.shifts();
+        var currentFilter = self.filter();
+
+        if (currentFilter === 'open') {
+            return allShifts.filter(function(shift) {
+                return shift.available_slots > 0;
+            });
+        }
+        if (currentFilter === 'full') {
+            return allShifts.filter(function(shift) {
+                return shift.available_slots === 0;
+            });
+        }
+        if (currentFilter === 'mine') {
+            return allShifts.filter(function(shift) {
+                // 参加ユーザーに自分自身が含まれているかチェック
+                return shift.assigned_users.some(function(user) {
+                    return user.id === window.CURRENT_USER_ID;
+                });
+            });
+        }
+        return allShifts; // 'all'の場合はすべて返す
+    });
     
     // 計算プロパティ
     self.currentMonth = ko.computed(function() {
@@ -329,7 +356,11 @@ function ShiftViewModel() {
     // カレンダー日付をレンダリング（テーブル形式）
     self.renderCalendarDays = function(days) {
         var container = document.getElementById('calendar-days-container');
-        if (!container) return;
+        console.log('renderCalendarDays called, container found:', !!container);
+        if (!container) {
+            console.error('calendar-days-container not found!');
+            return;
+        }
         
         container.innerHTML = '';
         
@@ -410,8 +441,9 @@ function ShiftViewModel() {
                     shiftBlock.appendChild(countDiv);
                     
                     // クリックイベント
-                    shiftBlock.addEventListener('click', function() {
-                        self.viewShift(shift);
+                    shiftBlock.addEventListener('click', function(e) {
+                        e.stopPropagation(); // 親要素（日付セル）への伝播を止める
+    self.viewShift(shift);
                     });
                     
                     dayElement.appendChild(shiftBlock);
@@ -483,10 +515,42 @@ function ShiftViewModel() {
                 countDiv.textContent = shift.assigned_users.length + '/' + shift.slot_count;
                 shiftBlock.appendChild(countDiv);
                 
-                // クリックイベント
-                shiftBlock.addEventListener('click', function() {
-                    self.viewShift(shift);
-                });
+                // ツールチップ機能を追加
+shiftBlock.addEventListener('mouseover', function(e) {
+    // ツールチップ要素を作成
+    var tooltip = document.createElement('div');
+    tooltip.className = 'shift-tooltip';
+    tooltip.style.position = 'absolute';
+    tooltip.style.zIndex = '100';
+    tooltip.style.background = 'white';
+    tooltip.style.border = '1px solid #ddd';
+    tooltip.style.padding = '10px';
+    tooltip.style.borderRadius = '4px';
+    tooltip.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+    tooltip.style.minWidth = '200px';
+
+     // ツールチップの内容を設定
+     tooltip.innerHTML = `
+     <p><strong>時間:</strong> ${shift.start_time.substring(0, 5)} - ${shift.end_time.substring(0, 5)}</p>
+     <p><strong>参加人数:</strong> ${shift.assigned_users.length} / ${shift.slot_count}</p>
+     <p><strong>空き:</strong> ${shift.available_slots}人</p>
+     ${shift.note ? `<p><strong>メモ:</strong> ${shift.note}</p>` : ''}
+ `;
+
+ // ツールチップの位置を調整
+ tooltip.style.top = (e.clientY + 10) + 'px';
+ tooltip.style.left = (e.clientX + 10) + 'px';
+ 
+ document.body.appendChild(tooltip);
+});
+
+shiftBlock.addEventListener('mouseout', function() {
+ // ツールチップを非表示にする
+ var tooltip = document.querySelector('.shift-tooltip');
+ if (tooltip) {
+     document.body.removeChild(tooltip);
+ }
+});
                 
                 dayElement.appendChild(shiftBlock);
             });
@@ -553,7 +617,7 @@ function ShiftViewModel() {
                         participantsHtml += '<div class="participant-item">';
                         participantsHtml += '<div class="participant-name">' + user.name + ' (' + user.status + ')</div>';
                         if (user.self_word && user.self_word.trim() !== '') {
-                            participantsHtml += '<div class="participant-comment">' + user.self_word + '</div>';
+                            participantsHtml += '<div class="participant-comment" style="font-style: italic; color: #666; font-size: 0.9em; margin-top: 2px;">' + user.self_word + '</div>';
                         }
                         participantsHtml += '</div>';
                     });
@@ -687,19 +751,8 @@ function ShiftViewModel() {
             }
             
             filteredShifts.forEach(function(shift, index) {
-                console.log('Creating shift item', index + 1, 'for:', shift);
                 var itemElement = document.createElement('div');
                 itemElement.className = 'recruitment-item';
-                itemElement.style.cssText = 'cursor: pointer;';
-                
-                // クリックイベントを追加（ボタン以外の部分）
-                itemElement.addEventListener('click', function(e) {
-                    // ボタンがクリックされた場合は詳細ページに遷移しない
-                    if (e.target.tagName === 'BUTTON') {
-                        return;
-                    }
-                    window.location.href = '/shifts/' + shift.id;
-                });
                 
                 // シフト情報とボタンを横並びにするコンテナ
                 var infoContainer = document.createElement('div');
@@ -731,6 +784,16 @@ function ShiftViewModel() {
                 actionsDiv.className = 'recruitment-actions';
                 actionsDiv.style.cssText = 'display: flex; gap: 5px; flex-shrink: 0;';
                 
+                // 詳細ボタンを追加
+        var detailBtn = document.createElement('button');
+        detailBtn.className = 'action-btn detail';
+        detailBtn.textContent = '詳細';
+        detailBtn.addEventListener('click', function() {
+            window.location.href = '/shifts/' + shift.id;
+        });
+        actionsDiv.appendChild(detailBtn);
+
+        // 参加・取消ボタンはそのまま
                 var joinBtn = document.createElement('button');
                 joinBtn.className = 'action-btn join';
                 joinBtn.textContent = '参加';
@@ -750,12 +813,8 @@ function ShiftViewModel() {
                 infoContainer.appendChild(actionsDiv);
                 itemElement.appendChild(infoContainer);
                 container.appendChild(itemElement);
-                console.log('Added shift item to container');
-                console.log('Container innerHTML length:', container.innerHTML.length);
-                console.log('Container children count:', container.children.length);
             });
         }
-        console.log('=== End renderAvailableShiftsForView ===');
     };
     
     // シフト詳細表示
@@ -792,11 +851,11 @@ function ShiftViewModel() {
         
         $.ajax({
             url: `${API}/shifts`,
-            data: { start: self._from, end: self._to, mine: 0, user_id: uid },
+            data: { from: self._from, to: self._to, mine: 0, user_id: uid },
             type: 'GET',
             dataType: 'json',
             success: function(response) {
-                if (response.success) {
+                if (response.ok) {
                     console.log('=== API response ===');
                     console.log('Full response:', response);
                     console.log('Total shifts:', response.data.length);
@@ -916,89 +975,42 @@ function ShiftViewModel() {
         }
     };
     };
-    
+
     // シフト参加を実際に実行
     self.submitJoinShift = function(shift, comment) {
+        console.log('Joining shift:', shift.id, 'with comment:', comment);
+        
         // 現在のユーザーIDを取得（セッションから）
-        var currentUserId = 1; // 仮のユーザーID（認証実装時に置き換え）
+        var currentUserId = window.CURRENT_USER_ID || 1;
         
         const API = window.API_BASE || '/api';
-        
-        $.ajax({
-            url: `${API}/shifts/${shift.id}/join`,
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
+        fetch(`${API}/shifts/${shift.id}/join`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
                 shift_id: shift.id,
                 user_id: currentUserId,
                 status: 'assigned',
                 self_word: comment
-            }),
-            success: function(response, status, xhr) {
-                // 成功レスポンス
-                try {
-                    var data = typeof response === 'string' ? JSON.parse(response) : response;
-                    
-                    if (data.success) {
-                        self.showAlert(data.message || 'シフトに参加しました！自分のシフトページで確認できます。', 'success');
-                        self.loadShifts();
-                        
-                        // 自分のシフトページのデータも更新
-                        if (typeof window.refreshMyShifts === 'function') {
-                            window.refreshMyShifts();
-                        }
-                    } else {
-                        self.showAlert('シフトの参加に失敗しました: ' + (data.message || data.error), 'error');
-                    }
-                } catch (e) {
-                    self.showAlert('シフトの参加に失敗しました', 'error');
-                    console.error('JSON Parse Error:', e);
-                }
-            },
-            error: function(xhr, status, error) {
-                // エラーメッセージを初期化
-                var errorMessage = 'シフトの参加に失敗しました';
-                
-                // ステータスコード別の処理
-                try {
-                    var response = JSON.parse(xhr.responseText);
-                    if (response.message) {
-                        errorMessage = response.message;
-                    } else if (response.error) {
-                        switch (response.error) {
-                            case 'already_joined':
-                                errorMessage = '既にこのシフトに参加しています';
-                                break;
-                            case 'shift_full':
-                                errorMessage = 'このシフトの定員に達しています';
-                                break;
-                            case 'shift_not_found':
-                                errorMessage = '指定されたシフトが見つかりません';
-                                break;
-                            case 'user_not_found':
-                                errorMessage = '指定されたユーザーが見つかりません';
-                                break;
-                            case 'validation_failed':
-                                errorMessage = '入力内容に誤りがあります';
-                                break;
-                            default:
-                                errorMessage = response.error;
-                        }
-                    }
-                } catch (e) {
-                    // JSON解析に失敗した場合のフォールバック
-                    if (xhr.status === 409) {
-                        errorMessage = '既に参加しているか、定員に達しています';
-                    } else if (xhr.status === 404) {
-                        errorMessage = 'シフトが見つかりません';
-                    } else if (xhr.status === 500) {
-                        errorMessage = 'サーバーエラーが発生しました';
-                    }
-                }
-                
-                // エラーメッセージを表示
-                self.showAlert(errorMessage, 'error');
+            })
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.ok) {
+                alert('シフトに参加しました！');
+                self.loadShifts(); // データを再読み込み
+            } else {
+                alert('参加に失敗しました: ' + (data.message || 'エラーが発生しました'));
             }
+        })
+        .catch(function(error) {
+            console.error('Join error:', error);
+            alert('参加に失敗しました: ' + error.message);
         });
     };
     
@@ -1088,7 +1100,7 @@ function ShiftViewModel() {
             success: function(response) {
                 console.log('All shifts API response:', response);
                 
-                if (response.success && response.data) {
+                if (response.ok && response.data) {
                     var shifts = response.data;
                     console.log('All shifts loaded:', shifts.length);
                     self.renderShiftsList(shifts);
@@ -1240,3 +1252,8 @@ function ShiftViewModel() {
         }
     }, 1000);
 }
+
+// Knockout.jsのバインディングを適用
+$(document).ready(function() {
+    ko.applyBindings(new ShiftViewModel());
+});

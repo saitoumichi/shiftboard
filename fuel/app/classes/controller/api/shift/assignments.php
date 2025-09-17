@@ -30,7 +30,7 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
         // バリデーション
         if (!$this->validate_input($input)) {
             return $this->response([
-                'success' => false,
+                'ok' => false,
                 'error' => 'validation_failed',
                 'errors' => $this->get_validation_errors()
             ], 400);
@@ -43,7 +43,7 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
 
             if (!$shift || !$user) {
                 return $this->response([
-                    'success' => false,
+                    'ok' => false,
                     'error' => $shift ? 'user_not_found' : 'shift_not_found',
                     'message' => $shift ? '指定されたユーザーが見つかりません' : '指定されたシフトが見つかりません'
                 ], 404);
@@ -52,7 +52,7 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
             // 重複参加チェック
             if ($this->is_duplicate_assignment($input['shift_id'], $input['user_id'])) {
                 return $this->response([
-                    'success' => false,
+                    'ok' => false,
                     'error' => 'already_joined',
                     'message' => '既にこのシフトに参加しています'
                 ], 409);
@@ -61,7 +61,7 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
             // 定員チェック
             if ($this->is_shift_full($shift)) {
                 return $this->response([
-                    'success' => false,
+                    'ok' => false,
                     'error' => 'shift_full',
                     'message' => 'このシフトの定員に達しています',
                     'details' => $this->get_capacity_details($shift)
@@ -83,14 +83,14 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
             ]);
 
             return $this->response([
-                'success' => true,
+                'ok' => true,
                 'message' => 'シフトへの参加が完了しました',
                 'data' => $this->format_assignment_data($assignment)
             ], 201);
 
         } catch (\Exception $e) {
             return $this->response([
-                'success' => false,
+                'ok' => false,
                 'error' => 'server_error',
                 'message' => 'サーバーエラーが発生しました: ' . $e->getMessage()
             ], 500);
@@ -108,7 +108,7 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
         // 拡張バリデーション（ステータスを含む）
         if (!$this->validate_create_input($input)) {
             return $this->response([
-                'success' => false,
+                'ok' => false,
                 'error' => 'validation_failed',
                 'message' => '入力内容に誤りがあります',
                 'errors' => $this->get_validation_errors()
@@ -122,7 +122,7 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
 
             if (!$shift || !$user) {
                 return $this->response([
-                    'success' => false,
+                    'ok' => false,
                     'error' => $shift ? 'user_not_found' : 'shift_not_found',
                     'message' => $shift ? '指定されたユーザーが見つかりません' : '指定されたシフトが見つかりません'
                 ], 404);
@@ -131,7 +131,7 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
             // 重複参加チェック（キャンセル済みは除く）
             if ($this->is_duplicate_assignment_active($input['shift_id'], $input['user_id'])) {
                 return $this->response([
-                    'success' => false,
+                    'ok' => false,
                     'error' => 'already_joined',
                     'message' => '既にこのシフトに参加しています'
                 ], 409);
@@ -140,7 +140,7 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
             // 定員チェック（キャンセル済みは除く）
             if ($input['status'] !== 'cancelled' && $this->is_shift_full($shift)) {
                 return $this->response([
-                    'success' => false,
+                    'ok' => false,
                     'error' => 'shift_full',
                     'message' => 'このシフトの定員に達しています',
                     'details' => $this->get_capacity_details($shift)
@@ -162,14 +162,14 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
             ]);
 
             return $this->response([
-                'success' => true,
+                'ok' => true,
                 'message' => 'シフト割り当てが正常に作成されました',
                 'data' => $this->format_assignment_data_with_shift($assignment)
             ], 201);
 
         } catch (\Exception $e) {
             return $this->response([
-                'success' => false,
+                'ok' => false,
                 'error' => 'server_error',
                 'message' => 'サーバーエラーが発生しました: ' . $e->getMessage()
             ], 500);

@@ -13,18 +13,22 @@
     ?>
 
     <div class="header">
-        <h1>シフトボード</h1>
+        <div class="header-left">
+            <h1>シフトボード</h1>
+            <?php if ($user): ?>
+                <a href="<?= \Fuel\Core\Uri::create('users/logout') ?>" class="logout-btn">ログアウト</a>
+            <?php endif; ?>
+        </div>
         <div class="nav-links">
             <a href="<?= \Fuel\Core\Uri::create('shifts') ?>">シフト一覧</a>
             <?php if ($user): ?>
                 <a href="<?= \Fuel\Core\Uri::create('shifts/create') ?>">シフト作成</a>
-                <a href="<?= \Fuel\Core\Uri::create('shift_assignments/my_assignments') ?>">自分のシフト</a>
+                <a href="<?= \Fuel\Core\Uri::create('my/shifts') ?>">自分のシフト</a>
             <?php endif; ?>
         </div>
         <div class="user-info">
             <?php if ($user): ?>
                 <span class="username"><?= htmlspecialchars($user->name) ?> さん</span>
-                <a href="<?= \Fuel\Core\Uri::create('users/logout') ?>" class="logout-btn">ログアウト</a>
             <?php else: ?>
                 <a href="<?= \Fuel\Core\Uri::create('users/create') ?>" class="login-btn">ユーザー登録・ログイン</a>
             <?php endif; ?>
