@@ -1,5 +1,16 @@
 // シフト一覧ページ用JavaScript
 
+// 参照専用。再代入や再宣言はしない！
+var uid = window.CURRENT_USER_ID;
+
+// API_BASEとCURRENT_USER_IDはビューファイルで設定済み
+
+// 未ログインガード
+if (!window.CURRENT_USER_ID) {
+  alert('ログインが必要です');
+  location.href = '/';
+}
+
 // ShiftViewModelクラス
 function ShiftViewModel() {
     var self = this;
@@ -776,9 +787,12 @@ function ShiftViewModel() {
             self._to   = fmt(last);
             console.log('[loadShifts] range', self._from, '→', self._to);
         })();
+        const API = window.API_BASE || '/api';
+        const uid = window.CURRENT_USER_ID || 0;
+        
         $.ajax({
-            url: '/api/shifts',
-            data: { from: self._from, to: self._to },
+            url: `${API}/shifts`,
+            data: { start: self._from, end: self._to, mine: 0, user_id: uid },
             type: 'GET',
             dataType: 'json',
             success: function(response) {
@@ -908,8 +922,10 @@ function ShiftViewModel() {
         // 現在のユーザーIDを取得（セッションから）
         var currentUserId = 1; // 仮のユーザーID（認証実装時に置き換え）
         
+        const API = window.API_BASE || '/api';
+        
         $.ajax({
-            url: '/api/shift_assignments/create',
+            url: `${API}/shifts/${shift.id}/join`,
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
@@ -992,8 +1008,10 @@ function ShiftViewModel() {
             return;
         }
         
+        const API = window.API_BASE || '/api';
+        
         $.ajax({
-            url: '/api/shifts/' + shift.id + '/cancel',
+            url: `${API}/shifts/${shift.id}/cancel`,
             type: 'POST',
             data: {
                 csrf_token: 'dummy_token' // 簡易実装
@@ -1060,8 +1078,11 @@ function ShiftViewModel() {
     self.loadAllShiftsForList = function() {
         console.log('Loading all shifts for list...');
         
+        const API = window.API_BASE || '/api';
+        const uid = window.CURRENT_USER_ID || 0;
+        
         $.ajax({
-            url: '/api/shifts',
+            url: `${API}/shifts`,
             type: 'GET',
             dataType: 'json',
             success: function(response) {

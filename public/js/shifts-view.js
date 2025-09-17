@@ -1,5 +1,11 @@
 // シフト詳細ページ用JavaScript
 
+// 未ログインガード
+if (!window.CURRENT_USER_ID) {
+  alert('ログインが必要です');
+  location.href = '/';
+}
+
 // 1) KO の互換（古い Knockout の場合）
 if (window.ko && typeof ko.pureComputed !== 'function') {
     ko.pureComputed = ko.computed;
@@ -563,7 +569,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           // 現在のユーザーIDを取得（セッションから）
           var currentUserId = 1; // 仮のユーザーID（認証実装時に置き換え）
           
-          fetch('/api/shift_assignments/create', {
+          const API = window.API_BASE || '/api';
+          fetch(`${API}/shifts/${shiftId}/join`, {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
@@ -631,7 +638,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       // シフト参加を取消
       vm.cancelParticipation = function(shiftId) {
           console.log('Canceling participation for shift:', shiftId);
-          fetch('/api/shifts/' + shiftId + '/cancel', {
+          const API = window.API_BASE || '/api';
+          fetch(`${API}/shifts/${shiftId}/cancel`, {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',

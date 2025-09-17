@@ -1,9 +1,26 @@
 // 共通JavaScript - ShiftBoard
 
+// APIベースURLとユーザーIDは各ビューファイルで設定済み
+
+// jQuery AJAX設定: X-HTTP-Method-OverrideをGETリクエストに付与しない
+$(document).ready(function() {
+    // jQuery AJAXのグローバル設定
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            // GETリクエストの場合は上書きしない
+            if ((settings.type || settings.method || 'GET').toUpperCase() === 'GET') {
+                return;
+            }
+            // ここから下は POST/PUT/PATCH/DELETE のみ
+            // xhr.setRequestHeader('X-HTTP-Method-Override', 'PUT' など)
+        }
+    });
+});
+
 // グローバル設定
 window.ShiftBoard = {
     config: {
-        apiBaseUrl: '/api',
+        apiBaseUrl: window.API_BASE || '/api',
         animationDuration: 300,
         alertTimeout: 5000
     },
@@ -239,7 +256,7 @@ window.ShiftBoard = {
             // already starts with /api
             if (path.startsWith('/api')) return path;
             // join with base
-            const base = ShiftBoard.config.apiBaseUrl || '';
+            const base = window.API_BASE || '/api';
             const left = base.replace(/\/+$/, '');
             const right = String(path).replace(/^\/+/, '');
             return left + '/' + right;
@@ -258,6 +275,10 @@ window.ShiftBoard = {
                 // Some servers dislike Content-Type on GET; remove it
                 if (finalOptions.headers && finalOptions.headers['Content-Type']) {
                     try { delete finalOptions.headers['Content-Type']; } catch (e) {}
+                }
+                // X-HTTP-Method-Override should never be sent with GET requests (causes 405 error)
+                if (finalOptions.headers && finalOptions.headers['X-HTTP-Method-Override']) {
+                    try { delete finalOptions.headers['X-HTTP-Method-Override']; } catch (e) {}
                 }
             }
             const fullUrl = (/^https?:\/\//i.test(url) || url.startsWith('/api')) ? url : ShiftBoard.api.url(url);
@@ -566,6 +587,8 @@ ShiftBoard.dom.ensureElement = function(selector, opts = {}) {
       document.querySelector('.view-content.active') ||
       document.body;
   
-    parent.appendChild(el);
+    if (parent) {
+      parent.appendChild(el);
+    }
     return el;
   };

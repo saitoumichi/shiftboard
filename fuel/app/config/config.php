@@ -4,7 +4,7 @@ return [
     'base_url' => '/',
     'index_file' => false,
     'controller_prefix' => 'Controller_',
-    'environment' => Fuel::DEVELOPMENT,
+    'environment' => \Fuel\Core\Fuel::DEVELOPMENT,
     
     // 言語・ロケール設定
     'language' => 'ja',
@@ -29,7 +29,7 @@ return [
     ],
     
     // ログ設定
-    'log_threshold' => \Fuel::L_WARNING,
+    'log_threshold' => \Fuel\Core\Fuel::L_WARNING,
     'log_path' => APPPATH.'logs/',
     'log_date_format' => 'Y-m-d H:i:s',
     
@@ -54,12 +54,19 @@ return [
     
     // クッキー設定
     'cookie' => [
+        'salt' => '2005-02-02-3110-owata-saitoumichi-daigakudarusugi-te-sinuu',
         'expiration' => 0,
         'path' => '/',
         'domain' => null,
         'secure' => false,
         'http_only' => false,
     ],
+
+    'session' => array(
+    'driver' => 'cookie',       // cookie or db
+    'cookie_name' => 'fuelcid',
+    'expiration_time' => 7200,
+),
     
     // パッケージ・モジュール設定
     'module_paths' => [],

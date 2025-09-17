@@ -1,3 +1,4 @@
+<?php use Fuel\Core\Uri; ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,16 +6,16 @@
     <title><?php echo $title; ?> - ShiftBoard</title>
     
     <!-- 共通CSS -->
-    <link rel="stylesheet" href="<?php echo \Fuel\Core\Uri::create('css/common.css'); ?>">
+    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>">
     
     <!-- Knockout.js -->
-    <script src="<?php echo \Fuel\Core\Uri::create('js/knockout-min.js'); ?>"></script>
+    <script src="<?= Uri::create('js/knockout-min.js') ?>"></script>
     
     <!-- jQuery for AJAX -->
-    <script src="<?php echo \Fuel\Core\Uri::create('js/jquery-3.6.0.min.js'); ?>"></script>
+    <script src="<?= Uri::create('js/jquery-3.6.0.min.js') ?>"></script>
     
     <!-- 共通JavaScript -->
-    <script src="<?php echo \Fuel\Core\Uri::create('js/common.js'); ?>"></script>
+    <script src="<?= Uri::create('js/common.js') ?>"></script>
     
     <style>
         body {

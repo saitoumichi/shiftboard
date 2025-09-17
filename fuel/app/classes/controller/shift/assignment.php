@@ -2,142 +2,15 @@
 
 class Controller_Shift_Assignment extends \Fuel\Core\Controller
 {
-    // シフト一覧 (カレンダー＋右側リスト想定)
-    public function action_index()
-    {
-        // 近い順に取得（今日以降）
-        $shifts = \Model_Shift::query()
-            ->related('assignments')  // 参加者を一括取得（N+1回避）
-            ->where('shift_date', '>=', date('Y-m-d'))
-            ->order_by('shift_date', 'asc')
-            ->order_by('start_time', 'asc')
-            ->get();
-
-        // 各シフトの参加状況を計算
-        $shifts_with_status = array();
-        foreach ($shifts as $shift) {
-            $joined_count = $shift->joined_count();
-            $recruit_count = (int)$shift->recruit_count;
-            $remaining = $shift->remaining();
-            
-            // 参加状況の判定
-            $is_full = ($joined_count >= $recruit_count);
-            $is_available = ($remaining > 0);
-            
-            $shifts_with_status[] = array(
-                'shift' => $shift,
-                'joined_count' => $joined_count,
-                'recruit_count' => $recruit_count,
-                'remaining' => $remaining,
-                'is_full' => $is_full,
-                'is_available' => $is_available,
-                'status_text' => $is_full ? '満員' : ($remaining . '名募集中'),
-            );
-        }
-
-        return \Fuel\Core\Response::forge(\Fuel\Core\View::forge('shifts/index', [
-            'shifts' => $shifts,
-            'shifts_with_status' => $shifts_with_status,
-        ]));
-    }
-
-    // シフト作成（GET=フォーム表示 / POST=登録）
-    public function action_create()
-    {
-        if (\Fuel\Core\Input::method() === 'POST') {
-            // 現在ログインしているユーザーのIDを取得（認証未実装のため仮の値）
-            $current_user_id = \Fuel\Core\Session::get('user_id', 1);
-            
-            // バリデーション
-            $validation = \Fuel\Core\Validation::forge();
-            $validation->add('shift_date', 'シフト日付')
-                ->add_rule('required')
-                ->add_rule('match_pattern', '/^\d{4}-\d{2}-\d{2}$/');
-            $validation->add('start_time', '開始時刻')
-                ->add_rule('required')
-                ->add_rule('match_pattern', '/^\d{2}:\d{2}$/');
-            $validation->add('end_time', '終了時刻')
-                ->add_rule('required')
-                ->add_rule('match_pattern', '/^\d{2}:\d{2}$/');
-            $validation->add('recruit_count', '募集人数')
-                ->add_rule('required')
-                ->add_rule('valid_string', ['numeric'])
-                ->add_rule('min_value', 1);
-            
-            if ($validation->run()) {
-                // ORMのプロパティに沿って forge
-                $shift = \Model_Shift::forge([
-                    'created_by'    => $current_user_id,
-                    'shift_id'    => \Fuel\Core\Input::post('shift_id'),
-                    'start_time'    => \Fuel\Core\Input::post('start_time'),
-                    'end_time'      => \Fuel\Core\Input::post('end_time'),
-                    'recruit_count' => (int)\Fuel\Core\Input::post('recruit_count'),
-                    'self_word'     => \Fuel\Core\Input::post('self_word'),
-                ]);
-            } else {
-                \Fuel\Core\Session::set_flash('error', '入力内容に誤りがあります');
-                return \Fuel\Core\Response::forge(\Fuel\Core\View::forge('shifts/create'));
-            }
-            try {
-                $shift->save();
-                \Fuel\Core\Session::set_flash('success', 'シフトを作成しました');
-                return \Fuel\Core\Response::redirect('shifts/'.$shift->id);
-             } catch (\Fuel\Core\Validation_Error $e) {
-                 \Fuel\Core\Session::set_flash('error', $e->get_message());
-             }
-         }
-
-        return \Fuel\Core\Response::forge(\Fuel\Core\View::forge('shifts/create'));
-    }
-
-    // シフト詳細（左：参加者一覧 / 右：概要）
-    public function action_view($id)
-    {
-        $shift = \Model_Shift::find($id, [
-            'related' => [
-                'assignments' => ['related' => ['user']], // ユーザーも一気に
-            ],
-        ]);
-        if (!$shift) throw new \Fuel\Core\HttpNotFoundException;
-
-        // 現在のユーザーIDを取得（認証未実装のため仮の値）
-        $current_user_id = \Fuel\Core\Session::get('user_id', 1);
-        
-        // 既に参加しているかチェック
-        $already_joined = false;
-        foreach ($shift->assignments as $assignment) {
-            if ($assignment->user_id == $current_user_id) {
-                $already_joined = true;
-                break;
-            }
-        }
-
-        // 参加状況の詳細計算
-        $joined_count = $shift->joined_count();
-        $recruit_count = (int)$shift->recruit_count;
-        $remaining = $shift->remaining();
-        $is_full = ($joined_count >= $recruit_count);
-        $is_available = ($remaining > 0);
-        
-        return \Fuel\Core\Response::forge(\Fuel\Core\View::forge('shifts/view', [
-            'shift'       => $shift,
-            'assignments' => $shift->assignments,     // $a->user->name / color が使える
-            'joined'      => $joined_count,
-            'remaining'   => $remaining,
-            'recruit_count' => $recruit_count,
-            'is_full' => $is_full,
-            'is_available' => $is_available,
-            'status_text' => $is_full ? '満員' : ($remaining . '名募集中'),
-            'current_user_id'=> $current_user_id,
-            'already_joined' => $already_joined,
-        ]));
-    }
-
     // 自分の割り当て一覧ページ
     public function action_my_assignments()
     {
         // 自分の割り当て一覧ページ
-        $user_id = \Fuel\Core\Session::get('user_id', 1); // 仮のユーザーID
+        $user_id = \Fuel\Core\Session::get('user_id'); // 認証ユーザーのIDを使用
+        if (!$user_id) {
+            \Fuel\Core\Session::set_flash('error', 'ログインしてください');
+            return \Fuel\Core\Response::redirect('users/login');
+        }
         
         // 自分の参加中シフト一覧（必要に応じて並び替え）
         $assignments = \Model_Shift_Assignment::query()
@@ -182,7 +55,11 @@ class Controller_Shift_Assignment extends \Fuel\Core\Controller
         $data = array();
         
         // セッションからユーザー情報を取得
-        $user_id = \Fuel\Core\Session::get('user_id', 1); // 仮のユーザーID
+        $user_id = \Fuel\Core\Session::get('user_id'); // 認証ユーザーのIDを使用
+        if (!$user_id) {
+            \Fuel\Core\Session::set_flash('error', 'ログインしてください');
+            return \Fuel\Core\Response::redirect('users/login');
+        }
         $data['current_user_id'] = $user_id;
         
         // ビューをレンダリング
@@ -200,7 +77,11 @@ class Controller_Shift_Assignment extends \Fuel\Core\Controller
         $data['shift_id'] = $shift_id;
         
         // セッションからユーザー情報を取得
-        $user_id = \Fuel\Core\Session::get('user_id', 1); // 仮のユーザーID
+        $user_id = \Fuel\Core\Session::get('user_id'); // 認証ユーザーのIDを使用
+        if (!$user_id) {
+            \Fuel\Core\Session::set_flash('error', 'ログインしてください');
+            return \Fuel\Core\Response::redirect('users/login');
+        }
         $data['current_user_id'] = $user_id;
         
         // ビューをレンダリング
@@ -213,7 +94,11 @@ class Controller_Shift_Assignment extends \Fuel\Core\Controller
         $data = array();
         
         // セッションからユーザー情報を取得
-        $user_id = \Fuel\Core\Session::get('user_id', 1); // 仮のユーザーID
+        $user_id = \Fuel\Core\Session::get('user_id'); // 認証ユーザーのIDを使用
+        if (!$user_id) {
+            \Fuel\Core\Session::set_flash('error', 'ログインしてください');
+            return \Fuel\Core\Response::redirect('users/login');
+        }
         $data['current_user_id'] = $user_id;
         
         // ビューをレンダリング
@@ -222,8 +107,7 @@ class Controller_Shift_Assignment extends \Fuel\Core\Controller
     
     /**
      * 特定のシフトIDに関連するすべてのshift_assignmentsレコードを取得
-     * 
-     * @param int $shift_id シフトID
+     * * @param int $shift_id シフトID
      * @return array 割り当てレコードの配列
      */
     public function get_assignments_by_shift_id($shift_id)
@@ -244,8 +128,7 @@ class Controller_Shift_Assignment extends \Fuel\Core\Controller
     
     /**
      * 特定のシフトIDに関連する割り当ての統計情報を取得
-     * 
-     * @param int $shift_id シフトID
+     * * @param int $shift_id シフトID
      * @return array 統計情報の配列
      */
     public function get_shift_assignment_stats($shift_id)
@@ -295,8 +178,7 @@ class Controller_Shift_Assignment extends \Fuel\Core\Controller
     
     /**
      * 特定のシフトIDの参加者一覧を表示するページ
-     * 
-     * @param int $shift_id シフトID
+     * * @param int $shift_id シフトID
      * @return Response ビューレスポンス
      */
     public function action_participants($shift_id = null)
@@ -328,8 +210,7 @@ class Controller_Shift_Assignment extends \Fuel\Core\Controller
     
     /**
      * 特定のシフトIDに関連する割り当てをJSON形式で返すAPIエンドポイント
-     * 
-     * @param int $shift_id シフトID
+     * * @param int $shift_id シフトID
      * @return Response JSONレスポンス
      */
     public function action_get_assignments($shift_id = null)

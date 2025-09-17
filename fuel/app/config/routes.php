@@ -1,27 +1,22 @@
 <?php
-
 return [
-  // UI
-  '_root_'        => 'shifts/index',
-  'users'         => 'users/index',
-  'users/create'  => 'users/create',
-  'users/(:num)'  => 'users/view/$1',
-  'my/shifts' => 'shift/assignment/my_assignments',
-  'myshifts'  => 'shift/assignment/my_assignments',
-  'shifts'  => 'shifts/index',
-  'shifts/create' => 'shifts/create',
-  'shifts/(:num)' => 'shifts/view/$1',
-  'shifts/(:num)/participants' => 'shift/assignment/participants/$1',
+  // UI（表示系）
+  '_root_'            => 'shifts/index',       // トップ＝ログイン/一覧（未ログインならログイン画面を出す）
+  'shifts'            => 'shifts/index',
+  'shifts/create'     => 'shifts/create',
+  'shifts/(:num)'     => 'shifts/view/$1',
+  'users/create'  => 'users/create',  // 新規登録
+  'my/shifts'         => 'shifts/my',           // 自分のシフト一覧（必要なら）
+  'users/login'   => 'users/login',
+  'users/logout'  => 'users/logout',
 
-  // API
-  'api/shifts'          => 'api/shifts/index',    // GET一覧 / POST作成
-  'api/shifts/(:num)'   => 'api/shifts/show/$1',  // GET詳細 / PUT更新 / DELETE削除
-  'api/shifts/(:num)/join' => 'api/shift_assignments/join/$1',  // POST参加
-  'api/shifts/(:num)/cancel' => 'api/shift_assignments/cancel/$1',  // POSTキャンセル
-  'api/shifts/(:num)/assignments' => 'shift/assignment/get_assignments/$1',  // GET割り当て一覧
-  'api/shift_assignments' => 'api/shift_assignments/index',  // GET一覧 / POST作成
-  'api/shift_assignments/create' => 'api/shift_assignments/create',  // POST専用作成
-  'api/users'           => 'api/users/index',     // GET一覧 / POST作成
-  'api/users/(:num)'    => 'api/users/show/$1',   // GET詳細 / PUT更新 / DELETE削除
-  'api/debug/db-test' => 'api/debug/db_test',
+  // API（JSON）
+  'api/shifts'                    => 'api/shifts/index',       // GET一覧 / POST作成
+  'api/shifts/(:num)'             => 'api/shifts/show/$1',     // GET詳細 / PUT更新 / DELETE削除
+  'api/shifts/(:num)/join'        => 'api/shift_assignments/join/$1',   // POST参加
+  'api/shifts/(:num)/cancel'      => 'api/shift_assignments/cancel/$1', // POSTキャンセル
+  'api/shift_assignments'         => 'api/shift_assignments/index',     // GET一覧
+  'api/users'                     => 'api/users/index',        // GET/POST
+  'api/users/(:num)'              => 'api/users/show/$1',      // GET/PUT/DELETE
+  'api/debug/db-test'           => 'api/debug/db_test',
 ];
