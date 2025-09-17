@@ -487,22 +487,66 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           });
           
           if (isParticipating) {
-              vm.cancelParticipation(shift.id);
+              vm.cancelShift(shift);
           } else {
-              vm.joinShift(shift.id);
+              vm.joinShift(shift);
           }
       };
       
     // シフト参加
-    vm.joinShift = function(shiftId) {
-        console.log('joinShift called with shiftId:', shiftId);
+    vm.joinShift = function(shift) {
+        console.log('joinShift called with shift:', shift);
         // モーダルダイアログを表示
-        vm.showCommentModal(shiftId);
+        vm.showCommentModal(shift);
+    };
+    
+    // シフト取消
+    vm.cancelShift = function(shift) {
+        if (!confirm('このシフトの参加を取り消しますか？')) {
+            return;
+        }
+        
+        const API = window.API_BASE || '/api';
+        
+        $.ajax({
+            url: `${API}/shifts/${shift.id}/cancel`,
+            type: 'POST',
+            data: {
+                csrf_token: 'dummy_token'
+            },
+            success: function(response) {
+                try {
+                    var data = typeof response === 'string' ? JSON.parse(response) : response;
+                    
+                    if (data.success) {
+                        alert('シフトの参加を取り消しました');
+                        vm.loadShiftDetail();
+                    } else {
+                        alert('シフトの取消に失敗しました: ' + data.message);
+                    }
+                } catch (e) {
+                    alert('シフトの取消に失敗しました');
+                    console.error('JSON Parse Error:', e);
+                }
+            },
+            error: function(xhr, status, error) {
+                var errorMessage = 'シフトの取消に失敗しました';
+                
+                if (xhr.status === 404) {
+                    errorMessage = 'このシフトに参加していません';
+                } else if (xhr.status === 409) {
+                    errorMessage = 'シフトの取消ができません';
+                }
+                
+                alert(errorMessage);
+                console.error('AJAX Error:', error, xhr.responseText);
+            }
+        });
     };
       
       // コメント入力モーダルを表示
-      vm.showCommentModal = function(shiftId) {
-          console.log('showCommentModal called with shiftId:', shiftId);
+      vm.showCommentModal = function(shift) {
+          console.log('showCommentModal called with shift:', shift);
           
           var modal = document.getElementById('comment-modal');
           var textarea = document.getElementById('comment-textarea');
@@ -543,7 +587,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           // OKボタンのイベント
           okBtn.onclick = function() {
               var comment = textarea.value.trim();
-              vm.submitJoinShift(shiftId, comment);
+              vm.submitJoinShift(shift, comment);
               modal.style.display = 'none';
           };
           
@@ -563,21 +607,21 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       };
       
       // シフト参加を実際に実行
-      vm.submitJoinShift = function(shiftId, comment) {
-          console.log('Joining shift:', shiftId, 'with comment:', comment);
+      vm.submitJoinShift = function(shift, comment) {
+          console.log('Joining shift:', shift.id, 'with comment:', comment);
           
           // 現在のユーザーIDを取得（セッションから）
-          var currentUserId = 1; // 仮のユーザーID（認証実装時に置き換え）
+          var currentUserId = window.CURRENT_USER_ID || 1;
           
           const API = window.API_BASE || '/api';
-          fetch(`${API}/shifts/${shiftId}/join`, {
+          fetch(`${API}/shifts/${shift.id}/join`, {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
                   'Accept': 'application/json'
               },
               body: JSON.stringify({
-                  shift_id: shiftId,
+                  shift_id: shift.id,
                   user_id: currentUserId,
                   status: 'assigned',
                   self_word: comment

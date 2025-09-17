@@ -16,6 +16,7 @@ function ShiftViewModel() {
     var self = this;
     
     // データ
+    self.filter = ko.observable('all'); // 'all', 'open', 'full', 'mine'
     self.currentDate = ko.observable(new Date());
     self.currentView = ko.observable('month');
     self.shifts = ko.observableArray([]);
@@ -24,6 +25,32 @@ function ShiftViewModel() {
     self.loading = ko.observable(false);
     self.alertMessage = ko.observable('');
     self.alertType = ko.observable('');
+    
+    // 計算プロパティ：フィルタリングされたシフト一覧
+    self.filteredShifts = ko.computed(function() {
+        var allShifts = self.shifts();
+        var currentFilter = self.filter();
+
+        if (currentFilter === 'open') {
+            return allShifts.filter(function(shift) {
+                return shift.available_slots > 0;
+            });
+        }
+        if (currentFilter === 'full') {
+            return allShifts.filter(function(shift) {
+                return shift.available_slots === 0;
+            });
+        }
+        if (currentFilter === 'mine') {
+            return allShifts.filter(function(shift) {
+                // 参加ユーザーに自分自身が含まれているかチェック
+                return shift.assigned_users.some(function(user) {
+                    return user.id === window.CURRENT_USER_ID;
+                });
+            });
+        }
+        return allShifts; // 'all'の場合はすべて返す
+    });
     
     // 計算プロパティ
     self.currentMonth = ko.computed(function() {
@@ -329,7 +356,11 @@ function ShiftViewModel() {
     // カレンダー日付をレンダリング（テーブル形式）
     self.renderCalendarDays = function(days) {
         var container = document.getElementById('calendar-days-container');
-        if (!container) return;
+        console.log('renderCalendarDays called, container found:', !!container);
+        if (!container) {
+            console.error('calendar-days-container not found!');
+            return;
+        }
         
         container.innerHTML = '';
         
@@ -410,8 +441,9 @@ function ShiftViewModel() {
                     shiftBlock.appendChild(countDiv);
                     
                     // クリックイベント
-                    shiftBlock.addEventListener('click', function() {
-                        self.viewShift(shift);
+                    shiftBlock.addEventListener('click', function(e) {
+                        e.stopPropagation(); // 親要素（日付セル）への伝播を止める
+    self.viewShift(shift);
                     });
                     
                     dayElement.appendChild(shiftBlock);
@@ -483,10 +515,42 @@ function ShiftViewModel() {
                 countDiv.textContent = shift.assigned_users.length + '/' + shift.slot_count;
                 shiftBlock.appendChild(countDiv);
                 
-                // クリックイベント
-                shiftBlock.addEventListener('click', function() {
-                    self.viewShift(shift);
-                });
+                // ツールチップ機能を追加
+shiftBlock.addEventListener('mouseover', function(e) {
+    // ツールチップ要素を作成
+    var tooltip = document.createElement('div');
+    tooltip.className = 'shift-tooltip';
+    tooltip.style.position = 'absolute';
+    tooltip.style.zIndex = '100';
+    tooltip.style.background = 'white';
+    tooltip.style.border = '1px solid #ddd';
+    tooltip.style.padding = '10px';
+    tooltip.style.borderRadius = '4px';
+    tooltip.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+    tooltip.style.minWidth = '200px';
+
+     // ツールチップの内容を設定
+     tooltip.innerHTML = `
+     <p><strong>時間:</strong> ${shift.start_time.substring(0, 5)} - ${shift.end_time.substring(0, 5)}</p>
+     <p><strong>参加人数:</strong> ${shift.assigned_users.length} / ${shift.slot_count}</p>
+     <p><strong>空き:</strong> ${shift.available_slots}人</p>
+     ${shift.note ? `<p><strong>メモ:</strong> ${shift.note}</p>` : ''}
+ `;
+
+ // ツールチップの位置を調整
+ tooltip.style.top = (e.clientY + 10) + 'px';
+ tooltip.style.left = (e.clientX + 10) + 'px';
+ 
+ document.body.appendChild(tooltip);
+});
+
+shiftBlock.addEventListener('mouseout', function() {
+ // ツールチップを非表示にする
+ var tooltip = document.querySelector('.shift-tooltip');
+ if (tooltip) {
+     document.body.removeChild(tooltip);
+ }
+});
                 
                 dayElement.appendChild(shiftBlock);
             });
@@ -687,19 +751,8 @@ function ShiftViewModel() {
             }
             
             filteredShifts.forEach(function(shift, index) {
-                console.log('Creating shift item', index + 1, 'for:', shift);
                 var itemElement = document.createElement('div');
                 itemElement.className = 'recruitment-item';
-                itemElement.style.cssText = 'cursor: pointer;';
-                
-                // クリックイベントを追加（ボタン以外の部分）
-                itemElement.addEventListener('click', function(e) {
-                    // ボタンがクリックされた場合は詳細ページに遷移しない
-                    if (e.target.tagName === 'BUTTON') {
-                        return;
-                    }
-                    window.location.href = '/shifts/' + shift.id;
-                });
                 
                 // シフト情報とボタンを横並びにするコンテナ
                 var infoContainer = document.createElement('div');
@@ -731,6 +784,16 @@ function ShiftViewModel() {
                 actionsDiv.className = 'recruitment-actions';
                 actionsDiv.style.cssText = 'display: flex; gap: 5px; flex-shrink: 0;';
                 
+                // 詳細ボタンを追加
+        var detailBtn = document.createElement('button');
+        detailBtn.className = 'action-btn detail';
+        detailBtn.textContent = '詳細';
+        detailBtn.addEventListener('click', function() {
+            window.location.href = '/shifts/' + shift.id;
+        });
+        actionsDiv.appendChild(detailBtn);
+
+        // 参加・取消ボタンはそのまま
                 var joinBtn = document.createElement('button');
                 joinBtn.className = 'action-btn join';
                 joinBtn.textContent = '参加';
@@ -750,12 +813,8 @@ function ShiftViewModel() {
                 infoContainer.appendChild(actionsDiv);
                 itemElement.appendChild(infoContainer);
                 container.appendChild(itemElement);
-                console.log('Added shift item to container');
-                console.log('Container innerHTML length:', container.innerHTML.length);
-                console.log('Container children count:', container.children.length);
             });
         }
-        console.log('=== End renderAvailableShiftsForView ===');
     };
     
     // シフト詳細表示
@@ -1240,3 +1299,8 @@ function ShiftViewModel() {
         }
     }, 1000);
 }
+
+// Knockout.jsのバインディングを適用
+$(document).ready(function() {
+    ko.applyBindings(new ShiftViewModel());
+});
