@@ -200,6 +200,9 @@ body .header .container .header-content .header-right {
     cursor: pointer;
     border-radius: 100px;
     font-size: 14px;
+    z-index: 10;
+    pointer-events: auto;
+    position: relative;
 }
 
 .view-btn.active {
@@ -214,10 +217,13 @@ body .header .container .header-content .header-right {
     padding: 10px 20px;
     border: none;
     border-radius: 8px;
-    /* cursor: pointer; */
+    cursor: pointer;
     text-decoration: none;
     display: inline-block;
     font-size: 14px;
+    z-index: 10;
+    pointer-events: auto;
+    position: relative;
 }
 
 .btn:hover {
@@ -365,6 +371,9 @@ body .day-recruitment-section #available-shifts-container-day {
     border: 1.5px solid #3366ff;
     font-size: 18px;
     padding: 5px 10px;
+    z-index: 10;
+    pointer-events: auto;
+    position: relative;
 }
 
 .current-month {
@@ -590,8 +599,24 @@ body .day-recruitment-section .recruitment-item .recruitment-slots {
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 99999;
+    z-index: 1000;
     max-width: 400px;
+}
+
+/* 緊急ボタン用アニメーション */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+#emergency-my-shifts-btn, #emergency-my-shifts-btn-2 {
+    animation: pulse 1s infinite, blink 2s infinite;
 }
 
 #alert-container .alert {

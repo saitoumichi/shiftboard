@@ -14,15 +14,15 @@
     <div class="header-content">
         <div class="header-left">
             <div class="month-nav">
-                <button class="nav-btn" data-bind="click: $root.previousMonth"> ◀︎</button>
+                <button type="button" class="nav-btn" data-bind="click: $root.previousMonth"> ◀︎</button>
                 <span class="current-month" data-bind="text: currentMonth"></span>
-                <button class="nav-btn" data-bind="click: $root.nextMonth">▶︎ </button>
+                <button type="button" class="nav-btn" data-bind="click: $root.nextMonth">▶︎ </button>
             </div>
             <div class="view-buttons">
-                <button class="view-btn active" data-bind="click: function() { $root.setView('month'); }">月</button>
-                <button class="view-btn" data-bind="click: function() { $root.setView('week'); }">週</button>
-                <button class="view-btn" data-bind="click: function() { $root.setView('day'); }">日</button>
-                <button class="view-btn" data-bind="click: function() { $root.setView('list'); }">リスト</button>
+                <button type="button" class="view-btn active" data-bind="click: function() { $root.setView('month'); }">月</button>
+                <button type="button" class="view-btn" data-bind="click: function() { $root.setView('week'); }">週</button>
+                <button type="button" class="view-btn" data-bind="click: function() { $root.setView('day'); }">日</button>
+                <button type="button" class="view-btn" data-bind="click: function() { $root.setView('list'); }">リスト</button>
             </div>
         </div>
         <div class="header-right">
@@ -63,10 +63,6 @@
                     <!-- JavaScriptで動的に生成 -->
                 </tbody>
             </table>
-            <!-- 自分のシフトボタン -->
- <div style="text-align: center; margin: 20px 40px;">
-        <button class="btn my-shifts-btn" data-bind="click: goToMyShifts">自分のシフト</button>
-    </div>
         </div>
         
         <!-- 日表示の募集中シフトセクション -->
@@ -105,10 +101,6 @@
                     <!-- JavaScriptで動的に生成 -->
                 </tbody>
             </table>
-            <!-- 自分のシフトボタン -->
-    <div style="text-align: center; margin: 20px 40px;">
-        <button class="btn my-shifts-btn" data-bind="click: goToMyShifts">自分のシフト</button>
-    </div>
         </div>
         
         <!-- 週表示の募集中シフトセクション -->
@@ -150,8 +142,8 @@
 
 </table>
     <!-- 自分のシフトボタン -->
-    <div style="text-align: center; margin: 20px 40px;">
-        <button class="btn my-shifts-btn" data-bind="click: goToMyShifts">自分のシフト</button>
+    <div style="text-align: center; margin: 20px 40px; position: relative; z-index: 10;">
+        <button type="button" class="btn my-shifts-btn" onclick="window.location.href='/my/shifts'">自分のシフト</button>
     </div>
         </div>
         
@@ -176,18 +168,6 @@
                 <div id="available-shifts-container-list"></div>
                 <div id="no-shifts-message-list" class="muted" style="display:none;">募集中のシフトはありません</div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- 参加コメント用モーダル -->
-<div id="comment-modal" class="modal-overlay">
-    <div class="modal-dialog" onclick="event.stopPropagation()">
-        <h3 style="margin:0 0 8px;">参加時のひとこと（任意）</h3>
-        <textarea id="comment-textarea" rows="4" style="width:100%;" placeholder="例：頑張ります！"></textarea>
-        <div style="margin-top:12px; text-align:right;">
-            <button id="comment-cancel-btn" type="button">キャンセル</button>
-            <button id="comment-ok-btn" type="button">参加する</button>
         </div>
     </div>
 </div>

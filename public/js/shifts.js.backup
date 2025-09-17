@@ -168,7 +168,7 @@ function ShiftViewModel() {
         var viewBtns = document.querySelectorAll('.view-btn');
         viewBtns.forEach(function(btn) {
             btn.classList.remove('active');
-            if (btn.textContent.trim() === self.getViewText(view)) {
+            if (btn.textContent.trim() === getViewText(view)) {
                 btn.classList.add('active');
                 console.log('Added active to button:', btn.textContent.trim());
             }
@@ -179,7 +179,7 @@ function ShiftViewModel() {
     };
     
     // ビューテキストを取得
-    self.getViewText = function(view) {
+    function getViewText(view) {
         switch(view) {
             case 'month': return '月';
             case 'week': return '週';
@@ -187,7 +187,7 @@ function ShiftViewModel() {
             case 'list': return 'リスト';
             default: return '月';
         }
-    };
+    }
     
     // 前の月
     self.previousMonth = function() {

@@ -62,11 +62,6 @@ return [
         'http_only' => false,
     ],
 
-    'session' => array(
-    'driver' => 'cookie',       // cookie or db
-    'cookie_name' => 'fuelcid',
-    'expiration_time' => 7200,
-),
     
     // パッケージ・モジュール設定
     'module_paths' => [],

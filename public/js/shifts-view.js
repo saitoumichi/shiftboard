@@ -767,6 +767,11 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
   
   // 2) シングルトンな VM を使う
   window.__shiftVM = window.__shiftVM || new ShiftDetailViewModel();
+  
+  // Knockout.jsのバインディングを適用
+  document.addEventListener('DOMContentLoaded', function() {
+    ko.applyBindings(window.__shiftVM);
+  });
   var vm = window.__shiftVM;
   
   // ===== Helper: Resolve Shift ID from multiple URL patterns or data attribute =====

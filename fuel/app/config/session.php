@@ -1,6 +1,6 @@
 <?php
 return array(
-    'driver'        => 'file',
+    'driver'        => 'cookie',
     'cookie_name'   => 'fuelcid',
     'expiration_time' => 7200,
     'encrypt_cookie'  => false,

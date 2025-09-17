@@ -51,7 +51,7 @@
         <div class="action-buttons">
             <h3>参加/取り消し</h3>
             <!-- 参加ボタン（未参加時のみ表示） -->
-            <button class="action-btn btn-participate" 
+            <button type="button" class="action-btn btn-participate" 
                     data-bind="visible: shift() && !isParticipating() && canParticipate(), 
                                click: function() { console.log('参加ボタンクリック！'); $root.joinShift($root.shift()); }"
                     onclick="console.log('直接クリックイベント！');">
@@ -59,7 +59,7 @@
             </button>
             
             <!-- 取消ボタン（参加時のみ表示） -->
-            <button class="action-btn btn-cancel" 
+            <button type="button" class="action-btn btn-cancel" 
                     data-bind="visible: shift() && isParticipating(), 
                                click: function() { $root.cancelShift($root.shift()); }">
                 参加を取消
