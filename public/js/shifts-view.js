@@ -1,8 +1,10 @@
 // シフト詳細ページ用JavaScript
+console.log('shifts-view.js loaded');
 
 // 未ログインガード（即リダイレクトは削除）
 // 代わりに、DOM後に"操作を無効化"するだけ
 document.addEventListener('DOMContentLoaded', function () {
+  console.log('DOMContentLoaded event fired in shifts-view.js');
   var uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
   console.log('CURRENT_USER_ID (view):', uid);
   if (!uid) {
@@ -116,28 +118,30 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       
       // 参加状況の判定
       vm.isParticipating = ko.computed(function() {
-          var s = vm.shift();
-          if (!s) {
-              console.log('isParticipating: shift is null');
-              return false;
-          }
-          
-          // 現在のユーザーIDを取得
+          console.log('=== isParticipating computed called ===');
           var currentUserId = window.CURRENT_USER_ID || 0;
           if (!currentUserId) {
               console.log('isParticipating: no current user ID');
               return false;
           }
           
-          var result = Array.isArray(s.assigned_users) && s.assigned_users.some(function(u) {
-              return u.user_id === currentUserId || u.id === currentUserId;
+          // シフトデータが読み込まれていない場合は false
+          var shift = vm.shift();
+          if (!shift) {
+              console.log('isParticipating: shift not loaded yet');
+              return false;
+          }
+          
+          var participants = vm.participants();
+          console.log('isParticipating - participants:', participants);
+          console.log('isParticipating - participants length:', participants.length);
+          
+          var result = participants.some(function(p) {
+              console.log('Checking participant:', p, 'user_id:', p.user_id, 'id:', p.id, 'currentUserId:', currentUserId);
+              return p.user_id == currentUserId || p.id == currentUserId;
           });
           
-          console.log('isParticipating calculation:', {
-              currentUserId: currentUserId,
-              assigned_users: s.assigned_users,
-              result: result
-          });
+          console.log('isParticipating calculation result:', result);
           
           return result;
       });
@@ -200,6 +204,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           
           var firstTriedUrl = apiUrlFor(id);
           var fallbackTriedUrl = apiFallbackUrlFor(id);
+          console.log('First URL:', firstTriedUrl);
+          console.log('Fallback URL:', fallbackTriedUrl);
   
           function doFetch(url) {
             return fetch(url, { headers: { 'Accept': 'application/json' } })
@@ -224,19 +230,170 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               var payload = json && (json.data || json);
               if (!payload || !payload.id) throw new Error('Invalid payload');
               console.log('Setting shift data:', payload);
+              console.log('Assigned users in payload:', payload.assigned_users);
               
+              // 参加者情報をクリア
               self.participants.removeAll();
+              
+              // 参加者情報を追加
               if (payload.assigned_users && Array.isArray(payload.assigned_users)) {
-                payload.assigned_users.forEach(function (user) { self.participants.push(user); });
+                console.log('Adding participants:', payload.assigned_users);
+                var participantsToAdd = [];
+                payload.assigned_users.forEach(function (user) { 
+                  console.log('Adding participant:', user);
+                  // 参加者情報を正しい形式で追加
+                  var participant = {
+                    id: user.id || user.user_id,
+                    user_id: user.user_id || user.id,
+                    name: user.name || 'Unknown User',
+                    status: user.status || 'assigned',
+                    self_word: user.self_word || '',
+                    color: user.color || '#000000'
+                  };
+                  participantsToAdd.push(participant); 
+                });
+                
+                // 既存の参加者をクリアして新しい参加者を追加
+                self.participants.removeAll();
+                self.participants(participantsToAdd);
+                
+                console.log('Participants after adding:', self.participants());
+                console.log('First participant details:', self.participants()[0]);
+              } else {
+                console.log('No assigned_users found or not an array');
+                console.log('Payload structure:', Object.keys(payload));
               }
   
               self.shift(payload);
               self.loading(false);
               self.isReady(true);
               
+              // Knockout.jsのバインディングを強制的に更新
+              if (typeof ko !== 'undefined' && ko.processAllDeferredBindingUpdates) {
+                ko.processAllDeferredBindingUpdates();
+              }
+              
+              // バインディングが適用されていない場合は再適用
+              if (!bindingApplied) {
+                try {
+                  ko.applyBindings(vm, document.getElementById('shift-detail-root') || document.body);
+                  bindingApplied = true;
+                  console.log('Knockout binding applied after data load');
+                } catch (e) {
+                  console.error('Binding error after data load:', e);
+                }
+              }
+              
               console.log('Data loaded successfully');
               console.log('isReady after load:', self.isReady());
               console.log('shift after load:', self.shift());
+              console.log('Final participants count:', self.participants().length);
+              console.log('Final participants data:', self.participants());
+              
+              // isParticipating のcomputedが正しく動作するかテスト
+              setTimeout(function() {
+                console.log('Testing isParticipating computed after data load');
+                console.log('Current participants:', self.participants());
+                console.log('Current isParticipating value:', self.isParticipating());
+              }, 100);
+              
+              // 参加者一覧を手動で更新
+              setTimeout(function() {
+                var participantsList = document.querySelector('.participants-list');
+                if (participantsList) {
+                  console.log('Manually updating participants list');
+                  var participants = self.participants();
+                  console.log('Participants for manual update:', participants);
+                  
+                  // 既存の参加者アイテムと「参加者なし」表示をクリア（デバッグ情報以外）
+                  var existingItems = participantsList.querySelectorAll('.participant-item, .no-participants');
+                  existingItems.forEach(function(item) {
+                    item.remove();
+                  });
+                  
+                  // 参加者を手動で追加
+                  if (participants && participants.length > 0) {
+                    participants.forEach(function(participant) {
+                      console.log('Manually adding participant:', participant);
+                      var item = document.createElement('div');
+                      item.className = 'participant-item';
+                      item.style.cssText = 'display: flex; align-items: center; margin: 5px 0; padding: 8px; border-radius: 4px; background: #f9f9f9;';
+                      
+                      var colorDiv = document.createElement('div');
+                      colorDiv.className = 'participant-color';
+                      colorDiv.style.cssText = 'width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; flex-shrink: 0;';
+                      colorDiv.style.backgroundColor = participant.color || '#000000';
+                      
+                      var contentDiv = document.createElement('div');
+                      contentDiv.style.cssText = 'flex: 1;';
+                      
+                      var nameDiv = document.createElement('div');
+                      nameDiv.className = 'participant-name';
+                      nameDiv.style.cssText = 'font-weight: bold; color: #333;';
+                      nameDiv.textContent = participant.name || 'Unknown';
+                      
+                      contentDiv.appendChild(nameDiv);
+                      
+                      if (participant.self_word && participant.self_word.trim() !== '') {
+                        var commentDiv = document.createElement('div');
+                        commentDiv.className = 'participant-comment';
+                        commentDiv.style.cssText = 'font-style: italic; color: #666; font-size: 0.9em; margin-top: 2px;';
+                        commentDiv.textContent = participant.self_word;
+                        contentDiv.appendChild(commentDiv);
+                      }
+                      
+                      // 参加状況を追加
+                      var statusDiv = document.createElement('div');
+                      statusDiv.className = 'participant-status';
+                      statusDiv.style.cssText = 'margin-left: 8px; padding: 2px 6px; border-radius: 12px; font-size: 0.8em; font-weight: bold;';
+                      
+                      var status = participant.status || 'assigned';
+                      var statusText = status === 'assigned' ? '参加' : (status === 'cancelled' ? '欠席' : status);
+                      statusDiv.textContent = statusText;
+                      
+                      // ステータスに応じて色を設定
+                      if (status === 'assigned') {
+                        statusDiv.style.backgroundColor = '#e8f5e8';
+                        statusDiv.style.color = '#2d5a2d';
+                        statusDiv.classList.add('status-assigned');
+                      } else if (status === 'cancelled') {
+                        statusDiv.style.backgroundColor = '#ffe8e8';
+                        statusDiv.style.color = '#8b0000';
+                        statusDiv.classList.add('status-cancelled');
+                      } else {
+                        statusDiv.style.backgroundColor = '#f0f0f0';
+                        statusDiv.style.color = '#666';
+                        statusDiv.classList.add('status-other');
+                      }
+                      
+                      item.appendChild(colorDiv);
+                      item.appendChild(contentDiv);
+                      item.appendChild(statusDiv);
+                      participantsList.appendChild(item);
+                    });
+                  } else {
+                    var noParticipants = document.createElement('div');
+                    noParticipants.className = 'no-participants';
+                    noParticipants.style.cssText = 'color: #999;';
+                    noParticipants.textContent = '参加者なし';
+                    participantsList.appendChild(noParticipants);
+                  }
+                }
+              }, 100);
+              
+              // データ読み込み後にバインディングを再適用（必要に応じて）
+              setTimeout(function() {
+                try {
+                  if (window.ko && !bindingApplied) {
+                    var root = document.getElementById('shift-detail-root') || document.body;
+                    ko.applyBindings(vm, root);
+                    bindingApplied = true;
+                    console.log('Knockout binding applied after data load');
+                  }
+                } catch (e) {
+                  console.error('Rebinding error:', e);
+                }
+              }, 50);
               
               // 手動でDOMを更新
               setTimeout(function() {
@@ -673,6 +830,11 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   vm.showAlert(data.message || 'シフトに参加しました！', 'success');
                   vm.loadShiftDetail(); // データを再読み込み
                   
+                  // シフト一覧ページのデータも更新
+                  if (typeof window.refreshShiftList === 'function') {
+                      window.refreshShiftList();
+                  }
+                  
                   // 自分のシフトページのデータも更新
                   if (typeof window.refreshMyShifts === 'function') {
                       window.refreshMyShifts();
@@ -733,6 +895,11 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   vm.showAlert('シフト参加を取消しました', 'success');
                   vm.loadShiftDetail(); // データを再読み込み
                   
+                  // シフト一覧ページのデータも更新
+                  if (typeof window.refreshShiftList === 'function') {
+                      window.refreshShiftList();
+                  }
+                  
                   // 自分のシフトページのデータも更新
                   if (typeof window.refreshMyShifts === 'function') {
                       window.refreshMyShifts();
@@ -760,13 +927,21 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       
       // 戻るボタン
       vm.goBack = function() {
-          window.history.back();
+          window.location.href = '/shifts';
       };
       
   }
   
   // 2) シングルトンな VM を使う
   window.__shiftVM = window.__shiftVM || new ShiftDetailViewModel();
+  
+  // グローバルな更新関数を登録
+  window.refreshShiftDetail = function() {
+      console.log('Refreshing shift detail from external call');
+      if (window.__shiftVM && window.__shiftVM.loadShiftDetail) {
+          window.__shiftVM.loadShiftDetail();
+      }
+  };
   
   // Knockout.jsのバインディングを適用
   document.addEventListener('DOMContentLoaded', function() {
@@ -794,8 +969,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
   }
   
   // ===== Helper: API URL builder with fallback (/api/shifts/:id or /api/v1/shifts/:id) =====
-  var SHIFT_API_BASE = (window.SHIFT_API_BASE || '/api/shifts/');
-  var SHIFT_API_FALLBACK = (window.SHIFT_API_FALLBACK || '/api/v1/shifts/');
+  var SHIFT_API_BASE = (window.API_BASE || '/api') + '/shifts/';
+  var SHIFT_API_FALLBACK = (window.API_BASE || '/api') + '/shifts/';
   function apiUrlFor(id) {
     return SHIFT_API_BASE.replace(/\/+$/,'/') + encodeURIComponent(id);
   }
@@ -803,14 +978,25 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
     return SHIFT_API_FALLBACK.replace(/\/+$/,'/') + encodeURIComponent(id);
   }
   
-  // 3) バインディングを適用
+  // 3) バインディングを適用（データ読み込み後に遅延）
+  var bindingApplied = false;
   (function bindOnce() {
     var root = document.getElementById('shift-detail-root') || document.body;
     function bind() {
       try {
-        if (window.ko) {
-          ko.applyBindings(vm, root);
-          console.log('Knockout binding applied ONCE');
+        if (window.ko && !bindingApplied) {
+          // シフトデータが読み込まれるまで少し待つ
+          setTimeout(function() {
+            if (!bindingApplied) {
+              try {
+                ko.applyBindings(vm, root);
+                bindingApplied = true;
+                console.log('Knockout binding applied ONCE');
+              } catch (e) {
+                console.error('Binding error:', e);
+              }
+            }
+          }, 200);
         }
       } catch (e) {
         console.error('Binding error:', e);
@@ -825,12 +1011,15 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
   
   // 4) ID を取って "同じ vm" にロードする
   (function initLoad() {
+    console.log('initLoad function called');
     var id = resolveShiftId();
+    console.log('Resolved shift ID:', id);
     console.log('Initial state - loading:', vm.loading());
     console.log('Initial state - isReady:', vm.isReady());
     console.log('Initial state - shift:', vm.shift());
     
     if (!id) {
+      console.error('No shift ID found in URL');
       vm.loading(false);
       vm.error && vm.error('シフトIDがURLから取得できませんでした。');
       return;

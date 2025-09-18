@@ -31,25 +31,25 @@
     <!-- ヘッダー -->
     <div class="myshifts-header">
         <div class="header-left">
-            <span class="header-id">000000</span>
+            <span class="header-id">自分のシフト</span>
         </div>
-        <div class="header-right">
+        <!-- <div class="header-right">
             <button class="csv-export-btn">CSV000000</button>
-        </div>
+        </div> -->
     </div>
 
     <!-- コントロールパネル -->
     <div class="myshifts-controls">
         <div class="controls-left">
-            <span class="main-id">0000</span>
-            <div class="filter-tags">
+        <span class="current-month" id="current-date-display"><?php echo date('Y年n月j日'); ?></span>
+                <div class="filter-tags">
                 <span class="filter-tag">日</span>
                 <span class="filter-tag">週</span>
                 <span class="filter-tag">月</span>
             </div>
         </div>
         <div class="controls-right">
-            <button class="csv-export-btn">CSV000000</button>
+            <button onclick="window.location.href='/shifts'">戻る</button>
         </div>
     </div>
 
@@ -77,10 +77,10 @@
     </div>
 
     <!-- ページタイトル -->
-    <div class="myshifts-title">
+  
+  <!-- <div class="myshifts-title">
         <h1>自分のシフト</h1>
-    </div>
-
+    </div> -->
     <script>
         // 未ログインガード
         if (!window.CURRENT_USER_ID) {
@@ -177,8 +177,30 @@
         }
 
         // ページ読み込み時に自分のシフトを読み込み
-        $(document).ready(function() {
-            loadMyShifts();
+        // 今日の日付を表示
+        function displayCurrentDate() {
+            var today = new Date();
+            var year = today.getFullYear();
+            var month = today.getMonth() + 1;
+            var day = today.getDate();
+            var dateString = year + '年' + month + '月' + day + '日';
+            
+            var dateElement = document.getElementById('current-date-display');
+            if (dateElement) {
+                dateElement.textContent = dateString;
+                console.log('日付を表示しました:', dateString);
+            } else {
+                console.error('current-date-display要素が見つかりません');
+            }
+        }
+        
+        // DOMContentLoadedイベントで実行
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded実行');
+            displayCurrentDate();
+            if (typeof loadMyShifts === 'function') {
+                loadMyShifts();
+            }
         });
     </script>
 </body>

@@ -17,12 +17,6 @@ body {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.shift-header {
-    /* border-bottom: 2px solid #e5e7eb; */
-    padding-bottom: 16px;
-    margin-bottom: 20px;
-}
-
 .shift-title {
     font-size: 28px;
     font-weight: 700;

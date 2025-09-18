@@ -1,4 +1,4 @@
-// シフト一覧ページ用JavaScript
+// シフト一覧ページ用JavaScript - キャッシュ無効化 v2
 
 // 参照専用。再代入や再宣言はしない！
 var uid = window.CURRENT_USER_ID;
@@ -461,7 +461,7 @@ function ShiftViewModel() {
                     // クリックイベント
                     shiftBlock.addEventListener('click', function(e) {
                         e.stopPropagation(); // 親要素（日付セル）への伝播を止める
-    self.viewShift(shift);
+                        self.viewShift(shift);
                     });
                     
                     dayElement.appendChild(shiftBlock);
@@ -534,41 +534,41 @@ function ShiftViewModel() {
                 shiftBlock.appendChild(countDiv);
                 
                 // ツールチップ機能を追加
-shiftBlock.addEventListener('mouseover', function(e) {
-    // ツールチップ要素を作成
-    var tooltip = document.createElement('div');
-    tooltip.className = 'shift-tooltip';
-    tooltip.style.position = 'absolute';
-    tooltip.style.zIndex = '100';
-    tooltip.style.background = 'white';
-    tooltip.style.border = '1px solid #ddd';
-    tooltip.style.padding = '10px';
-    tooltip.style.borderRadius = '4px';
-    tooltip.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-    tooltip.style.minWidth = '200px';
+                shiftBlock.addEventListener('mouseover', function(e) {
+                    // ツールチップ要素を作成
+                    var tooltip = document.createElement('div');
+                    tooltip.className = 'shift-tooltip';
+                    tooltip.style.position = 'absolute';
+                    tooltip.style.zIndex = '100';
+                    tooltip.style.background = 'white';
+                    tooltip.style.border = '1px solid #ddd';
+                    tooltip.style.padding = '10px';
+                    tooltip.style.borderRadius = '4px';
+                    tooltip.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                    tooltip.style.minWidth = '200px';
 
-     // ツールチップの内容を設定
-     tooltip.innerHTML = `
-     <p><strong>時間:</strong> ${shift.start_time.substring(0, 5)} - ${shift.end_time.substring(0, 5)}</p>
-     <p><strong>参加人数:</strong> ${shift.assigned_users.length} / ${shift.slot_count}</p>
-     <p><strong>空き:</strong> ${shift.available_slots}人</p>
-     ${shift.note ? `<p><strong>メモ:</strong> ${shift.note}</p>` : ''}
- `;
+                    // ツールチップの内容を設定
+                    tooltip.innerHTML = `
+                        <p><strong>時間:</strong> ${shift.start_time.substring(0, 5)} - ${shift.end_time.substring(0, 5)}</p>
+                        <p><strong>参加人数:</strong> ${shift.assigned_users.length} / ${shift.slot_count}</p>
+                        <p><strong>空き:</strong> ${shift.available_slots}人</p>
+                        ${shift.note ? '<p><strong>メモ:</strong> ' + shift.note + '</p>' : ''}
+                    `;
 
- // ツールチップの位置を調整
- tooltip.style.top = (e.clientY + 10) + 'px';
- tooltip.style.left = (e.clientX + 10) + 'px';
- 
- document.body.appendChild(tooltip);
-});
+                    // ツールチップの位置を調整
+                    tooltip.style.top = (e.clientY + 10) + 'px';
+                    tooltip.style.left = (e.clientX + 10) + 'px';
+                    
+                    document.body.appendChild(tooltip);
+                });
 
-shiftBlock.addEventListener('mouseout', function() {
- // ツールチップを非表示にする
- var tooltip = document.querySelector('.shift-tooltip');
- if (tooltip) {
-     document.body.removeChild(tooltip);
- }
-});
+                shiftBlock.addEventListener('mouseout', function() {
+                    // ツールチップを非表示にする
+                    var tooltip = document.querySelector('.shift-tooltip');
+                    if (tooltip) {
+                        document.body.removeChild(tooltip);
+                    }
+                });
                 
                 dayElement.appendChild(shiftBlock);
             });
@@ -1045,6 +1045,11 @@ shiftBlock.addEventListener('mouseout', function() {
                 }
                 alert(message);
                 self.loadShifts(); // データを再読み込み
+                
+                // 詳細ページのデータも更新（詳細ページが開いている場合）
+                if (typeof window.refreshShiftDetail === 'function') {
+                    window.refreshShiftDetail();
+                }
             } else {
                 alert('参加に失敗しました: ' + (data.message || 'エラーが発生しました'));
             }
@@ -1077,6 +1082,11 @@ shiftBlock.addEventListener('mouseout', function() {
                     if (data.success) {
                         self.showAlert('シフトの参加を取り消しました', 'success');
                         self.loadShifts();
+                        
+                        // 詳細ページのデータも更新（詳細ページが開いている場合）
+                        if (typeof window.refreshShiftDetail === 'function') {
+                            window.refreshShiftDetail();
+                        }
                         
                         // 自分のシフトページのデータも更新
                         if (typeof window.refreshMyShifts === 'function') {
@@ -1273,6 +1283,12 @@ shiftBlock.addEventListener('mouseout', function() {
     self.generateCalendar(); // カレンダーを先に生成
     self.loadShifts();
     
+    // グローバルな更新関数を登録
+    window.refreshShiftList = function() {
+        console.log('Refreshing shift list from external call');
+        self.loadShifts();
+    };
+    
     // 手動でナビゲーションボタンのイベントリスナーを追加
     setTimeout(function() {
         var prevBtn = document.querySelector('.nav-btn[data-bind*="previousMonth"]');
@@ -1387,3 +1403,4 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Knockout.jsバインディングエラー:', error);
     }
 });
+

@@ -77,7 +77,7 @@ $(document).ready(function() {
               start_time: ($('#start_time').val() || '').trim(),
               end_time:   ($('#end_time').val() || '').trim(),
               recruit_count: Number($('#recruit_count').val() || 1),
-              free_text:   ($('#note').val() || '').trim()
+              free_text:   ($('#title').val() || '').trim()
             }),
             dataType: 'json',
             success: function(response) {

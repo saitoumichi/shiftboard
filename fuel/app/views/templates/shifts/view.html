@@ -12,12 +12,34 @@
     </div>
 
 
-    <div data-bind="visible: isReady()" class="main-content">
-    <div class="left-section">
-        <div class="shift-basic-info">
-            <div class="shift-header">
-                <h2 class="shift-title" data-bind="text: shiftTitle()">シフト詳細</h2>
-                <div class="shift-date" data-bind="text: shiftDate()">読み込み中...</div>
+    <div data-bind="visible: isReady()" class="main-content" style="display: flex; gap: 20px;">
+        <div class="left-section" style="flex: 1;">
+            <div class="shift-basic-info">
+            
+            <!-- 日表示の情報を追加 -->
+            <div class="shift-details" data-bind="visible: shift()">
+                <!-- シフト情報 -->
+                <div class="shift-info">
+                    <div class="shift-info-content">
+                        <p style="color: #444444; font-size: 18px; font-weight: bold;" data-bind="text: shift() ? (shift().free_text || 'シフト情報なし') : 'シフト情報なし'"></p>
+                        <p class="shift-id" style="color: #444444; font-size: 16px; font-weight: bold;">シフト作成者: <span data-bind="text: shift() ? shift().id : ''"></span></p>
+                    </div>
+                </div>
+
+                <!-- 定員状況 -->
+                <div class="shift-capacity">
+                    <h4 style="color: #333333;">定員状況</h4>
+                    <div class="capacity-info" style="color: #333333;">
+                        <span data-bind="text: shift() ? shift().assigned_users.length : 0"></span> / 
+                        <span data-bind="text: shift() ? shift().slot_count : 0"></span>人
+                        <!-- ko if: shift() && shift().slot_count && shift().assigned_users && (shift().slot_count - shift().assigned_users.length) === 0 -->
+                        <span class="capacity-full" style="color: #d32f2f;">(満員)</span>
+                        <!-- /ko -->
+                        <!-- ko if: shift() && shift().slot_count && shift().assigned_users && (shift().slot_count - shift().assigned_users.length) > 0 -->
+                        <span class="capacity-available" style="color: #2e7d32;">(空き: <span data-bind="text: shift() ? (shift().slot_count - shift().assigned_users.length) : 0"></span>人)</span>
+                        <!-- /ko -->
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -25,70 +47,63 @@
             <h3>参加者一覧</h3>
             <div class="participants-list">
                 <!-- ko foreach: participants -->
-                <div class="participant-item">
-                    <div class="participant-icon"></div>
-                    <div class="participant-info">
-                        <div class="participant-name" data-bind="text: name"></div>
-                        <div class="participant-status" data-bind="text: status"></div>
-                        <!-- ko if: self_word && self_word.trim() !== '' -->
-                        <div class="participant-comment">
-                            <strong>コメント:</strong> <span data-bind="text: self_word"></span>
-                        </div>
+                <div class="participant-item" style="display: flex; align-items: center; margin: 5px 0; padding: 8px; border-radius: 4px; background: #f9f9f9;">
+                    <!-- カラー表示 -->
+                    <div class="participant-color" style="width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; flex-shrink: 0;" data-bind="style: { backgroundColor: $data.color }"></div>
+                    <!-- 名前と一言 -->
+                    <div style="flex: 1; display: flex; align-items: center; gap: 8px;">
+                        <div class="participant-name" style="font-weight: bold; color: #333;" data-bind="text: $data.name"></div>
+                        <!-- ko if: $data.self_word && $data.self_word.trim() !== '' -->
+                        <div class="participant-comment" style="font-style: italic; color: #666; font-size: 0.9em;" data-bind="text: $data.self_word"></div>
                         <!-- /ko -->
                     </div>
+                    <!-- 参加状況 -->
+                    <div class="participant-status" style="margin-left: 8px; padding: 2px 6px; border-radius: 12px; font-size: 0.8em; font-weight: bold;" 
+                         data-bind="text: $data.status === 'assigned' ? '参加' : ($data.status === 'cancelled' ? '欠席' : $data.status)"></div>
                 </div>
                 <!-- /ko -->
                 <!-- ko if: participants().length === 0 -->
-                <div class="no-participants">
-                    参加者がいません
+                <div class="no-participants" style="color: #999;">
+                    参加者なし
                 </div>
                 <!-- /ko -->
             </div>
-        </div>
-    </div>
-    
-    <div class="right-section">
-        <div class="action-buttons">
-            <h3>参加/取り消し</h3>
-            <!-- 参加ボタン（未参加時のみ表示） -->
-            <button type="button" class="action-btn btn-participate" 
-                    data-bind="visible: shift() && !isParticipating() && canParticipate(), 
-                               click: function() { console.log('参加ボタンクリック！'); $root.joinShift($root.shift()); }"
-                    onclick="console.log('直接クリックイベント！');">
-                参加する
-            </button>
-            
-            <!-- 取消ボタン（参加時のみ表示） -->
-            <button type="button" class="action-btn btn-cancel" 
-                    data-bind="visible: shift() && isParticipating(), 
-                               click: function() { $root.cancelShift($root.shift()); }">
-                参加を取消
-            </button>
-            
-            <!-- 定員満了メッセージ（定員満了時のみ表示） -->
-            <span class="action-message" 
-                  data-bind="visible: shift() && !canParticipate() && !isParticipating()">
-                定員に達しています
-            </span>
-            
-            <!-- 参加者一覧リンク -->
-            <div class="participants-link" style="margin-top: 15px;">
-                <a href="#" class="action-btn btn-participants" 
-                   data-bind="attr: { href: '/shifts/' + shift().id + '/participants' }, 
-                              visible: shift()">
-                    参加者一覧を見る
-                </a>
             </div>
         </div>
         
+        <div class="right-section" style="flex: 1;">
+            <div class="action-buttons">
+            <h3>参加/取り消し</h3>
+            <!-- ボタンコンテナ -->
+            <div class="button-container" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <!-- 参加ボタン（定員に空きがある時のみ表示） -->
+                <button type="button" class="action-btn btn-participate" 
+                        data-bind="visible: shift() && canParticipate(), 
+                                   click: joinShift"
+                        onclick="console.log('参加ボタンクリック！');">
+                    参加
+                </button>
+                
+                <!-- 取消ボタン（テスト用：常に表示） -->
+                <button type="button" class="action-btn btn-cancel" 
+                        style="display: block; background-color: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; margin: 5px 0;"
+                        onclick="console.log('取消ボタンクリック！');">
+                    取消
+                </button>
+            </div>
+            
+            
+        </div>
+        
         <div class="recruitment-times">
-
-            <h3>募集中の時刻</h3>
+            <h3>シフト情報</h3>
             <ul class="recruitment-details">
                 <li>開始時刻: <span data-bind="text: shift() ? shift().start_time : ''"></span></li>
                 <li>終了時刻: <span data-bind="text: shift() ? shift().end_time : ''"></span></li>
+                <li>シフト作成者: <span data-bind="text: shift() ? shift().id : ''"></span></li>
             </ul>
         </div>
+        
     </div>
     </div>
     
@@ -102,5 +117,6 @@
                 <button id="comment-ok-btn-view" type="button">OK</button>
             </div>
         </div>
+    </div>
     </div>
 </div>

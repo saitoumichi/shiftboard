@@ -1015,3 +1015,47 @@ body .day-recruitment-section .recruitment-item .recruitment-slots {
         padding: 16px 20px;
     }
 }
+
+/* 参加状況のスタイル */
+.status-assigned {
+    background-color: #e8f5e8 !important;
+    color: #2d5a2d !important;
+}
+
+.status-cancelled {
+    background-color: #ffe8e8 !important;
+    color: #8b0000 !important;
+}
+
+.status-other {
+    background-color: #f0f0f0 !important;
+    color: #666 !important;
+}
+
+/* シフト情報のスタイル */
+.shift-info {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.shift-info h4 {
+    margin: 0 0 10px 0;
+    color: #333333;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.shift-info-content p {
+    margin: 5px 0;
+    color: #333333;
+    line-height: 1.4;
+}
+
+.shift-id {
+    font-size: 14px;
+    color: #444444;
+    font-weight: normal;
+}
