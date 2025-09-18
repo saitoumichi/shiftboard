@@ -1,4 +1,4 @@
-// シフト一覧ページ用JavaScript
+// シフト一覧ページ用JavaScript - キャッシュ無効化 v2
 
 // 参照専用。再代入や再宣言はしない！
 var uid = window.CURRENT_USER_ID;
@@ -10,16 +10,21 @@ var uid = window.CURRENT_USER_ID;
 document.addEventListener('DOMContentLoaded', function () {
   var uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
   console.log('CURRENT_USER_ID:', uid);
+  console.log('window.CURRENT_USER_ID:', window.CURRENT_USER_ID);
+  console.log('meta content:', document.querySelector('meta[name="current-user-id"]')?.content);
+  
   if (!uid) {
     console.warn('未ログイン：操作を無効化');
     // 参加・取消ボタンを無効化（存在すれば）
-    var btns = document.querySelectorAll('.btn-participate, .btn-cancel, .btn-join, .btn-cancel-shift');
+    var btns = document.querySelectorAll('.action-btn.btn-participate, .action-btn.btn-cancel, .btn-join, .btn-cancel-shift, .btn.my-shifts-btn, .nav-btn, .view-btn');
+    console.log('無効化するボタン数:', btns.length);
     btns.forEach(b => { b.disabled = true; b.title = 'ログインが必要です'; });
     // ここで location.href に飛ばさない
   } else {
     console.log('ログイン済み：ボタンを有効化');
     // ログイン済みの場合はボタンを有効化
-    var btns = document.querySelectorAll('.btn-participate, .btn-cancel, .btn-join, .btn-cancel-shift');
+    var btns = document.querySelectorAll('.action-btn.btn-participate, .action-btn.btn-cancel, .btn-join, .btn-cancel-shift, .btn.my-shifts-btn, .nav-btn, .view-btn');
+    console.log('有効化するボタン数:', btns.length);
     btns.forEach(b => { b.disabled = false; b.title = ''; });
   }
 });
@@ -163,7 +168,7 @@ function ShiftViewModel() {
         var viewBtns = document.querySelectorAll('.view-btn');
         viewBtns.forEach(function(btn) {
             btn.classList.remove('active');
-            if (btn.textContent.trim() === getViewText(view)) {
+            if (btn.textContent.trim() === self.getViewText(view)) {
                 btn.classList.add('active');
                 console.log('Added active to button:', btn.textContent.trim());
             }
@@ -174,7 +179,7 @@ function ShiftViewModel() {
     };
     
     // ビューテキストを取得
-    function getViewText(view) {
+    self.getViewText = function(view) {
         switch(view) {
             case 'month': return '月';
             case 'week': return '週';
@@ -182,7 +187,7 @@ function ShiftViewModel() {
             case 'list': return 'リスト';
             default: return '月';
         }
-    }
+    };
     
     // 前の月
     self.previousMonth = function() {
@@ -456,7 +461,7 @@ function ShiftViewModel() {
                     // クリックイベント
                     shiftBlock.addEventListener('click', function(e) {
                         e.stopPropagation(); // 親要素（日付セル）への伝播を止める
-    self.viewShift(shift);
+                        self.viewShift(shift);
                     });
                     
                     dayElement.appendChild(shiftBlock);
@@ -529,41 +534,41 @@ function ShiftViewModel() {
                 shiftBlock.appendChild(countDiv);
                 
                 // ツールチップ機能を追加
-shiftBlock.addEventListener('mouseover', function(e) {
-    // ツールチップ要素を作成
-    var tooltip = document.createElement('div');
-    tooltip.className = 'shift-tooltip';
-    tooltip.style.position = 'absolute';
-    tooltip.style.zIndex = '100';
-    tooltip.style.background = 'white';
-    tooltip.style.border = '1px solid #ddd';
-    tooltip.style.padding = '10px';
-    tooltip.style.borderRadius = '4px';
-    tooltip.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-    tooltip.style.minWidth = '200px';
+                shiftBlock.addEventListener('mouseover', function(e) {
+                    // ツールチップ要素を作成
+                    var tooltip = document.createElement('div');
+                    tooltip.className = 'shift-tooltip';
+                    tooltip.style.position = 'absolute';
+                    tooltip.style.zIndex = '100';
+                    tooltip.style.background = 'white';
+                    tooltip.style.border = '1px solid #ddd';
+                    tooltip.style.padding = '10px';
+                    tooltip.style.borderRadius = '4px';
+                    tooltip.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                    tooltip.style.minWidth = '200px';
 
-     // ツールチップの内容を設定
-     tooltip.innerHTML = `
-     <p><strong>時間:</strong> ${shift.start_time.substring(0, 5)} - ${shift.end_time.substring(0, 5)}</p>
-     <p><strong>参加人数:</strong> ${shift.assigned_users.length} / ${shift.slot_count}</p>
-     <p><strong>空き:</strong> ${shift.available_slots}人</p>
-     ${shift.note ? `<p><strong>メモ:</strong> ${shift.note}</p>` : ''}
- `;
+                    // ツールチップの内容を設定
+                    tooltip.innerHTML = `
+                        <p><strong>時間:</strong> ${shift.start_time.substring(0, 5)} - ${shift.end_time.substring(0, 5)}</p>
+                        <p><strong>参加人数:</strong> ${shift.assigned_users.length} / ${shift.slot_count}</p>
+                        <p><strong>空き:</strong> ${shift.available_slots}人</p>
+                        ${shift.note ? '<p><strong>メモ:</strong> ' + shift.note + '</p>' : ''}
+                    `;
 
- // ツールチップの位置を調整
- tooltip.style.top = (e.clientY + 10) + 'px';
- tooltip.style.left = (e.clientX + 10) + 'px';
- 
- document.body.appendChild(tooltip);
-});
+                    // ツールチップの位置を調整
+                    tooltip.style.top = (e.clientY + 10) + 'px';
+                    tooltip.style.left = (e.clientX + 10) + 'px';
+                    
+                    document.body.appendChild(tooltip);
+                });
 
-shiftBlock.addEventListener('mouseout', function() {
- // ツールチップを非表示にする
- var tooltip = document.querySelector('.shift-tooltip');
- if (tooltip) {
-     document.body.removeChild(tooltip);
- }
-});
+                shiftBlock.addEventListener('mouseout', function() {
+                    // ツールチップを非表示にする
+                    var tooltip = document.querySelector('.shift-tooltip');
+                    if (tooltip) {
+                        document.body.removeChild(tooltip);
+                    }
+                });
                 
                 dayElement.appendChild(shiftBlock);
             });
@@ -934,121 +939,83 @@ shiftBlock.addEventListener('mouseout', function() {
         console.log('showCommentModal call completed');
     };
     
-    // コメント入力モーダルを表示
+    // コメント入力モーダルを表示（緊急ボタン仕様で確実に動作）
     self.showCommentModal = function(shift) {
-        console.log('showCommentModal called with shift:', shift);
-
-        var modal = document.getElementById('comment-modal');
-        console.log('Found modal element:', modal);
-        console.log('Modal current display style:', modal ? modal.style.display : 'modal not found');
-
-        if (!modal) {
-            console.error('Error: Modal element with ID "comment-modal" was not found.');
-            console.log('Available elements with IDs:', Array.from(document.querySelectorAll('*[id]')).map(el => el.id));
-            return; // 要素が見つからない場合は処理を終了
-        }
-
-        var textarea = document.getElementById('comment-textarea');
-        var cancelBtn = document.getElementById('comment-cancel-btn');
-        var cancelBtnTop = document.getElementById('comment-cancel-btn-top');
-        var okBtn = document.getElementById('comment-ok-btn');
-
-        console.log('Modal elements found:', {
-            textarea: !!textarea,
-            cancelBtn: !!cancelBtn,
-            okBtn: !!okBtn
+        console.log('🚨 緊急コメントモーダル表示開始！');
+        
+        // 既存のモーダルをすべて削除
+        var existingModals = document.querySelectorAll('#comment-modal, .modal-overlay');
+        existingModals.forEach(function(modal) {
+            modal.remove();
         });
-
-        // テキストエリアをクリア
-        if (textarea) {
-            textarea.value = '';
-        }
-
-        // モーダルを表示（クラス管理のみ）
-        console.log('Setting modal display to flex...');
-        modal.classList.add('show');
-        console.log('Modal classes:', modal.className);
-        console.log('Modal computed style:', window.getComputedStyle(modal).display);
         
-        // デバッグ用即席チェック
-        console.log('=== デバッグチェック ===');
-        console.log('1. モーダル要素存在チェック:', document.getElementById('comment-modal') ? 'OK' : 'NG');
-        console.log('2. 計算されたdisplay:', getComputedStyle(document.getElementById('comment-modal')).display);
-        console.log('3. z-index:', getComputedStyle(document.getElementById('comment-modal')).zIndex);
-        console.log('4. position:', getComputedStyle(document.getElementById('comment-modal')).position);
-        console.log('5. visibility:', getComputedStyle(document.getElementById('comment-modal')).visibility);
-        console.log('6. opacity:', getComputedStyle(document.getElementById('comment-modal')).opacity);
-        console.log('7. transform:', getComputedStyle(document.getElementById('comment-modal')).transform);
-        console.log('8. クラス一覧:', modal.className);
-        console.log('9. showクラス有無:', modal.classList.contains('show'));
-        console.log('10. インラインスタイル:', modal.style.display);
-        console.log('=======================');
+        // 現在のシフトを保存
+        self.currentShift = shift;
         
-        // モーダルが実際に表示されているかチェック
+        // グローバルにViewModelを保存
+        window.shiftVM = self;
+        
+        // 緊急ボタン仕様でモーダルを作成
+        var modal = document.createElement('div');
+        modal.id = 'comment-modal';
+        modal.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background: rgba(0,0,0,0.8) !important; z-index: 99999 !important; display: flex !important; align-items: center !important; justify-content: center !important;';
+        
+        modal.innerHTML = `
+            <div style="background: white; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 0 30px rgba(0,0,0,0.5); position: relative;">
+                <button onclick="window.shiftVM.hideCommentModal()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
+                <h3 style="margin: 0 0 20px 0; color: #333; font-size: 20px;">参加時のひとこと（任意）</h3>
+                <textarea id="comment-textarea" rows="4" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; resize: vertical;" placeholder="例：頑張ります！"></textarea>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button onclick="window.shiftVM.hideCommentModal()" style="background: #ccc; color: #333; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px; font-size: 16px;">キャンセル</button>
+                    <button onclick="window.shiftVM.submitJoinShift(window.shiftVM.currentShift, document.getElementById('comment-textarea').value)" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">参加する</button>
+                </div>
+            </div>
+        `;
+        
+        // モーダルを表示
+        document.body.appendChild(modal);
+        console.log('🚨 緊急コメントモーダル表示完了！');
+        
+        // テキストエリアにフォーカス
         setTimeout(function() {
-            var rect = modal.getBoundingClientRect();
-            console.log('Modal position and size:', {
-                top: rect.top,
-                left: rect.left,
-                width: rect.width,
-                height: rect.height,
-                visible: rect.width > 0 && rect.height > 0
-            });
+            var textarea = document.getElementById('comment-textarea');
+            if (textarea) {
+                textarea.focus();
+            }
         }, 100);
         
-        if (textarea) {
-            textarea.focus();
-        }
-
-        // キャンセルボタンのイベント
-        if (cancelBtn) {
-            cancelBtn.onclick = function() {
-                console.log('Cancel button clicked');
-                modal.classList.remove('show');
-            };
-        }
-
-        // 上部キャンセルボタンのイベント
-        if (cancelBtnTop) {
-            cancelBtnTop.onclick = function() {
-                console.log('Top cancel button clicked');
-                modal.classList.remove('show');
-            };
-        }
-
-        // OKボタンのイベント
-        if (okBtn) {
-            okBtn.onclick = function() {
-                console.log('OK button clicked');
-                var comment = textarea ? textarea.value.trim() : '';
-                console.log('Comment entered:', comment);
-                self.submitJoinShift(shift, comment);
-                modal.classList.remove('show');
-            };
-        }
-
-        // エスケープキーでモーダルを閉じる
-        var escapeHandler = function(e) {
+        // ESCキーで閉じる
+        var escHandler = function(e) {
             if (e.key === 'Escape') {
-                console.log('Escape key pressed, closing modal');
-                modal.classList.remove('show');
-                document.removeEventListener('keydown', escapeHandler);
+                self.hideCommentModal();
+                document.removeEventListener('keydown', escHandler);
             }
         };
-        document.addEventListener('keydown', escapeHandler);
-
+        document.addEventListener('keydown', escHandler);
+        
         // モーダル外クリックで閉じる
         modal.onclick = function(e) {
             if (e.target === modal) {
-                console.log('Modal background clicked, closing modal');
-                modal.classList.remove('show');
+                self.hideCommentModal();
             }
         };
+    };
+
+    // コメントモーダルを非表示
+    self.hideCommentModal = function() {
+        console.log('🚨 緊急コメントモーダル非表示！');
+        var modal = document.getElementById('comment-modal');
+        if (modal) {
+            modal.remove();
+        }
     };
 
     // シフト参加を実際に実行
     self.submitJoinShift = function(shift, comment) {
         console.log('Joining shift:', shift.id, 'with comment:', comment);
+        
+        // モーダルを閉じる
+        self.hideCommentModal();
         
         // 現在のユーザーIDを取得（セッションから）
         var currentUserId = window.CURRENT_USER_ID || 1;
@@ -1078,6 +1045,11 @@ shiftBlock.addEventListener('mouseout', function() {
                 }
                 alert(message);
                 self.loadShifts(); // データを再読み込み
+                
+                // 詳細ページのデータも更新（詳細ページが開いている場合）
+                if (typeof window.refreshShiftDetail === 'function') {
+                    window.refreshShiftDetail();
+                }
             } else {
                 alert('参加に失敗しました: ' + (data.message || 'エラーが発生しました'));
             }
@@ -1110,6 +1082,11 @@ shiftBlock.addEventListener('mouseout', function() {
                     if (data.success) {
                         self.showAlert('シフトの参加を取り消しました', 'success');
                         self.loadShifts();
+                        
+                        // 詳細ページのデータも更新（詳細ページが開いている場合）
+                        if (typeof window.refreshShiftDetail === 'function') {
+                            window.refreshShiftDetail();
+                        }
                         
                         // 自分のシフトページのデータも更新
                         if (typeof window.refreshMyShifts === 'function') {
@@ -1306,6 +1283,12 @@ shiftBlock.addEventListener('mouseout', function() {
     self.generateCalendar(); // カレンダーを先に生成
     self.loadShifts();
     
+    // グローバルな更新関数を登録
+    window.refreshShiftList = function() {
+        console.log('Refreshing shift list from external call');
+        self.loadShifts();
+    };
+    
     // 手動でナビゲーションボタンのイベントリスナーを追加
     setTimeout(function() {
         var prevBtn = document.querySelector('.nav-btn[data-bind*="previousMonth"]');
@@ -1350,6 +1333,74 @@ window.debugModal = function() {
 };
 
 // Knockout.jsのバインディングを適用
-$(document).ready(function() {
-    ko.applyBindings(new ShiftViewModel());
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded: Knockout.jsバインディング開始');
+    
+    try {
+        var viewModel = new ShiftViewModel();
+        console.log('ShiftViewModel作成完了');
+        
+        ko.applyBindings(viewModel);
+        console.log('Knockout.jsバインディング適用完了');
+        
+        // バインディング後にボタンの状態を再確認
+        setTimeout(function() {
+            var uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
+            console.log('バインディング後のCURRENT_USER_ID:', uid);
+            
+            if (uid) {
+                console.log('バインディング後：ボタンを有効化');
+                var btns = document.querySelectorAll('.action-btn.btn-participate, .action-btn.btn-cancel, .btn-join, .btn-cancel-shift, .btn-add-shift, .btn.my-shifts-btn, .nav-btn, .view-btn');
+                console.log('バインディング後有効化するボタン数:', btns.length);
+                btns.forEach(b => { 
+                    b.disabled = false; 
+                    b.title = ''; 
+                    console.log('ボタン有効化:', b.className, b.textContent);
+                });
+                
+                // 直接イベントリスナーを追加（Knockout.jsのバインディングが動作しない場合のフォールバック）
+                var myShiftsBtn = document.querySelector('.btn.my-shifts-btn');
+                console.log('自分のシフトボタン検索結果:', myShiftsBtn);
+                
+                if (myShiftsBtn) {
+                    console.log('自分のシフトボタンにイベントリスナーを追加');
+                    myShiftsBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('自分のシフトボタンがクリックされました！');
+                        window.location.href = '/my/shifts';
+                    });
+                } else {
+                    console.error('自分のシフトボタンが見つかりません！');
+                }
+                
+                // ナビゲーションボタンにも直接イベントリスナーを追加
+                var prevBtn = document.querySelector('.nav-btn');
+                var nextBtn = document.querySelectorAll('.nav-btn')[1];
+                
+                console.log('前月ボタン検索結果:', prevBtn);
+                console.log('次月ボタン検索結果:', nextBtn);
+                
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('前月ボタンがクリックされました！');
+                        // ここで前月の処理を実行
+                    });
+                }
+                
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('次月ボタンがクリックされました！');
+                        // ここで次月の処理を実行
+                    });
+                }
+            }
+        }, 100);
+        
+    } catch (error) {
+        console.error('Knockout.jsバインディングエラー:', error);
+    }
 });
+

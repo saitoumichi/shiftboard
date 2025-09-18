@@ -295,17 +295,8 @@ if (!isset($users)) {
               </div>
             <?php endforeach; ?>
           <?php else: ?>
-            <div class="user-item" onclick="loginUser(1)">
-              <span class="user-color" style="background-color: #ff6b6b;"></span>
-              Alice
-            </div>
-            <div class="user-item" onclick="loginUser(2)">
-              <span class="user-color" style="background-color: #4ecdc4;"></span>
-              Bob
-            </div>
-            <div class="user-item" onclick="loginUser(3)">
-              <span class="user-color" style="background-color: #45b7d1;"></span>
-              Chariie
+            <div class="user-item">
+              ユーザーが存在しません
             </div>
           <?php endif; ?>
         </div>

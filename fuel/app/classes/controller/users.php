@@ -128,6 +128,7 @@ class Controller_Users extends \Fuel\Core\Controller
         // デバッグ用ログ
         error_log('ログイン成功 - ユーザーID: ' . (int)$user->id);
         error_log('セッション設定後 - user_id: ' . Session::get('user_id'));
+        error_log('セッションID: ' . Session::key());
 
         // ログイン後は一覧へ
         return Response::redirect('shifts');

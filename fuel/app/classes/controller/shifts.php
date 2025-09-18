@@ -23,6 +23,7 @@ class Controller_Shifts extends \Fuel\Core\Controller
     {
         $uid = Session::get('user_id');
         error_log('shifts/index - セッションuser_id: ' . ($uid ?: 'null'));
+        error_log('shifts/index - セッションID: ' . Session::key());
         if (!$uid) {
             error_log('shifts/index - 未ログインのためログイン画面にリダイレクト');
             return Response::forge(View::forge('users/login')); // 未ログイン→ログイン画面
