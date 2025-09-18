@@ -8,9 +8,6 @@ return [
   'users/create'      => 'users/create',
   'users/delete/(:num)' => 'users/delete/$1',  // ユーザー削除
   'my/shifts'         => 'shifts/my',           // 自分のシフト一覧（必要なら）
-  'users/login'       => 'users/login',
-  'users/logout'      => 'users/logout',
-  'users/create_test_users' => 'users/create_test_users',  // テストユーザー作成
 
   // API（JSON）
   'api/shifts'                    => 'api/shifts/index',       // GET一覧 / POST作成
