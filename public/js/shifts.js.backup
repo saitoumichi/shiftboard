@@ -1403,3 +1403,4 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Knockout.jsバインディングエラー:', error);
     }
 });
+
