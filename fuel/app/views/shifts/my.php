@@ -68,11 +68,6 @@
                 </div>
             </div>
 
-            <!-- 右側：入力した一言 -->
-            <div class="comment-section">
-                <h3 class="section-title">入力した一言</h3>
-                <textarea id="comment-display" class="comment-textarea" readonly placeholder="参加時のコメントがここに表示されます"></textarea>
-            </div>
         </div>
     </div>
 
@@ -174,7 +169,7 @@
             container.style.display = 'none';
             if (noShiftsMessage) {
                 noShiftsMessage.style.display = 'block';
-        }
+        }}
 
         // ページ読み込み時に自分のシフトを読み込み
         // 今日の日付を表示
