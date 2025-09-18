@@ -662,7 +662,6 @@ function ShiftViewModel() {
                 // 操作列
                 var actionCell = document.createElement('td');
                 actionCell.className = 'day-shift-actions';
-                
                 var detailBtn = document.createElement('button');
                 detailBtn.className = 'action-btn detail';
                 detailBtn.textContent = '詳細';
@@ -670,6 +669,7 @@ function ShiftViewModel() {
                     self.viewShift(shift);
                 });
                 actionCell.appendChild(detailBtn);
+                
                 
                 // 参加ボタン（空きがある場合）
                 if (availableSlots > 0) {
@@ -771,6 +771,16 @@ function ShiftViewModel() {
             filteredShifts.forEach(function(shift, index) {
                 var itemElement = document.createElement('div');
                 itemElement.className = 'recruitment-item';
+                itemElement.style.cssText = 'cursor: pointer;';
+                
+                // シフト枠全体のクリックイベント
+                itemElement.addEventListener('click', function(e) {
+                    // ボタンがクリックされた場合は詳細ページに遷移しない
+                    if (e.target.tagName === 'BUTTON') {
+                        return;
+                    }
+                    window.location.href = '/shifts/' + shift.id;
+                });
                 
                 // シフト情報とボタンを横並びにするコンテナ
                 var infoContainer = document.createElement('div');
@@ -802,14 +812,6 @@ function ShiftViewModel() {
                 actionsDiv.className = 'recruitment-actions';
                 actionsDiv.style.cssText = 'display: flex; gap: 5px; flex-shrink: 0;';
                 
-                // 詳細ボタンを追加
-        var detailBtn = document.createElement('button');
-        detailBtn.className = 'action-btn detail';
-        detailBtn.textContent = '詳細';
-        detailBtn.addEventListener('click', function() {
-            window.location.href = '/shifts/' + shift.id;
-        });
-        actionsDiv.appendChild(detailBtn);
 
         // 参加・取消ボタンはそのまま
                 var joinBtn = document.createElement('button');
