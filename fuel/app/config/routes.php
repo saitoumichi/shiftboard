@@ -6,7 +6,6 @@ return [
   'shifts/create'     => 'shifts/create',
   'shifts/(:num)'     => 'shifts/view/$1',
   'users/create'      => 'users/create',
-  'users/delete/(:num)' => 'users/delete/$1',  // ユーザー削除
   'my/shifts'         => 'shifts/my',           // 自分のシフト一覧（必要なら）
 
   // API（JSON）

@@ -87,6 +87,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             if (!$id) {
                 return $this->response(['ok' => false, 'error' => 'invalid_id'], 400);
             }
+            
         
             $shift = \Model_Shift::find($id, [
                 'related' => ['assignments' => ['related' => ['user']]],
@@ -111,18 +112,19 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
                 }
             }
             
-            $payload = $shift->to_array();
-            $payload['assigned_users'] = $assigned_users;
-            $payload['joined_count'] = count($assigned_users);
-            $payload['remaining'] = max((int)$shift->recruit_count - count($assigned_users), 0);
-            $payload['slot_count'] = (int)$shift->recruit_count;
+        $payload = $shift->to_array();
+        $payload['assigned_users'] = $assigned_users;
+        $payload['joined_count'] = count($assigned_users);
+        $payload['remaining'] = max((int)$shift->recruit_count - count($assigned_users), 0);
+        $payload['slot_count'] = (int)$shift->recruit_count;
+        
         
             // ← ok & data に統一
-            return $this->response([
-                'ok' => true,
-                'data'    => $payload
-            ]);
-        }
+        return $this->response([
+            'ok' => true,
+            'data'    => $payload
+        ]);
+    }
     
 
     // POST /api/shifts

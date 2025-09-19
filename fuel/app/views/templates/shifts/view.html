@@ -16,32 +16,28 @@
         <div class="left-section" style="flex: 1;">
             <div class="shift-basic-info">
             
-            <!-- 日表示の情報を追加 -->
-            <div class="shift-details" data-bind="visible: shift()">
-                <!-- シフト情報 -->
-                <div class="shift-info">
-                    <div class="shift-info-content">
-                        <p style="color: #444444; font-size: 18px; font-weight: bold;" data-bind="text: shift() ? (shift().free_text || 'シフト情報なし') : 'シフト情報なし'"></p>
-                        <p class="shift-id" style="color: #444444; font-size: 16px; font-weight: bold;">シフト作成者: <span data-bind="text: shift() ? shift().id : ''"></span></p>
+            
+                        <!-- 日表示の情報を追加 -->
+                        <div class="shift-details">
+                            <!-- シフト情報 -->
+                            <div class="shift-info">
+                                <div class="shift-info-content">
+                                    <p style="color: #444444; font-size: 18px; font-weight: bold;" id="shift-free-text">シフト情報なし</p>
+                                    <p class="shift-id" style="color: #444444; font-size: 16px; font-weight: bold;"><span id="shift-created-by"></span>より</p>
+                                    
+                                    <!-- 定員状況 -->
+                                    <div class="shift-capacity" style="display: block !important; visibility: visible !important; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                                        <h4 style="color: #333333; margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">定員状況</h4>
+                                        <div class="capacity-info" style="color: #333333; font-size: 16px; font-weight: 500;">
+                                            <span id="capacity-assigned">0</span> / 
+                                            <span id="capacity-total">0</span>人
+                                            <span id="capacity-status" style="margin-left: 10px;"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                <!-- 定員状況 -->
-                <div class="shift-capacity">
-                    <h4 style="color: #333333;">定員状況</h4>
-                    <div class="capacity-info" style="color: #333333;">
-                        <span data-bind="text: shift() ? shift().assigned_users.length : 0"></span> / 
-                        <span data-bind="text: shift() ? shift().slot_count : 0"></span>人
-                        <!-- ko if: shift() && shift().slot_count && shift().assigned_users && (shift().slot_count - shift().assigned_users.length) === 0 -->
-                        <span class="capacity-full" style="color: #d32f2f;">(満員)</span>
-                        <!-- /ko -->
-                        <!-- ko if: shift() && shift().slot_count && shift().assigned_users && (shift().slot_count - shift().assigned_users.length) > 0 -->
-                        <span class="capacity-available" style="color: #2e7d32;">(空き: <span data-bind="text: shift() ? (shift().slot_count - shift().assigned_users.length) : 0"></span>人)</span>
-                        <!-- /ko -->
-                    </div>
-                </div>
-            </div>
-        </div>
         
         <div class="participants-section">
             <h3>参加者一覧</h3>
@@ -80,16 +76,30 @@
                 <button type="button" class="action-btn btn-participate" 
                         data-bind="visible: shift() && canParticipate(), 
                                    click: joinShift"
+                        style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;"
                         onclick="console.log('参加ボタンクリック！');">
                     参加
                 </button>
                 
-                <!-- 取消ボタン（テスト用：常に表示） -->
+                <!-- 取消ボタン（参加している時のみ表示） -->
                 <button type="button" class="action-btn btn-cancel" 
-                        style="display: block; background-color: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; margin: 5px 0;"
-                        onclick="console.log('取消ボタンクリック！');">
+                        data-bind="visible: shift() && isParticipating(),
+                                   click: cancelShift"
+                        style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;"
+                        onclick="
+                            console.log('=== 取消ボタン直接クリック ===');
+                            console.log('ViewModel exists:', !!window.__shiftVM);
+                            console.log('cancelShift function exists:', !!(window.__shiftVM && window.__shiftVM.cancelShift));
+                            if (window.__shiftVM && window.__shiftVM.cancelShift) {
+                                console.log('Calling cancelShift directly...');
+                                window.__shiftVM.cancelShift();
+                            } else {
+                                console.error('cancelShift function not found');
+                            }
+                        ">
                     取消
                 </button>
+                
             </div>
             
             
@@ -100,7 +110,7 @@
             <ul class="recruitment-details">
                 <li>開始時刻: <span data-bind="text: shift() ? shift().start_time : ''"></span></li>
                 <li>終了時刻: <span data-bind="text: shift() ? shift().end_time : ''"></span></li>
-                <li>シフト作成者: <span data-bind="text: shift() ? shift().id : ''"></span></li>
+                <li>シフト作成者ID: <span id="shift-created-by-bottom"></span></li>
             </ul>
         </div>
         
@@ -108,13 +118,14 @@
     </div>
     
     <!-- 詳細ページ用モーダル -->
-    <div id="comment-modal-view" class="modal-overlay">
-        <div class="modal-dialog" onclick="event.stopPropagation()">
-            <h3 style="margin:0 0 8px;">ひとこと</h3>
-            <textarea id="comment-textarea-view" rows="4" style="width:100%;"></textarea>
-            <div style="margin-top:12px; text-align:right;">
-                <button id="comment-cancel-btn-view" type="button">キャンセル</button>
-                <button id="comment-ok-btn-view" type="button">OK</button>
+    <div id="comment-modal-view" class="modal-overlay" style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background: rgba(0,0,0,0.8) !important; z-index: 99999 !important; display: none !important; align-items: center !important; justify-content: center !important;">
+        <div onclick="event.stopPropagation()" style="background: white; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 0 30px rgba(0,0,0,0.5); position: relative;">
+            <button onclick="window.__shiftVM.hideCommentModal()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
+            <h3 style="margin: 0 0 20px 0; color: #333; font-size: 20px;">参加時のひとこと（任意）</h3>
+            <textarea id="comment-textarea-view" rows="4" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; resize: vertical;" placeholder="例：頑張ります！"></textarea>
+            <div style="margin-top: 20px; text-align: right;">
+                <button id="comment-cancel-btn-view" style="background: #ccc; color: #333; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px; font-size: 16px;">キャンセル</button>
+                <button id="comment-ok-btn-view" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">参加する</button>
             </div>
         </div>
     </div>
