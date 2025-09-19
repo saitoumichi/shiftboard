@@ -360,8 +360,16 @@ public function post_cancel($shift_id)
     $json = json_decode($raw, true);
     $in   = is_array($json) ? $json : \Fuel\Core\Input::post();
 
-    $user_id = (int)($in['user_id'] ?? 1);
+    // セッションからユーザーIDを取得
+    $user_id = (int)($in['user_id'] ?? \Fuel\Core\Session::get('user_id', 1));
+    
+    // デバッグログ
+    error_log("post_cancel: shift_id=$shift_id, user_id=$user_id");
+    error_log("post_cancel: input=" . json_encode($in));
+    error_log("post_cancel: session user_id=" . \Fuel\Core\Session::get('user_id'));
+    
     try {
+        // シフト一覧画面と同じシンプルな実装
         $assign = \Model_Shift_Assignment::query()
             ->where('shift_id', (int)$shift_id)
             ->where('user_id',  $user_id)
@@ -370,10 +378,46 @@ public function post_cancel($shift_id)
         if ( ! $assign) {
             return $this->response(['ok'=>false, 'error'=>'not_found'], 404);
         }
+        
         $assign->delete();
         return $this->response(['ok'=>true], 200);
     } catch (\Exception $e) {
         return $this->response(['ok'=>false, 'error'=>'server_error', 'message'=>$e->getMessage()], 500);
+    }
+}
+
+// テスト用エンドポイント
+public function get_test()
+{
+    try {
+        $user_id = \Fuel\Core\Session::get('user_id', 1);
+        $shift_id = \Fuel\Core\Input::get('shift_id', 10);
+        
+        $all_assignments = \Model_Shift_Assignment::query()
+            ->where('shift_id', (int)$shift_id)
+            ->get();
+        
+        $assign = \Model_Shift_Assignment::query()
+            ->where('shift_id', (int)$shift_id)
+            ->where('user_id', $user_id)
+            ->get_one();
+            
+        return $this->response([
+            'ok' => true,
+            'debug' => [
+                'shift_id' => $shift_id,
+                'user_id' => $user_id,
+                'all_assignments_count' => count($all_assignments),
+                'all_assignments' => $all_assignments->to_array(),
+                'found_assignment' => $assign ? $assign->to_array() : null
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return $this->response([
+            'ok' => false,
+            'error' => 'test_error',
+            'message' => $e->getMessage()
+        ]);
     }
 }
 
