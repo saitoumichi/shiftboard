@@ -1,11 +1,13 @@
 <?php
 return [
   // UI（表示系）
-  '_root_'            => 'shifts/index',       // トップ＝ログイン/一覧（未ログインならログイン画面を出す）
+  '_root_'            => 'users/login',        // トップ＝ログイン画面
+  'users/login'       => 'users/login',        // ログイン画面
   'shifts'            => 'shifts/index',
   'shifts/create'     => 'shifts/create',
   'shifts/(:num)'     => 'shifts/view/$1',
   'users/create'      => 'users/create',
+  'users/delete/(:num)' => 'users/delete/$1',  // ユーザー削除
   'my/shifts'         => 'shifts/my',           // 自分のシフト一覧（必要なら）
 
   // API（JSON）

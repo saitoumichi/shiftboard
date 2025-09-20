@@ -155,10 +155,18 @@ if (!isset($users)) {
       line-height: 1.4;
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #eee;
     }
     
     .user-item:last-child {
       border-bottom: none;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      flex: 1;
     }
     
     .user-color {
@@ -171,6 +179,23 @@ if (!isset($users)) {
     
     .user-item:hover {
       color: #007bff;
+    }
+    
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      opacity: 1;
+      transition: background-color 0.2s;
+      margin-left: 10px;
+    }
+    
+    .delete-btn:hover {
+      background-color: #c82333;
     }
     
     
@@ -289,9 +314,14 @@ if (!isset($users)) {
         <div class="user-list">
           <?php if (is_array($users) && !empty($users)): ?>
             <?php foreach ($users as $u): ?>
-              <div class="user-item" onclick="loginUser(<?= (int)$u->id ?>)">
-                <span class="user-color" style="background-color: <?= e($u->color) ?>;"></span>
-                <?= e($u->name) ?>
+              <div class="user-item">
+                <div class="user-info" onclick="loginUser(<?= (int)$u->id ?>)">
+                  <span class="user-color" style="background-color: <?= e($u->color) ?>;"></span>
+                  <?= e($u->name) ?>
+                </div>
+                <button class="delete-btn" onclick="event.stopPropagation(); deleteUser(<?= (int)$u->id ?>, '<?= e($u->name) ?>');" title="ユーザーを削除">
+                  削除
+                </button>
               </div>
             <?php endforeach; ?>
           <?php else: ?>

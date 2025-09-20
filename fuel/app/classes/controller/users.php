@@ -4,7 +4,6 @@ use Fuel\Core\Input;
 use Fuel\Core\Response;
 use Fuel\Core\Session;
 use Fuel\Core\View;
-use Model_User;
 
 class Controller_Users extends \Fuel\Core\Controller
 {
@@ -18,7 +17,7 @@ class Controller_Users extends \Fuel\Core\Controller
 
             if ($name === '') {
                 // 超簡易バリデーション
-                $users = Model_User::query()->order_by('name', 'asc')->get();
+                $users = \Model_User::query()->order_by('name', 'asc')->get();
                 $v = View::forge('users/login');
                 $v->set('error', '名前は必須です', false);
                 $v->set('users', $users);
@@ -26,9 +25,9 @@ class Controller_Users extends \Fuel\Core\Controller
             }
 
             // 既存があればそれでログイン、なければ作成
-            $user = Model_User::query()->where('name', $name)->get_one();
+            $user = \Model_User::query()->where('name', $name)->get_one();
             if (!$user) {
-                $user = Model_User::forge([
+                $user = \Model_User::forge([
                     'name'       => $name,
                     'color'      => $color ?: '#000000',
                     'created_at' => date('Y-m-d H:i:s'),
@@ -46,23 +45,12 @@ class Controller_Users extends \Fuel\Core\Controller
         // GET: フォーム表示
         // 既存のユーザー一覧を取得
         try {
-            // デバッグ: Model_Userが存在するかチェック
-            if (!class_exists('Model_User')) {
-                error_log('Model_User class does not exist');
+            $users = \Model_User::query()->order_by('name', 'asc')->get();
+            if (!$users) {
                 $users = array();
-            } else {
-                error_log('Model_User class exists, attempting query...');
-                $users = Model_User::query()->order_by('name', 'asc')->get();
-                error_log('Query result type: ' . gettype($users));
-                error_log('Query result count: ' . (is_array($users) ? count($users) : 'not array'));
-                
-                if (!$users) {
-                    $users = array();
-                }
             }
         } catch (Exception $e) {
             error_log('Error fetching users: ' . $e->getMessage());
-            error_log('Error trace: ' . $e->getTraceAsString());
             $users = array();
         }
         
@@ -78,7 +66,7 @@ class Controller_Users extends \Fuel\Core\Controller
         // user_idパラメータが指定されている場合は直接ログイン
         $user_id = Input::get('user_id');
         if ($user_id) {
-            $user = Model_User::find($user_id);
+            $user = \Model_User::find($user_id);
             if ($user) {
                 Session::set('user_id', (int)$user->id);
                 return Response::redirect('shifts');
@@ -87,7 +75,7 @@ class Controller_Users extends \Fuel\Core\Controller
         
         // 既存のユーザー一覧を取得
         try {
-            $users = Model_User::query()->order_by('name', 'asc')->get();
+            $users = \Model_User::query()->order_by('name', 'asc')->get();
             if (!$users) {
                 $users = array();
             }
@@ -99,7 +87,6 @@ class Controller_Users extends \Fuel\Core\Controller
         $view = View::forge('users/login');
         $view->set('users', $users);
         
-        
         return Response::forge($view);
     }
 
@@ -109,7 +96,7 @@ class Controller_Users extends \Fuel\Core\Controller
         $color = trim(Input::post('color', '#000000'));
 
         if ($name === '') {
-            $users = Model_User::query()->order_by('name', 'asc')->get();
+            $users = \Model_User::query()->order_by('name', 'asc')->get();
             $view = View::forge('users/login');
             $view->set('error', '名前は必須です', false);
             $view->set('users', $users);
@@ -140,81 +127,67 @@ class Controller_Users extends \Fuel\Core\Controller
         \Fuel\Core\Response::redirect('users/login'); // ログイン画面へ戻す
     }
 
-    public function action_delete($id = null)
-    {
-        if (!$id) {
-            return Response::redirect('users/login');
-        }
 
-        $user = Model_User::find($id);
-        if (!$user) {
-            return Response::redirect('users/login');
+    public function action_delete($user_id = null)
+    {
+        error_log('action_delete called, user_id: ' . ($user_id ?: 'null'));
+        
+        if (!$user_id) {
+            error_log('action_delete - ユーザーIDが指定されていません');
+            return Response::forge('ユーザーIDが指定されていません', 400);
         }
 
         try {
+            // ユーザーを取得
+            $user = \Model_User::query()->where('id', $user_id)->get_one();
+            if (!$user) {
+                error_log('action_delete - ユーザーが見つかりません: ' . $user_id);
+                return Response::forge('ユーザーが見つかりません', 404);
+            }
+
+            $user_name = $user->name;
+            error_log('action_delete - 削除対象ユーザー: ' . $user_name . ' (ID: ' . $user_id . ')');
+
             // トランザクション開始
             \Fuel\Core\DB::start_transaction();
 
-            // 1. ユーザーが作成したシフトを削除（shift_assignmentsも自動削除される）
-            \Fuel\Core\DB::query("DELETE FROM shifts WHERE created_by = " . (int)$id);
+            try {
+                // ユーザーが作成したシフトを削除（関連するshift_assignmentsも自動削除される）
+                $created_shifts = \Model_Shift::query()->where('created_by', $user_id)->get();
+                foreach ($created_shifts as $shift) {
+                    error_log('action_delete - シフト削除: ' . $shift->id);
+                    $shift->delete();
+                }
 
-            // 2. ユーザーが参加しているシフト割り当てを削除
-            \Fuel\Core\DB::query("DELETE FROM shift_assignments WHERE user_id = " . (int)$id);
+                // ユーザーが参加しているシフト参加を削除
+                $assignments = \Model_Shift_Assignment::query()->where('user_id', $user_id)->get();
+                foreach ($assignments as $assignment) {
+                    error_log('action_delete - シフト参加削除: ' . $assignment->id);
+                    $assignment->delete();
+                }
 
-            // 3. ユーザーを削除
-            $user->delete();
+                // ユーザーを削除
+                error_log('action_delete - ユーザー削除実行: ' . $user_id);
+                $user->delete();
 
-            // トランザクションコミット
-            \Fuel\Core\DB::commit_transaction();
+                // トランザクションコミット
+                \Fuel\Core\DB::commit_transaction();
+                
+                error_log('action_delete - 削除完了: ' . $user_name);
+                
+                // ログインページにリダイレクト
+                return Response::redirect('/users/login', 'refresh');
+                
+            } catch (Exception $e) {
+                // トランザクションロールバック
+                \Fuel\Core\DB::rollback_transaction();
+                error_log('action_delete - トランザクションエラー: ' . $e->getMessage());
+                throw $e;
+            }
 
         } catch (Exception $e) {
-            // エラーが発生した場合はロールバック
-            \Fuel\Core\DB::rollback_transaction();
-            throw $e;
-        }
-
-        // ログイン画面にリダイレクト
-        return Response::redirect('users/login');
-    }
-    
-    public function action_create_test_users()  // テストユーザー作成
-    {
-        try {
-            // 既存のテストユーザーをチェック
-            $existingUsers = Model_User::query()->where('name', 'in', ['田中太郎', '佐藤花子', '鈴木一郎'])->get();
-            if (count($existingUsers) > 0) {
-                return Response::forge(json_encode([
-                    'ok' => false,
-                    'message' => 'テストユーザーは既に存在します'
-                ]), 400, ['Content-Type' => 'application/json']);
-            }
-            
-            // テストユーザーを作成
-            $testUsers = [
-                ['name' => '田中太郎', 'color' => '#ff6b6b'],
-                ['name' => '佐藤花子', 'color' => '#4ecdc4'],
-                ['name' => '鈴木一郎', 'color' => '#45b7d1']
-            ];
-            
-            foreach ($testUsers as $userData) {
-                $user = Model_User::forge([
-                    'name' => $userData['name'],
-                    'color' => $userData['color'],
-                    'created_at' => date('Y-m-d H:i:s'),
-                ]);
-                $user->save();
-            }
-            
-            return Response::forge(json_encode([
-                'ok' => true,
-                'message' => 'テストユーザーを作成しました'
-            ]), 200, ['Content-Type' => 'application/json']);
-            
-        } catch (Exception $e) {
-            return Response::forge(json_encode([
-                'ok' => false,
-                'message' => 'エラー: ' . $e->getMessage()
-            ]), 500, ['Content-Type' => 'application/json']);
+            error_log('action_delete - エラー: ' . $e->getMessage());
+            return Response::forge('ユーザーの削除に失敗しました: ' . $e->getMessage(), 500);
         }
     }
 

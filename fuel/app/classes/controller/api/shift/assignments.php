@@ -408,8 +408,8 @@ public function get_test()
                 'shift_id' => $shift_id,
                 'user_id' => $user_id,
                 'all_assignments_count' => count($all_assignments),
-                'all_assignments' => $all_assignments->to_array(),
-                'found_assignment' => $assign ? $assign->to_array() : null
+                'all_assignments' => $all_assignments,
+                'found_assignment' => $assign
             ]
         ]);
     } catch (\Exception $e) {
