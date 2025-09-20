@@ -29,16 +29,30 @@ erDiagram
     
     shifts {
         bigint_unsigned id PK "主キー"
-        bigint_unsigned user_id FK "シフトに紐づくユーザー（users.idを参照）"
+        bigint_unsigned created_by FK "シフト作成者（users.idを参照）"
         date shift_date "日付"
         time start_time "開始時刻"
         time end_time "終了時刻"
+        int_unsigned recruit_count "募集人数"
         varchar_500 free_text "自由記述（やる気を書くとか）"
         timestamp created_at "シフト登録日時"
         timestamp updated_at "シフト更新日時"
     }
     
+    shift_assignments {
+        bigint_unsigned id PK "主キー"
+        bigint_unsigned shift_id FK "シフトID（shifts.idを参照）"
+        bigint_unsigned user_id FK "ユーザーID（users.idを参照）"
+        varchar_50 status "ステータス（assigned/cancelled）"
+        varchar_255 self_word "参加時の一言"
+        char_7 color "ユーザーの色"
+        timestamp created_at "参加登録日時"
+        timestamp updated_at "参加更新日時"
+    }
+    
     users ||--o{ shifts : "作成"
+    shifts ||--o{ shift_assignments : "参加"
+    users ||--o{ shift_assignments : "参加"
 ```
 
 ### テーブル詳細
@@ -56,13 +70,26 @@ erDiagram
 | カラム名 | データ型 | NULL許可 | デフォルト値 | 説明 |
 |---------|---------|---------|-------------|------|
 | id | bigint unsigned | NO | AUTO_INCREMENT | 主キー |
-| user_id | bigint unsigned | NO | - | シフトに紐づくユーザー（users.idを参照） |
+| created_by | bigint unsigned | NO | - | シフト作成者（users.idを参照） |
 | shift_date | date | NO | - | 日付 |
 | start_time | time | NO | - | 開始時刻 |
 | end_time | time | NO | - | 終了時刻 |
+| recruit_count | int unsigned | NO | 1 | 募集人数 |
 | free_text | varchar(500) | YES | NULL | 自由記述（やる気を書くとか） |
 | created_at | timestamp | NO | CURRENT_TIMESTAMP | シフト登録日時 |
 | updated_at | timestamp | YES | NULL | シフト更新日時 |
+
+#### shift_assignments テーブル
+| カラム名 | データ型 | NULL許可 | デフォルト値 | 説明 |
+|---------|---------|---------|-------------|------|
+| id | bigint unsigned | NO | AUTO_INCREMENT | 主キー |
+| shift_id | bigint unsigned | NO | - | シフトID（shifts.idを参照） |
+| user_id | bigint unsigned | NO | - | ユーザーID（users.idを参照） |
+| status | varchar(50) | NO | assigned | ステータス（assigned/cancelled） |
+| self_word | varchar(255) | YES | NULL | 参加時の一言 |
+| color | char(7) | YES | NULL | ユーザーの色 |
+| created_at | timestamp | NO | CURRENT_TIMESTAMP | 参加登録日時 |
+| updated_at | timestamp | YES | NULL | 参加更新日時 |
 
 ## セットアップ
 
