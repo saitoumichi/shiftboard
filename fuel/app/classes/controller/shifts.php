@@ -26,7 +26,21 @@ class Controller_Shifts extends \Fuel\Core\Controller
         error_log('shifts/index - セッションID: ' . Session::key());
         if (!$uid) {
             error_log('shifts/index - 未ログインのためログイン画面にリダイレクト');
-            return Response::forge(View::forge('users/login')); // 未ログイン→ログイン画面
+            
+            // 既存のユーザー一覧を取得
+            try {
+                $users = \Model_User::query()->order_by('name', 'asc')->get();
+                if (!$users) {
+                    $users = array();
+                }
+            } catch (Exception $e) {
+                error_log('Error fetching users in shifts/index: ' . $e->getMessage());
+                $users = array();
+            }
+            
+            $view = View::forge('users/login');
+            $view->set('users', $users);
+            return Response::forge($view); // 未ログイン→ログイン画面（既存ユーザー付き）
         }
         $v = View::forge('shifts/index');
         $v->set('current_user_id', (int)Session::get('user_id'), false); // ← ここが超重要

@@ -33,6 +33,7 @@ require COREPATH.'bootstrap.php';
 
 // Initialize the framework with the config file.
 \Fuel\Core\Fuel::init('config.php');
+
 /* --- prevent View from being auto-escaped in templates --- */
 \Fuel\Core\Config::set(
     "security.whitelisted_classes",
