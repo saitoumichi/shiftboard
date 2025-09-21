@@ -41,8 +41,8 @@ return [
         'token_salt' => 'shiftboard_salt_2024_secure_token',
         'allow_x_headers' => false,
         'uri_filter' => ['htmlentities'],
-        'input_filter' => [],
-        'output_filter' => [],
+        'input_filter' => ['htmlentities', 'strip_tags'],
+        'output_filter' => ['htmlentities'],
         'auto_filter_output' => true,
         'whitelisted_classes' => [
             'stdClass',

@@ -9,7 +9,14 @@ class Controller_Shifts extends \Fuel\Core\Controller
     public function before()
     {
         parent::before();
-        Session::instance(); // セッション初期化を確実に
+        try {
+            Session::instance(); // セッション初期化を確実に
+        } catch (Exception $e) {
+            // セッションエラーの場合は新しいセッションを開始
+            error_log('Session error: ' . $e->getMessage());
+            Session::destroy();
+            Session::instance();
+        }
     }
 
     private function require_login()
