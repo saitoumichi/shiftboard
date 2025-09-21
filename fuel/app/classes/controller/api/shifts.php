@@ -203,4 +203,95 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             ], 500);
         }
     }
+
+    // PUT /api/shifts/{id} - シフト更新
+    public function put_show($id = null)
+    {
+        if (!$id) {
+            return $this->response(['ok' => false, 'error' => 'invalid_id'], 400);
+        }
+
+        // 現在のユーザーIDを取得
+        $current_user_id = \Fuel\Core\Session::get('user_id');
+        if (!$current_user_id) {
+            return $this->response(['ok' => false, 'error' => 'not_authenticated'], 401);
+        }
+
+        // シフトを取得
+        $shift = \Model_Shift::find($id);
+        if (!$shift) {
+            return $this->response(['ok' => false, 'error' => 'not_found'], 404);
+        }
+
+        // 作成者のみ編集可能
+        if ($shift->created_by !== (int)$current_user_id) {
+            return $this->response(['ok' => false, 'error' => 'forbidden'], 403);
+        }
+
+        // JSON を安全に読む
+        $raw  = file_get_contents('php://input');
+        $json = json_decode($raw, true);
+        $in   = is_array($json) ? $json : [];
+
+        // バリデーション
+        $val = \Fuel\Core\Validation::forge();
+        $val->add('shift_date', 'Shift Date')
+            ->add_rule('required')
+            ->add_rule('match_pattern', '/^\d{4}-\d{2}-\d{2}$/'); // YYYY-MM-DD
+
+        $val->add('start_time', 'Start Time')
+            ->add_rule('required')
+            ->add_rule('match_pattern', '/^\d{2}:\d{2}$/'); // HH:MM
+
+        $val->add('end_time', 'End Time')
+            ->add_rule('required')
+            ->add_rule('match_pattern', '/^\d{2}:\d{2}$/');
+
+        $val->add('recruit_count', 'Recruit Count')
+            ->add_rule('required')
+            ->add_rule('valid_string', ['numeric'])
+            ->add_rule(function($value) {
+                if (!is_numeric($value)) return false;
+                return (int)$value >= 1; // 下限チェック
+            }, 'must be >= 1');
+
+        if (!$val->run($in)) {
+            return $this->response([
+                'ok'     => false,
+                'errors' => $val->error()
+            ], 422);
+        }
+
+        // 追加の業務ルール: 時刻の前後関係
+        if (strtotime($in['end_time']) <= strtotime($in['start_time'])) {
+            return $this->response([
+                'ok'     => false,
+                'errors' => ['end_time' => 'must be later than start_time']
+            ], 422);
+        }
+
+        try {
+            // シフト情報を更新
+            $shift->shift_date = $in['shift_date'];
+            $shift->start_time = $in['start_time'];
+            $shift->end_time = $in['end_time'];
+            $shift->recruit_count = (int)$in['recruit_count'];
+            $shift->free_text = isset($in['free_text']) ? $in['free_text'] : null;
+            $shift->updated_at = date('Y-m-d H:i:s');
+            $shift->save();
+
+            return $this->response([
+                'ok' => true,
+                'message' => 'シフト情報を更新しました',
+                'shift' => $shift->to_array()
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response([
+                'ok' => false,
+                'error' => 'server_error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

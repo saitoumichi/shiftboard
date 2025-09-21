@@ -662,6 +662,8 @@ function ShiftViewModel() {
                 // 操作列
                 var actionCell = document.createElement('td');
                 actionCell.className = 'day-shift-actions';
+                
+                // 詳細ボタン
                 var detailBtn = document.createElement('button');
                 detailBtn.className = 'action-btn detail';
                 detailBtn.textContent = '詳細';
@@ -670,6 +672,18 @@ function ShiftViewModel() {
                 });
                 actionCell.appendChild(detailBtn);
                 
+                // 編集ボタン（作成者のみ）
+                if (shift.created_by === uid) {
+                    var editBtn = document.createElement('button');
+                    editBtn.className = 'action-btn edit';
+                    editBtn.textContent = '編集';
+                    editBtn.style.marginLeft = '5px';
+                    editBtn.style.backgroundColor = '#28a745';
+                    editBtn.addEventListener('click', function() {
+                        self.editShift(shift);
+                    });
+                    actionCell.appendChild(editBtn);
+                }
                 
                 // 参加ボタン（空きがある場合）
                 if (availableSlots > 0) {
@@ -840,6 +854,11 @@ function ShiftViewModel() {
     // シフト詳細表示
     self.viewShift = function(shift) {
         window.location.href = '/shifts/' + shift.id;
+    };
+    
+    // シフト編集
+    self.editShift = function(shift) {
+        window.location.href = '/shifts/edit/' + shift.id;
     };
     
     // 自分のシフト画面へ

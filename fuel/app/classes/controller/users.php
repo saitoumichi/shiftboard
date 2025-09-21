@@ -128,6 +128,7 @@ class Controller_Users extends \Fuel\Core\Controller
     }
 
 
+
     public function action_delete($user_id = null)
     {
         error_log('action_delete called, user_id: ' . ($user_id ?: 'null'));
@@ -188,6 +189,88 @@ class Controller_Users extends \Fuel\Core\Controller
         } catch (Exception $e) {
             error_log('action_delete - エラー: ' . $e->getMessage());
             return Response::forge('ユーザーの削除に失敗しました: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * ユーザー編集画面を表示
+     */
+    public function action_edit($user_id = null)
+    {
+        if (!$user_id) {
+            return Response::forge('ユーザーIDが指定されていません', 400);
+        }
+
+        $user = \Model_User::find($user_id);
+        if (!$user) {
+            return Response::forge('ユーザーが見つかりません', 404);
+        }
+
+        $view = View::forge('users/edit');
+        $view->set('user', $user);
+        return Response::forge($view);
+    }
+
+    /**
+     * ユーザー情報を更新
+     */
+    public function action_update($user_id = null)
+    {
+        if (Input::method() !== 'POST') {
+            return Response::forge('POSTメソッドでアクセスしてください', 405);
+        }
+
+        if (!$user_id) {
+            return Response::forge('ユーザーIDが指定されていません', 400);
+        }
+
+        $user = \Model_User::find($user_id);
+        if (!$user) {
+            return Response::forge('ユーザーが見つかりません', 404);
+        }
+
+        $name = trim(Input::post('name', ''));
+        $color = trim(Input::post('color', '#000000'));
+
+        // バリデーション
+        if ($name === '') {
+            $view = View::forge('users/edit');
+            $view->set('user', $user);
+            $view->set('error', '名前は必須です', false);
+            return Response::forge($view, 422);
+        }
+
+        // 同名の他のユーザーが存在するかチェック
+        $existing_user = \Model_User::query()
+            ->where('name', $name)
+            ->where('id', '!=', $user_id)
+            ->get_one();
+        
+        if ($existing_user) {
+            $view = View::forge('users/edit');
+            $view->set('user', $user);
+            $view->set('error', 'その名前は既に使用されています', false);
+            return Response::forge($view, 422);
+        }
+
+        try {
+            // ユーザー情報を更新
+            $user->name = $name;
+            $user->color = $color;
+            $user->updated_at = date('Y-m-d H:i:s');
+            $user->save();
+
+            error_log('ユーザー更新完了: ' . $name . ' (ID: ' . $user_id . ')');
+            
+            // ログイン画面にリダイレクト
+            return Response::redirect('users/login');
+            
+        } catch (Exception $e) {
+            error_log('ユーザー更新エラー: ' . $e->getMessage());
+            $view = View::forge('users/edit');
+            $view->set('user', $user);
+            $view->set('error', 'ユーザー情報の更新に失敗しました', false);
+            return Response::forge($view, 500);
         }
     }
 

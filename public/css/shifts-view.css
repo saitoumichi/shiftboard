@@ -551,6 +551,121 @@ body {
     background-color: #0056b3;
 }
 
+/* 編集モーダル専用スタイル */
+#edit-shift-modal {
+    z-index: 10000;
+}
+
+#edit-shift-modal .modal-dialog {
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+#edit-shift-modal .form-group {
+    margin-bottom: 20px;
+}
+
+#edit-shift-modal .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+#edit-shift-modal .form-group input,
+#edit-shift-modal .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+#edit-shift-modal .form-group input:focus,
+#edit-shift-modal .form-group textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+#edit-shift-modal .form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+#edit-shift-modal .form-row {
+    display: flex;
+    gap: 15px;
+}
+
+#edit-shift-modal .form-row .form-group {
+    flex: 1;
+}
+
+#edit-shift-modal .field-help {
+    font-size: 14px;
+    color: #666;
+    margin-top: 5px;
+}
+
+#edit-shift-modal .form-actions {
+    margin-top: 30px;
+    text-align: center;
+}
+
+#edit-shift-modal .btn {
+    display: inline-block;
+    padding: 12px 24px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#edit-shift-modal .btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+#edit-shift-modal .btn-primary:hover {
+    background-color: #0056b3;
+}
+
+#edit-shift-modal .btn-primary:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+#edit-shift-modal .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+#edit-shift-modal .btn-secondary:hover {
+    background-color: #545b62;
+}
+
+/* エラーメッセージ表示 */
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.error ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
 /* レスポンシブデザイン - モーダル */
 @media (max-width: 768px) {
     .modal-dialog {
@@ -562,5 +677,20 @@ body {
     .modal-body,
     .modal-footer {
         padding: 16px 20px;
+    }
+    
+    #edit-shift-modal .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    #edit-shift-modal .form-actions {
+        text-align: center;
+    }
+    
+    #edit-shift-modal .btn {
+        display: block;
+        width: 100%;
+        margin: 5px 0;
     }
 }

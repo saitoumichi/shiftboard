@@ -7,6 +7,8 @@ return [
   'shifts/create'     => 'shifts/create',
   'shifts/(:num)'     => 'shifts/view/$1',
   'users/create'      => 'users/create',
+  'users/edit/(:num)' => 'users/edit/$1',      // ユーザー編集画面
+  'users/update/(:num)' => 'users/update/$1',  // ユーザー更新
   'users/delete/(:num)' => 'users/delete/$1',  // ユーザー削除
   'my/shifts'         => 'shifts/my',           // 自分のシフト一覧（必要なら）
 

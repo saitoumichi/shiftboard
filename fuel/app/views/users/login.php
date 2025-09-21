@@ -181,6 +181,27 @@ if (!isset($users)) {
       color: #007bff;
     }
     
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-left: 10px;
+    }
+    
+    .edit-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .edit-btn:hover {
+      background-color: #0056b3;
+    }
+    
     .delete-btn {
       background-color: #dc3545;
       color: white;
@@ -191,7 +212,6 @@ if (!isset($users)) {
       cursor: pointer;
       opacity: 1;
       transition: background-color 0.2s;
-      margin-left: 10px;
     }
     
     .delete-btn:hover {
@@ -319,9 +339,14 @@ if (!isset($users)) {
                   <span class="user-color" style="background-color: <?= e($u->color) ?>;"></span>
                   <?= e($u->name) ?>
                 </div>
-                <button class="delete-btn" onclick="event.stopPropagation(); deleteUser(<?= (int)$u->id ?>, '<?= e($u->name) ?>');" title="ユーザーを削除">
-                  削除
-                </button>
+                <div class="action-buttons">
+                  <button class="edit-btn" onclick="event.stopPropagation(); editUser(<?= (int)$u->id ?>);" title="ユーザーを編集">
+                    編集
+                  </button>
+                  <button class="delete-btn" onclick="event.stopPropagation(); deleteUser(<?= (int)$u->id ?>, '<?= e($u->name) ?>');" title="ユーザーを削除">
+                    削除
+                  </button>
+                </div>
               </div>
             <?php endforeach; ?>
           <?php else: ?>
@@ -346,6 +371,12 @@ if (!isset($users)) {
       console.log('loginUser関数実行:', userId);
       // ログインAPIを呼び出し
       window.location.href = '/users/login?user_id=' + userId;
+    }
+    
+    function editUser(userId) {
+      console.log('editUser関数実行:', userId);
+      // 編集ページにリダイレクト
+      window.location.href = '/users/edit/' + userId;
     }
     
     function deleteUser(userId, userName) {
