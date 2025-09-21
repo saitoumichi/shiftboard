@@ -125,6 +125,18 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       vm.currentUserId = ko.observable(window.CURRENT_USER_ID || 0);
       vm.confirmationShown = false; // 確認ダイアログ表示フラグ
       
+      // シフト編集（モーダル表示）
+      vm.editShift = function() {
+          var shift = vm.shift();
+          if (!shift || !shift.id) {
+              console.error('No shift data available for editing');
+              return;
+          }
+          
+          // 編集モーダルを表示
+          vm.showEditModal(shift);
+      };
+      
       // 計算プロパティ
       vm.shiftTitle = ko.computed(function() {
           var s = vm.shift();
@@ -1628,13 +1640,153 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           });
       };
       
-      // シフト編集
-      vm.editShift = function() {
-          var shift = vm.shift();
-          if (!shift) return;
+      // 編集モーダルを表示
+      vm.showEditModal = function(shift) {
+          console.log('=== showEditModal called ===');
+          console.log('showEditModal called with shift:', shift);
           
-          // 編集ページへ遷移
-          window.location.href = '/shifts/' + shift.id + '/edit';
+          var modal = document.getElementById('edit-shift-modal');
+          console.log('Edit modal element found:', !!modal);
+          
+          if (!modal) {
+              console.error('edit-shift-modal element not found!');
+              return;
+          }
+          
+          // フォームフィールドに現在の値を設定
+          document.getElementById('edit-shift-date').value = shift.shift_date || '';
+          document.getElementById('edit-start-time').value = shift.start_time || '';
+          document.getElementById('edit-end-time').value = shift.end_time || '';
+          document.getElementById('edit-recruit-count').value = shift.recruit_count || 1;
+          document.getElementById('edit-free-text').value = shift.free_text || '';
+          
+          // モーダルを表示
+          modal.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background: rgba(0,0,0,0.8) !important; z-index: 99999 !important; display: flex !important; align-items: center !important; justify-content: center !important;';
+          
+          // イベントリスナーを設定
+          var cancelBtn = document.getElementById('edit-shift-cancel-btn');
+          var submitBtn = document.getElementById('edit-shift-submit-btn');
+          var form = document.getElementById('edit-shift-form');
+          
+          // キャンセルボタンのイベント
+          cancelBtn.onclick = function() {
+              vm.hideEditModal();
+          };
+          
+          // フォーム送信のイベント
+          form.onsubmit = function(e) {
+              e.preventDefault();
+              vm.submitEditShift(shift);
+          };
+          
+          // エスケープキーでモーダルを閉じる
+          var escapeHandler = function(e) {
+              if (e.key === 'Escape') {
+                  vm.hideEditModal();
+                  document.removeEventListener('keydown', escapeHandler);
+              }
+          };
+          document.addEventListener('keydown', escapeHandler);
+          
+          // モーダル外クリックで閉じる
+          modal.onclick = function(e) {
+              if (e.target === modal) {
+                  vm.hideEditModal();
+              }
+          };
+          
+          console.log('Edit modal displayed successfully');
+      };
+      
+      // 編集モーダルを閉じる
+      vm.hideEditModal = function() {
+          console.log('=== hideEditModal called ===');
+          var modal = document.getElementById('edit-shift-modal');
+          if (modal) {
+              modal.style.display = 'none';
+              console.log('Edit modal closed');
+          }
+      };
+      
+      // シフト編集を実行
+      vm.submitEditShift = function(shift) {
+          console.log('=== submitEditShift called ===');
+          
+          var form = document.getElementById('edit-shift-form');
+          var formData = new FormData(form);
+          
+          // 時刻の妥当性チェック
+          var startTime = formData.get('start_time');
+          var endTime = formData.get('end_time');
+          
+          if (startTime && endTime && startTime >= endTime) {
+              alert('終了時刻は開始時刻より後に設定してください');
+              return;
+          }
+          
+          // 送信ボタンを無効化
+          var submitBtn = document.getElementById('edit-shift-submit-btn');
+          var originalText = submitBtn.textContent;
+          submitBtn.disabled = true;
+          submitBtn.textContent = '更新中...';
+          
+          // APIエンドポイントを構築
+          const API = window.API_BASE || '/api';
+          var url = `${API}/shifts/${shift.id}`;
+          
+          // フォームデータをJSONに変換
+          var jsonData = {
+              shift_date: formData.get('shift_date'),
+              start_time: formData.get('start_time'),
+              end_time: formData.get('end_time'),
+              recruit_count: parseInt(formData.get('recruit_count')),
+              free_text: formData.get('free_text')
+          };
+          
+          console.log('Sending edit data:', jsonData);
+          
+          fetch(url, {
+              method: 'PUT',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
+              },
+              body: JSON.stringify(jsonData)
+          })
+          .then(function(response) {
+              return response.json();
+          })
+          .then(function(data) {
+              console.log('Edit response:', data);
+              
+              if (data.ok || data.success) {
+                  vm.showAlert('シフト情報を更新しました', 'success');
+                  vm.hideEditModal();
+                  
+                  // 編集完了後、シフト一覧ページにリダイレクト
+                  setTimeout(function() {
+                      window.location.href = '/shifts';
+                  }, 1500); // 成功メッセージを表示してからリダイレクト
+                  
+              } else {
+                  var errorMessage = 'シフト情報の更新に失敗しました';
+                  if (data.message) {
+                      errorMessage = data.message;
+                  } else if (data.error) {
+                      errorMessage = data.error;
+                  }
+                  vm.showAlert(errorMessage, 'error');
+              }
+          })
+          .catch(function(error) {
+              console.error('Edit error:', error);
+              vm.showAlert('シフト情報の更新に失敗しました: ' + error.message, 'error');
+          })
+          .finally(function() {
+              // 送信ボタンを再有効化
+              submitBtn.disabled = false;
+              submitBtn.textContent = originalText;
+          });
       };
       
       // 戻るボタン

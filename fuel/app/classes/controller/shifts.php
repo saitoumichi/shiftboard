@@ -74,4 +74,5 @@ class Controller_Shifts extends \Fuel\Core\Controller
         $v->set('current_user_id', (int)\Fuel\Core\Session::get('user_id'), false);
         return \Fuel\Core\Response::forge($v);
     }
+
 }
