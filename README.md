@@ -22,7 +22,7 @@ erDiagram
     users {
         bigint_unsigned id PK "主キー"
         varchar_100 name "ユーザー名"
-        char_7 colors "そのユーザーの色"
+        char_7 color "ユーザーの色"
         timestamp created_at "ユーザー情報登録日時"
         timestamp updated_at "ユーザー情報更新日時"
     }
@@ -43,9 +43,8 @@ erDiagram
         bigint_unsigned id PK "主キー"
         bigint_unsigned shift_id FK "シフトID（shifts.idを参照）"
         bigint_unsigned user_id FK "ユーザーID（users.idを参照）"
-        varchar_50 status "ステータス（assigned/cancelled）"
-        varchar_255 self_word "参加時の一言"
-        char_7 color "ユーザーの色"
+        enum status "ステータス（assigned/confirmed/cancelled）"
+        varchar_500 self_word "参加時の一言"
         timestamp created_at "参加登録日時"
         timestamp updated_at "参加更新日時"
     }

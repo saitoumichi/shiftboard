@@ -127,8 +127,6 @@ class Controller_Users extends \Fuel\Core\Controller
         \Fuel\Core\Response::redirect('users/login'); // ログイン画面へ戻す
     }
 
-
-
     public function action_delete($user_id = null)
     {
         error_log('action_delete called, user_id: ' . ($user_id ?: 'null'));
@@ -240,18 +238,6 @@ class Controller_Users extends \Fuel\Core\Controller
             return Response::forge($view, 422);
         }
 
-        // 同名の他のユーザーが存在するかチェック
-        $existing_user = \Model_User::query()
-            ->where('name', $name)
-            ->where('id', '!=', $user_id)
-            ->get_one();
-        
-        if ($existing_user) {
-            $view = View::forge('users/edit');
-            $view->set('user', $user);
-            $view->set('error', 'その名前は既に使用されています', false);
-            return Response::forge($view, 422);
-        }
 
         try {
             // ユーザー情報を更新

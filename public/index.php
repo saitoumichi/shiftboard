@@ -116,30 +116,30 @@ class_alias('Fuel\\Core\\Autoloader', 'Autoloader');
 
 $routerequest = function($request = null, $e = false)
 {
-	Request::reset_request(true);
+	\Fuel\Core\Request::reset_request(true);
 
-	$route = array_key_exists($request, Router::$routes) ? Router::$routes[$request]->translation : Config::get('routes.'.$request);
+	$route = array_key_exists($request, \Fuel\Core\Router::$routes) ? \Fuel\Core\Router::$routes[$request]->translation : \Fuel\Core\Config::get('routes.'.$request);
 
 	if ($route instanceof Closure)
 	{
 		$response = $route();
 
-		if( ! $response instanceof Response)
+		if( ! $response instanceof \Fuel\Core\Response)
 		{
-			$response = Response::forge($response);
+			$response = \Fuel\Core\Response::forge($response);
 		}
 	}
 	elseif ($e === false)
 	{
-		$response = Request::forge()->execute()->response();
+		$response = \Fuel\Core\Request::forge()->execute()->response();
 	}
 	elseif ($route)
 	{
-		$response = Request::forge($route, false)->execute(array($e))->response();
+		$response = \Fuel\Core\Request::forge($route, false)->execute(array($e))->response();
 	}
 	elseif ($request)
 	{
-		$response = Request::forge($request)->execute(array($e))->response();
+		$response = \Fuel\Core\Request::forge($request)->execute(array($e))->response();
 	}
 	else
 	{
@@ -172,19 +172,19 @@ try
 	// ... and execute the main request
 	$response = $routerequest(null, false);
 }
-catch (HttpBadRequestException $e)
+catch (\Fuel\Core\HttpBadRequestException $e)
 {
 	$response = $routerequest('_400_', $e);
 }
-catch (HttpNoAccessException $e)
+catch (\Fuel\Core\HttpNoAccessException $e)
 {
 	$response = $routerequest('_403_', $e);
 }
-catch (HttpNotFoundException $e)
+catch (\Fuel\Core\HttpNotFoundException $e)
 {
 	$response = $routerequest('_404_', $e);
 }
-catch (HttpServerErrorException $e)
+catch (\Fuel\Core\HttpServerErrorException $e)
 {
 	$response = $routerequest('_500_', $e);
 }
@@ -204,7 +204,7 @@ $response->body((string) $response);
 
 if (strpos($response->body(), '{exec_time}') !== false or strpos($response->body(), '{mem_usage}') !== false)
 {
-	$bm = Profiler::app_total();
+	$bm = \Fuel\Core\Profiler::app_total();
 
 	$response->body(
 		str_replace(
