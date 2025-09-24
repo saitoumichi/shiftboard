@@ -27,9 +27,9 @@ abstract class Controller
 	/**
 	 * Sets the controller request object.
 	 *
-	 * @param   \Request $request  The current request object
+	 * @param   \Fuel\Core\Request $request  The current request object
 	 */
-	public function __construct(\Request $request)
+	public function __construct(\Fuel\Core\Request $request)
 	{
 		$this->request = $request;
 	}

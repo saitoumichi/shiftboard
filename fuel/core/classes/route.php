@@ -134,10 +134,10 @@ class Route
 	/**
 	 * Attempts to find the correct route for the given URI
 	 *
-	 * @param	\Request	$request  The URI object
+	 * @param	\Fuel\Core\Request	$request  The URI object
 	 * @return	array
 	 */
-	public function parse(\Request $request)
+	public function parse(\Fuel\Core\Request $request)
 	{
 		$uri = $request->uri->get();
 		$method = $request->get_method();
