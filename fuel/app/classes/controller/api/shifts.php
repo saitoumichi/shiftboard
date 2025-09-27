@@ -1,5 +1,8 @@
 <?php
 
+use Fuel\Core\DB;
+use Fuel\Core\Session;
+
 class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
 {
     protected $format = 'json';
@@ -18,62 +21,94 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
         $mine = \Fuel\Core\Input::get('mine');
         $user_id = \Fuel\Core\Input::get('user_id');
 
-        $q = \Model_Shift::query()
-            ->order_by('shift_date', 'asc')
-            ->order_by('start_time', 'asc')
-            ->related('assignments');
+        // DB::selectを使用してJOINクエリで最適化
+        $query = DB::select(
+            's.id',
+            's.shift_date',
+            's.start_time',
+            's.end_time',
+            's.recruit_count',
+            's.free_text',
+            's.created_by',
+            's.created_at',
+            's.updated_at',
+            DB::expr('COUNT(sa.id) as assigned_count'),
+            DB::expr('GROUP_CONCAT(
+                CONCAT(
+                    sa.id, ":", 
+                    sa.user_id, ":", 
+                    sa.status, ":", 
+                    COALESCE(sa.self_word, ""), ":", 
+                    COALESCE(u.name, "Unknown User"), ":", 
+                    COALESCE(u.color, "#000000")
+                ) 
+                SEPARATOR "|"
+            ) as assignments_data')
+        )
+        ->from(['shifts', 's'])
+        ->join(['shift_assignments', 'sa'], 'LEFT')
+            ->on('s.id', '=', 'sa.shift_id')
+            ->on('sa.status', '!=', DB::expr("'cancelled'"))
+        ->join(['users', 'u'], 'LEFT')
+            ->on('sa.user_id', '=', 'u.id')
+        ->group_by('s.id', 's.shift_date', 's.start_time', 's.end_time', 's.recruit_count', 's.free_text', 's.created_by', 's.created_at', 's.updated_at')
+        ->order_by('s.shift_date', 'asc')
+        ->order_by('s.start_time', 'asc');
 
-        if ($from) $q->where('shift_date', '>=', $from);
-        if ($to)   $q->where('shift_date', '<=', $to);
+        if ($from) $query->where('s.shift_date', '>=', $from);
+        if ($to)   $query->where('s.shift_date', '<=', $to);
 
         // 自分のシフトのみを取得する場合
         if ($mine && $user_id) {
-            $q->where('assignments.user_id', $user_id);
+            $query->where('sa.user_id', $user_id);
         }
 
-        $rows = $q->get();
+        $rows = $query->execute()->as_array();
 
         // フロント（shifts.js）が期待する形に整形
         $data = array_map(function($s) use ($mine, $user_id) {
-            $assigned = isset($s->assignments) ? count($s->assignments) : 0;
-            $slot     = (int)($s->recruit_count ?? 0);
+            $assigned = (int)($s['assigned_count'] ?? 0);
+            $slot     = (int)($s['recruit_count'] ?? 0);
             
-            // 参加者情報を整形
+            // 参加者情報を整形（GROUP_CONCATから解析）
             $assigned_users = [];
-            if (isset($s->assignments) && is_array($s->assignments)) {
-                foreach ($s->assignments as $assignment) {
-                    $assigned_users[] = [
-                        'id' => (int)$assignment->id,
-                        'user_id' => (int)$assignment->user_id,
-                        'name' => $assignment->user ? $assignment->user->name : 'Unknown User',
-                        'status' => $assignment->status,
-                        'self_word' => $assignment->self_word,
-                        'color' => $assignment->user ? $assignment->user->color : '#000000'
-                    ];
-                }
-            }
-            
-            // 自分のシフトの場合、自分のコメントをシフトレベルでも追加
             $self_word = null;
-            if ($mine && $user_id && isset($s->assignments)) {
-                foreach ($s->assignments as $assignment) {
-                    if ($assignment->user_id == $user_id) {
-                        $self_word = $assignment->self_word;
-                        break;
+            
+            if (!empty($s['assignments_data'])) {
+                $assignments = explode('|', $s['assignments_data']);
+                foreach ($assignments as $assignment_str) {
+                    if (empty($assignment_str)) continue;
+                    
+                    $parts = explode(':', $assignment_str);
+                    if (count($parts) >= 6) {
+                        $assignment = [
+                            'id' => (int)$parts[0],
+                            'user_id' => (int)$parts[1],
+                            'status' => $parts[2],
+                            'self_word' => $parts[3],
+                            'name' => $parts[4],
+                            'color' => $parts[5]
+                        ];
+                        $assigned_users[] = $assignment;
+                        
+                        // 自分のシフトの場合、自分のコメントをシフトレベルでも追加
+                        if ($mine && $user_id && $assignment['user_id'] == $user_id) {
+                            $self_word = $assignment['self_word'];
+                        }
                     }
                 }
             }
             
             return [
-                'id'              => (int)$s->id,
-                'shift_date'      => (string)$s->shift_date,
-                'start_time'      => substr((string)$s->start_time, 0, 5),
-                'end_time'        => substr((string)$s->end_time, 0, 5),
+                'id'              => (int)$s['id'],
+                'shift_date'      => (string)$s['shift_date'],
+                'start_time'      => substr((string)$s['start_time'], 0, 5),
+                'end_time'        => substr((string)$s['end_time'], 0, 5),
                 'slot_count'      => $slot,
                 'assigned_users'  => $assigned_users,
                 'assigned_count'  => $assigned,
                 'available_slots' => max($slot - $assigned, 0),
-                'note'            => (string)($s->free_text ?? ''),
+                'note'            => (string)($s['free_text'] ?? ''),
                 'self_word'       => $self_word, // 自分のコメントを追加
             ];
         }, $rows);
@@ -130,13 +165,11 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
     // POST /api/shifts
     public function post_index()
     {
-        // JSON を安全に読む（x-www-form-urlencoded にもフォールバック）
-        $raw  = file_get_contents('php://input');
-        $json = json_decode($raw, true);
-        $in   = is_array($json) ? $json : \Fuel\Core\Input::post();
+        // Input::json()を使用してJSONを安全に受信
+        $in = \Fuel\Core\Input::json() ?: \Fuel\Core\Input::post();
 
         // created_by を必ずセット（セッションから取得）
-        $created_by = \Fuel\Core\Session::get('user_id', 1);
+        $created_by = Session::get('user_id', 1);
 
         // ---- Validation ----
         $val = \Fuel\Core\Validation::forge();
@@ -212,7 +245,7 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
         }
 
         // 現在のユーザーIDを取得
-        $current_user_id = \Fuel\Core\Session::get('user_id');
+        $current_user_id = Session::get('user_id');
         if (!$current_user_id) {
             return $this->response(['ok' => false, 'error' => 'not_authenticated'], 401);
         }
@@ -228,10 +261,8 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             return $this->response(['ok' => false, 'error' => 'forbidden'], 403);
         }
 
-        // JSON を安全に読む
-        $raw  = file_get_contents('php://input');
-        $json = json_decode($raw, true);
-        $in   = is_array($json) ? $json : [];
+        // Input::json()を使用してJSONを安全に受信
+        $in = \Fuel\Core\Input::json() ?: [];
 
         // バリデーション
         $val = \Fuel\Core\Validation::forge();

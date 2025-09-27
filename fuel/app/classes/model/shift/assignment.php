@@ -1,5 +1,7 @@
 <?php
 
+use Fuel\Core\DB;
+
 class Model_Shift_Assignment extends \Orm\Model
 {
     protected static $_table_name = 'shift_assignments';
@@ -25,7 +27,7 @@ class Model_Shift_Assignment extends \Orm\Model
       ),
   );
 
-  // デフォルト値（任意：status が null で入らないように）
+  // デフォルト値（status は常に 'assigned' で設定）
   protected static $_defaults = array(
       'status' => 'assigned',
   );
@@ -67,10 +69,7 @@ class Model_Shift_Assignment extends \Orm\Model
         ->where('user_id', $user_id);
 
     if ($exclude_cancelled) {
-        $q->where_open()
-            ->where('status', '!=', 'cancelled')
-            ->or_where('status', null) // ← 重複チェックでも NULL をアクティブ扱い
-          ->where_close();
+        $q->where('status', '!=', 'cancelled');
     }
     return $q->get_one() !== null;
     }
@@ -80,12 +79,12 @@ class Model_Shift_Assignment extends \Orm\Model
      */
     public static function count_active_for_shift($shift_id): int
     {
-        return static::query()
-        ->where('shift_id', (int)$shift_id)
-        ->where_open()
+        $result = DB::select(DB::expr('COUNT(*) as count'))
+            ->from('shift_assignments')
+            ->where('shift_id', (int)$shift_id)
             ->where('status', '!=', 'cancelled')
-            ->or_where('status', null)   // NULL も参加扱いにする
-        ->where_close()
-        ->count();
+            ->execute();
+        
+        return (int)$result->get('count', 0);
     }
 }

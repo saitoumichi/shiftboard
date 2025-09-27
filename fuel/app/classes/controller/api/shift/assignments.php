@@ -1,4 +1,7 @@
 <?php
+
+use Fuel\Core\Session;
+
 class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
 
 {
@@ -181,9 +184,8 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
      */
     private function get_input_data()
     {
-        $raw = file_get_contents('php://input');
-        $json = json_decode($raw, true);
-        return is_array($json) ? $json : \Fuel\Core\Input::post();
+        // Input::json()を使用してJSONを安全に受信
+        return \Fuel\Core\Input::json() ?: \Fuel\Core\Input::post();
     }
 
     /**
@@ -320,9 +322,8 @@ class Controller_Api_Shift_Assignments extends \Fuel\Core\Controller_Rest
     // /api/shifts/{id}/join へ POST
 public function post_join($shift_id)
 {
-    $raw  = file_get_contents('php://input');
-    $json = json_decode($raw, true);
-    $in   = is_array($json) ? $json : \Fuel\Core\Input::post();
+    // Input::json()を使用してJSONを安全に受信
+    $in = \Fuel\Core\Input::json() ?: \Fuel\Core\Input::post();
 
     $user_id = (int)($in['user_id'] ?? 1); // 認証未実装なら仮
     $self_word = isset($in['self_word']) ? trim($in['self_word']) : null; // コメントを取得
@@ -356,17 +357,16 @@ public function post_join($shift_id)
 // /api/shifts/{id}/cancel へ POST
 public function post_cancel($shift_id)
 {
-    $raw  = file_get_contents('php://input');
-    $json = json_decode($raw, true);
-    $in   = is_array($json) ? $json : \Fuel\Core\Input::post();
+    // Input::json()を使用してJSONを安全に受信
+    $in = \Fuel\Core\Input::json() ?: \Fuel\Core\Input::post();
 
     // セッションからユーザーIDを取得
-    $user_id = (int)($in['user_id'] ?? \Fuel\Core\Session::get('user_id', 1));
+    $user_id = (int)($in['user_id'] ?? Session::get('user_id', 1));
     
     // デバッグログ
     error_log("post_cancel: shift_id=$shift_id, user_id=$user_id");
     error_log("post_cancel: input=" . json_encode($in));
-    error_log("post_cancel: session user_id=" . \Fuel\Core\Session::get('user_id'));
+    error_log("post_cancel: session user_id=" . Session::get('user_id'));
     
     try {
         // シフト一覧画面と同じシンプルな実装
@@ -390,7 +390,7 @@ public function post_cancel($shift_id)
 public function get_test()
 {
     try {
-        $user_id = \Fuel\Core\Session::get('user_id', 1);
+        $user_id = Session::get('user_id', 1);
         $shift_id = \Fuel\Core\Input::get('shift_id', 10);
         
         $all_assignments = \Model_Shift_Assignment::query()

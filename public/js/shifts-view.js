@@ -17,9 +17,9 @@ document.addEventListener('click', function(e) {
   }
   
   // モーダルが表示されているかチェック
-  var modal = document.getElementById('comment-modal-view');
+  const modal = document.getElementById('comment-modal-view');
   if (modal) {
-    var modalStyle = getComputedStyle(modal);
+    const modalStyle = getComputedStyle(modal);
     console.log('Modal state:', {
       display: modalStyle.display,
       visibility: modalStyle.visibility,
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
   console.log('DOMContentLoaded event fired in shifts-view.js');
   
   // モーダルを確実に閉じる
-  var modal = document.getElementById('comment-modal-view');
+  const modal = document.getElementById('comment-modal-view');
   if (modal) {
     console.log('Closing modal on DOMContentLoaded');
     modal.classList.remove('show');
@@ -57,18 +57,18 @@ document.addEventListener('DOMContentLoaded', function () {
     modal.style.opacity = '0';
   }
   
-  var uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
+  const uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
   console.log('CURRENT_USER_ID (view):', uid);
   if (!uid) {
     console.warn('未ログイン：操作を無効化');
     // 参加・取消ボタンを無効化（存在すれば）
-    var btns = document.querySelectorAll('.btn-participate, .btn-cancel');
+    const btns = document.querySelectorAll('.btn-participate, .btn-cancel');
     btns.forEach(b => { b.disabled = true; b.title = 'ログインが必要です'; });
     // ここで location.href に飛ばさない
   } else {
     console.log('ログイン済み：ボタンを有効化');
     // ログイン済みの場合はボタンを有効化
-    var btns = document.querySelectorAll('.btn-participate, .btn-cancel');
+    const btns = document.querySelectorAll('.btn-participate, .btn-cancel');
     btns.forEach(b => { b.disabled = false; b.title = ''; });
   }
 });
@@ -92,7 +92,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
   if (window.ko && typeof ko.toJSON !== 'function') {
     ko.toJSON = function (value, replacer, space) {
       try {
-        var v = (typeof ko.toJS === 'function') ? ko.toJS(value) : value;
+        const v = (typeof ko.toJS === 'function') ? ko.toJS(value) : value;
         return JSON.stringify(v, replacer || null, space || 2);
       } catch (e) {
         try { return JSON.stringify(value); } catch (_) { return String(value); }
@@ -100,7 +100,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
     };
   }
   
-  var defaultShift = {
+  const defaultShift = {
       id: null, 
       shift_date: '', 
       start_time: '', 
@@ -113,7 +113,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
   
   // Knockout.js ViewModel
   function ShiftDetailViewModel() {
-      var vm = this;
+      const vm = this;
       
       // データ
       vm.shift = ko.observable(null);
@@ -127,7 +127,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       
       // シフト編集（モーダル表示）
       vm.editShift = function() {
-          var shift = vm.shift();
+          const shift = vm.shift();
           if (!shift || !shift.id) {
               console.error('No shift data available for editing');
               return;
@@ -139,7 +139,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       
       // 計算プロパティ
       vm.shiftTitle = ko.computed(function() {
-          var s = vm.shift();
+          const s = vm.shift();
           console.log('shiftTitle computed - shift:', s);
           if (!s) return '';
           
@@ -150,50 +150,50 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           }
           
           // フォールバック：日付と時間から生成
-          var t = (s.start_time && s.end_time) ? (s.start_time.substring(0,5) + '〜' + s.end_time.substring(0,5)) : '';
-          var result = (s.shift_date ? s.shift_date + ' ' : '') + t;
+          const t = (s.start_time && s.end_time) ? (s.start_time.substring(0,5) + '〜' + s.end_time.substring(0,5)) : '';
+          const result = (s.shift_date ? s.shift_date + ' ' : '') + t;
           console.log('shiftTitle computed - fallback result:', result);
           return result;
       });
       
       vm.shiftDate = ko.computed(function() {
-          var s = vm.shift();
+          const s = vm.shift();
           console.log('shiftDate computed - shift:', s);
-          var result = s ? s.shift_date : '';
+          const result = s ? s.shift_date : '';
           console.log('shiftDate computed - result:', result);
           return result;
       });
       
       vm.shiftTime = ko.computed(function() {
-          var s = vm.shift();
+          const s = vm.shift();
           return (s && s.start_time && s.end_time) ? (s.start_time.substring(0,5) + '〜' + s.end_time.substring(0,5)) : '';
       });
       
       vm.shiftNote = ko.computed(function() {
-          var s = vm.shift();
+          const s = vm.shift();
           return s ? (s.note || '備考なし') : '';
       });
       
       vm.slotInfo = ko.computed(function() {
-          var s = vm.shift();
+          const s = vm.shift();
           if (!s) return '';
-          var assigned = s.assigned_users ? s.assigned_users.length : 0;
-          var total = s.recruit_count || 0;
+          const assigned = s.assigned_users ? s.assigned_users.length : 0;
+          const total = s.recruit_count || 0;
           return assigned + '/' + total + '人';
       });
       
       // 定員状況を手動で更新する関数
       vm.updateCapacityDisplay = function() {
           console.log('=== updateCapacityDisplay called ===');
-          var shift = vm.shift();
-          var participants = vm.participants();
+          const shift = vm.shift();
+          const participants = vm.participants();
           
           if (shift) {
-              var assignedFromShift = Array.isArray(shift.assigned_users) ? shift.assigned_users.length : 0;
-              var assignedFromParticipants = Array.isArray(participants) ? participants.length : 0;
-              var assigned = Math.max(assignedFromShift, assignedFromParticipants);
-              var total = parseInt(shift.recruit_count || shift.slot_count || 0) || 0;
-              var available = total - assigned;
+              const assignedFromShift = Array.isArray(shift.assigned_users) ? shift.assigned_users.length : 0;
+              const assignedFromParticipants = Array.isArray(participants) ? participants.length : 0;
+              const assigned = Math.max(assignedFromShift, assignedFromParticipants);
+              const total = parseInt(shift.recruit_count || shift.slot_count || 0) || 0;
+              const available = total - assigned;
               
               console.log('Updating capacity display:', {
                   assigned: assigned,
@@ -204,9 +204,9 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               });
               
               // 画面の要素を直接更新
-              var assignedSpan = document.getElementById('capacity-assigned');
-              var totalSpan = document.getElementById('capacity-total');
-              var statusSpan = document.getElementById('capacity-status');
+              const assignedSpan = document.getElementById('capacity-assigned');
+              const totalSpan = document.getElementById('capacity-total');
+              const statusSpan = document.getElementById('capacity-status');
               
               if (assignedSpan) assignedSpan.textContent = assigned;
               if (totalSpan) totalSpan.textContent = total;
@@ -227,14 +227,14 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               console.log('Capacity display updated: ' + assigned + '/' + total + '人');
               
               // シフト情報も更新
-              var shiftFreeText = document.getElementById('shift-free-text');
+              const shiftFreeText = document.getElementById('shift-free-text');
               if (shiftFreeText && shift) {
                   shiftFreeText.textContent = shift.free_text || 'シフト情報なし';
               }
               
               // シフト作成者IDも更新
-              var shiftCreatedBy = document.getElementById('shift-created-by');
-              var shiftCreatedByBottom = document.getElementById('shift-created-by-bottom');
+              const shiftCreatedBy = document.getElementById('shift-created-by');
+              const shiftCreatedByBottom = document.getElementById('shift-created-by-bottom');
               if (shift && shift.created_by) {
                   if (shiftCreatedBy) shiftCreatedBy.textContent = shift.created_by;
                   if (shiftCreatedByBottom) shiftCreatedByBottom.textContent = shift.created_by;
@@ -246,7 +246,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       // 参加状況の判定
       vm.isParticipating = ko.computed(function() {
           console.log('=== isParticipating computed called ===');
-          var currentUserId = vm.currentUserId();
+          const currentUserId = vm.currentUserId();
           console.log('Current user ID:', currentUserId, 'Type:', typeof currentUserId);
           
           if (!currentUserId) {
@@ -255,44 +255,44 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           }
           
           // シフトデータが読み込まれていない場合は false
-          var shift = vm.shift();
+          const shift = vm.shift();
           if (!shift) {
               console.log('isParticipating: shift not loaded yet');
               return false;
           }
           
-          var participants = vm.participants();
+          const participants = vm.participants();
           console.log('isParticipating - participants:', participants);
           console.log('isParticipating - participants length:', participants.length);
           console.log('isParticipating - shift assigned_users:', shift.assigned_users);
           
           // participants配列から確認
-          var resultFromParticipants = participants.some(function(p) {
+          const resultFromParticipants = participants.some(function(p) {
               console.log('Checking participant:', p, 'user_id:', p.user_id, 'id:', p.id, 'currentUserId:', currentUserId);
-              var match = p.user_id == currentUserId || p.id == currentUserId;
+              const match = p.user_id == currentUserId || p.id == currentUserId;
               console.log('Participant match:', match);
               return match;
           });
           
           // shift.assigned_usersからも確認
-          var resultFromShift = false;
+          let resultFromShift = false;
           if (shift.assigned_users && Array.isArray(shift.assigned_users)) {
               resultFromShift = shift.assigned_users.some(function(user) {
                   console.log('Checking assigned user:', user, 'user_id:', user.user_id, 'id:', user.id, 'currentUserId:', currentUserId);
-                  var match = user.user_id == currentUserId || user.id == currentUserId;
+                  const match = user.user_id == currentUserId || user.id == currentUserId;
                   console.log('Assigned user match:', match);
                   return match;
               });
           }
           
           // shift.assignmentsオブジェクトからも確認
-          var resultFromAssignments = false;
+          let resultFromAssignments = false;
           if (shift.assignments && typeof shift.assignments === 'object') {
-              for (var key in shift.assignments) {
+              for (const key in shift.assignments) {
                   if (shift.assignments.hasOwnProperty(key)) {
-                      var assignment = shift.assignments[key];
+                      const assignment = shift.assignments[key];
                       console.log('Checking assignment:', assignment, 'user_id:', assignment.user_id, 'id:', assignment.id, 'currentUserId:', currentUserId);
-                      var match = assignment.user_id == currentUserId || assignment.id == currentUserId;
+                      const match = assignment.user_id == currentUserId || assignment.id == currentUserId;
                       console.log('Assignment match:', match);
                       if (match) {
                           resultFromAssignments = true;
@@ -302,7 +302,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               }
           }
           
-          var result = resultFromParticipants || resultFromShift || resultFromAssignments;
+          const result = resultFromParticipants || resultFromShift || resultFromAssignments;
           console.log('isParticipating calculation result:', result, 'fromParticipants:', resultFromParticipants, 'fromShift:', resultFromShift, 'fromAssignments:', resultFromAssignments);
           
           console.log('RETURNING RESULT:', result);
@@ -312,11 +312,11 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       // 手動でisParticipatingを再計算する関数
       vm.recalculateIsParticipating = function() {
           console.log('=== Manual isParticipating recalculation ===');
-          var currentUserId = window.CURRENT_USER_ID || 0;
+          const currentUserId = window.CURRENT_USER_ID || 0;
           console.log('Manual recalculation - Current user ID:', currentUserId);
           
-          var shift = vm.shift();
-          var participants = vm.participants();
+          const shift = vm.shift();
+          const participants = vm.participants();
           
           if (!currentUserId || !shift || !participants) {
               console.log('Manual recalculation - Missing data:', {
@@ -327,7 +327,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               return false;
           }
           
-          var isParticipating = participants.some(function(p) {
+          const isParticipating = participants.some(function(p) {
               return p.user_id == currentUserId || p.id == currentUserId;
           });
           
@@ -338,45 +338,45 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       // デバッグ情報を手動で更新する関数
       vm.updateDebugInfoManually = function() {
           console.log('=== Manual debug info update ===');
-          var root = document.getElementById('shift-detail-root');
+          const root = document.getElementById('shift-detail-root');
           if (!root) {
               console.error('Root element not found');
               return;
           }
           
-          var debugDiv = root.querySelector('.debug-info');
+          const debugDiv = root.querySelector('.debug-info');
           if (!debugDiv) {
               console.error('Debug div not found');
               return;
           }
           
-          var spans = debugDiv.querySelectorAll('span');
+          const spans = debugDiv.querySelectorAll('span');
           console.log('Found', spans.length, 'debug spans');
           
           // ViewModelの現在の値を取得（強制的に最新値を取得）
           console.log('=== Force getting fresh ViewModel values ===');
-          var currentShift = vm.shift();
+          const currentShift = vm.shift();
           console.log('Raw shift from vm.shift():', currentShift);
           
-          var currentParticipants = vm.participants();
+          const currentParticipants = vm.participants();
           console.log('Raw participants from vm.participants():', currentParticipants);
           
-          var currentUserId = vm.currentUserId();
+          const currentUserId = vm.currentUserId();
           console.log('Raw currentUserId from vm.currentUserId():', currentUserId);
           
           // シフトデータから直接参加者情報を取得
-          var directParticipants = [];
+          let directParticipants = [];
           if (currentShift && currentShift.assigned_users) {
               directParticipants = currentShift.assigned_users;
               console.log('Direct participants from shift.assigned_users:', directParticipants);
           }
           
           // 実際の参加者数を使用
-          var actualParticipantCount = directParticipants.length;
+          const actualParticipantCount = directParticipants.length;
           console.log('Actual participant count:', actualParticipantCount);
           
           // 参加状況を手動で計算
-          var manualIsParticipating = false;
+          let manualIsParticipating = false;
           if (currentUserId && directParticipants.length > 0) {
               manualIsParticipating = directParticipants.some(function(p) {
                   return p.user_id == currentUserId || p.id == currentUserId;
@@ -385,10 +385,10 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           console.log('Manual isParticipating calculation:', manualIsParticipating);
           
           // 参加可能かを手動で計算
-          var manualCanParticipate = false;
+          let manualCanParticipate = false;
           if (currentShift) {
-              var total = parseInt(currentShift.recruit_count) || 0;
-              var assigned = directParticipants.length;
+              const total = parseInt(currentShift.recruit_count) || 0;
+              const assigned = directParticipants.length;
               manualCanParticipate = assigned < total;
           }
           console.log('Manual canParticipate calculation:', manualCanParticipate);
@@ -402,7 +402,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           });
           
           spans.forEach(function(span, index) {
-              var dataBind = span.getAttribute('data-bind');
+              const dataBind = span.getAttribute('data-bind');
               console.log('Span', index, 'data-bind:', dataBind);
               
               if (dataBind) {
@@ -422,10 +422,10 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                       } else if (dataBind.includes('参加者数')) {
                           span.textContent = actualParticipantCount;
                       } else if (dataBind.includes('定員状況')) {
-                          var slotInfo = '';
+                          let slotInfo = '';
                           if (currentShift) {
-                              var assigned = directParticipants.length;
-                              var total = parseInt(currentShift.recruit_count) || 0;
+                              const assigned = directParticipants.length;
+                              const total = parseInt(currentShift.recruit_count) || 0;
                               slotInfo = assigned + '/' + total;
                           }
                           span.textContent = slotInfo || 'なし';
@@ -438,12 +438,12 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           });
           
           // 参加者一覧も手動で更新
-          var participantsListDiv = root.querySelector('.participants-list');
+          const participantsListDiv = root.querySelector('.participants-list');
           if (participantsListDiv) {
               console.log('Updating participants list manually...');
               
               // shift.assigned_usersから直接参加者情報を取得
-              var actualParticipants = [];
+              let actualParticipants = [];
               if (currentShift && currentShift.assigned_users && currentShift.assigned_users.length > 0) {
                   actualParticipants = currentShift.assigned_users;
                   console.log('Using assigned_users:', actualParticipants);
@@ -455,7 +455,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               console.log('Final participants to display:', actualParticipants);
               
               if (actualParticipants.length > 0) {
-                  var participantsHTML = '';
+                  let participantsHTML = '';
                   
                   // シンプルなHTMLエスケープ（改行のみ除去）
                   function simpleEscape(text) {
@@ -466,9 +466,9 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   actualParticipants.forEach(function(participant) {
                       console.log('Adding participant:', participant);
                       
-                      var participantName = simpleEscape(participant.name);
-                      var participantComment = simpleEscape(participant.self_word);
-                      var participantColor = participant.color || '#cccccc';
+                      const participantName = simpleEscape(participant.name);
+                      const participantComment = simpleEscape(participant.self_word);
+                      const participantColor = participant.color || '#cccccc';
                       
                       participantsHTML += 
                           '<div class="participant-item" style="display: flex; align-items: center; margin: 5px 0; padding: 8px; border-radius: 4px; background: #f9f9f9;">' +
@@ -498,14 +498,14 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       };
       
       vm.canParticipate = ko.computed(function() {
-          var s = vm.shift();
+          const s = vm.shift();
           if (!s) {
               console.log('canParticipate: shift is null');
               return false;
           }
-          var assigned = Array.isArray(s.assigned_users) ? s.assigned_users.length : 0;
-          var total = parseInt(s.recruit_count || s.slot_count || 0) || 0;
-          var result = assigned < total;
+          const assigned = Array.isArray(s.assigned_users) ? s.assigned_users.length : 0;
+          const total = parseInt(s.recruit_count || s.slot_count || 0) || 0;
+          const result = assigned < total;
           console.log('canParticipate calculation:', {
               assigned: assigned,
               total: total,
@@ -518,8 +518,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       
       // 定員状況のcomputed observable
       vm.capacityInfo = ko.computed(function() {
-          var s = vm.shift();
-          var p = vm.participants();
+          const s = vm.shift();
+          const p = vm.participants();
           console.log('capacityInfo called - shift:', s, 'participants:', p);
           
           if (!s) {
@@ -534,14 +534,14 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           }
           
           // assigned_users と participants の両方を考慮
-          var assignedFromShift = Array.isArray(s.assigned_users) ? s.assigned_users.length : 0;
-          var assignedFromParticipants = Array.isArray(p) ? p.length : 0;
-          var assigned = Math.max(assignedFromShift, assignedFromParticipants);
+          const assignedFromShift = Array.isArray(s.assigned_users) ? s.assigned_users.length : 0;
+          const assignedFromParticipants = Array.isArray(p) ? p.length : 0;
+          const assigned = Math.max(assignedFromShift, assignedFromParticipants);
           
-          var total = parseInt(s.recruit_count || s.slot_count || 0) || 0;
-          var available = total - assigned;
+          const total = parseInt(s.recruit_count || s.slot_count || 0) || 0;
+          const available = total - assigned;
           
-          var result = {
+          const result = {
               assigned: assigned,
               total: total,
               available: available,
@@ -565,7 +565,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       
       // デバッグ用 JSON（テンプレから <pre data-bind="text: debugJSON"> で参照）
       vm.debugJSON = ko.pureComputed(function () {
-          var s = vm.shift();
+          const s = vm.shift();
           try {
               return ko.toJSON(s, null, 2);
           } catch (e) {
@@ -575,7 +575,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       
       // 現在のシフトを再読込
       vm.loadShiftDetail = function () {
-          var s = vm.shift && vm.shift();
+          const s = vm.shift && vm.shift();
           if (s && s.id) {
               vm.load(s.id);
           }
@@ -583,7 +583,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       
       // アラート表示
       vm.showAlert = function(message, type) {
-          var alert = document.createElement('div');
+          const alert = document.createElement('div');
           alert.className = 'alert alert-' + type;
           alert.textContent = message;
           alert.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 10px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 4px;';
@@ -596,14 +596,14 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       
       // シフト詳細を取得
       vm.load = function(id) {
-          var self = this;
+          const self = this;
           console.log('Load function called with ID:', id);
           self.loading(true);
           self.error('');
           self.isReady(false);
           
-          var firstTriedUrl = apiUrlFor(id);
-          var fallbackTriedUrl = apiFallbackUrlFor(id);
+          const firstTriedUrl = apiUrlFor(id);
+          const fallbackTriedUrl = apiFallbackUrlFor(id);
           console.log('First URL:', firstTriedUrl);
           console.log('Fallback URL:', fallbackTriedUrl);
   
@@ -611,7 +611,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
             return fetch(url, { headers: { 'Accept': 'application/json' } })
               .then(function (r) {
                 if (!r.ok) {
-                  var err = new Error('HTTP ' + r.status);
+                  const err = new Error('HTTP ' + r.status);
                   err.status = r.status;
                   err.url = url;
                   throw err;
@@ -627,7 +627,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
             })
             .then(function (json) {
               console.log('API Response:', json);
-              var payload = json && (json.data || json);
+              const payload = json && (json.data || json);
               if (!payload || !payload.id) throw new Error('Invalid payload');
               console.log('Setting shift data:', payload);
               console.log('Assigned users in payload:', payload.assigned_users);
@@ -638,11 +638,11 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               // 参加者情報を追加
               if (payload.assigned_users && Array.isArray(payload.assigned_users)) {
                 console.log('Adding participants:', payload.assigned_users);
-                var participantsToAdd = [];
+                const participantsToAdd = [];
                 payload.assigned_users.forEach(function (user) { 
                   console.log('Adding participant:', user);
                   // 参加者情報を正しい形式で追加
-                  var participant = {
+                  const participant = {
                     id: user.id || user.user_id,
                     user_id: user.user_id || user.id,
                     name: user.name || 'Unknown User',
@@ -678,7 +678,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                      // バインディングが適用されていない場合は再適用
                      if (!bindingApplied) {
                        try {
-                         var root = document.getElementById('shift-detail-root') || document.body;
+                         const root = document.getElementById('shift-detail-root') || document.body;
                          ko.applyBindings(vm, root);
                          bindingApplied = true;
                          console.log('Knockout binding applied after data load');
@@ -686,9 +686,9 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                          // バインディング適用後にデバッグ情報を強制更新
                          setTimeout(function() {
                            console.log('=== バインディング適用後のデバッグ情報確認 ===');
-                           var debugDiv = root.querySelector('.debug-info');
+                           const debugDiv = root.querySelector('.debug-info');
                            if (debugDiv) {
-                             var spans = debugDiv.querySelectorAll('span');
+                             const spans = debugDiv.querySelectorAll('span');
                              console.log('Debug spans after binding:', spans.length);
                              spans.forEach(function(span, index) {
                                console.log('Span ' + index + ':', span.textContent);
@@ -704,9 +704,9 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                        console.log('=== 強制的にobservableを更新 ===');
                        try {
                          // 現在の値を取得して再設定することで更新を強制
-                         var currentShift = vm.shift();
-                         var currentParticipants = vm.participants();
-                         var currentUserId = vm.currentUserId();
+                         const currentShift = vm.shift();
+                         const currentParticipants = vm.participants();
+                         const currentUserId = vm.currentUserId();
                          
                          // 直接値を再設定（nullクリアを削除）
                          vm.shift(currentShift);
@@ -729,7 +729,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               self.updateCapacityDisplay();
               
               // 最小限のデバッグ情報
-              var shift = self.shift();
+              const shift = self.shift();
               if (shift) {
                 console.log('Shift data:', {
                   id: shift.id,
@@ -745,17 +745,17 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               
               // シフト情報と参加者リストを強制的に表示
               setTimeout(function() {
-                var shift = self.shift();
+                const shift = self.shift();
                 if (shift) {
                   // シフト情報を更新
-                  var freeTextEl = document.getElementById('shift-free-text');
-                  var idTextEl = document.getElementById('shift-id-text');
+                  const freeTextEl = document.getElementById('shift-free-text');
+                  const idTextEl = document.getElementById('shift-id-text');
                   if (freeTextEl) {
                     freeTextEl.textContent = shift.free_text || 'シフト情報なし';
                     console.log('Auto-updated free text:', shift.free_text);
                   }
                   if (idTextEl) {
-                    var span = idTextEl.querySelector('span');
+                    const span = idTextEl.querySelector('span');
                     if (span) {
                       span.textContent = shift.id;
                       console.log('Auto-updated shift ID:', shift.id);
@@ -787,14 +787,14 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               
               // 参加者一覧を手動で更新
               setTimeout(function() {
-                var participantsList = document.querySelector('.participants-list');
+                const participantsList = document.querySelector('.participants-list');
                 if (participantsList) {
                   console.log('Manually updating participants list');
-                  var participants = self.participants();
+                  const participants = self.participants();
                   console.log('Participants for manual update:', participants);
                   
                   // shift.assigned_usersから参加者を取得して手動で更新
-                  var shift = self.shift();
+                  const shift = self.shift();
                   if (shift && shift.assigned_users && shift.assigned_users.length > 0) {
                     console.log('Found assigned_users in shift, updating participants manually');
                     self.participants.removeAll();
@@ -807,7 +807,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   }
                   
                   // 既存の参加者アイテムと「参加者なし」表示をクリア（デバッグ情報以外）
-                  var existingItems = participantsList.querySelectorAll('.participant-item, .no-participants');
+                  const existingItems = participantsList.querySelectorAll('.participant-item, .no-participants');
                   existingItems.forEach(function(item) {
                     item.remove();
                   });
@@ -816,19 +816,19 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   if (participants && participants.length > 0) {
                     participants.forEach(function(participant) {
                       console.log('Manually adding participant:', participant);
-                      var item = document.createElement('div');
+                      const item = document.createElement('div');
                       item.className = 'participant-item';
                       item.style.cssText = 'display: flex; align-items: center; margin: 5px 0; padding: 8px; border-radius: 4px; background: #f9f9f9;';
                       
-                      var colorDiv = document.createElement('div');
+                      const colorDiv = document.createElement('div');
                       colorDiv.className = 'participant-color';
                       colorDiv.style.cssText = 'width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; flex-shrink: 0;';
                       colorDiv.style.backgroundColor = participant.color || '#000000';
                       
-                      var contentDiv = document.createElement('div');
+                      const contentDiv = document.createElement('div');
                       contentDiv.style.cssText = 'flex: 1;';
                       
-                      var nameDiv = document.createElement('div');
+                      const nameDiv = document.createElement('div');
                       nameDiv.className = 'participant-name';
                       nameDiv.style.cssText = 'font-weight: bold; color: #333;';
                       nameDiv.textContent = participant.name || 'Unknown';
@@ -836,7 +836,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                       contentDiv.appendChild(nameDiv);
                       
                       if (participant.self_word && participant.self_word.trim() !== '') {
-                        var commentDiv = document.createElement('div');
+                        const commentDiv = document.createElement('div');
                         commentDiv.className = 'participant-comment';
                         commentDiv.style.cssText = 'font-style: italic; color: #666; font-size: 0.9em; margin-top: 2px;';
                         commentDiv.textContent = participant.self_word;
@@ -844,12 +844,12 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                       }
                       
                       // 参加状況を追加
-                      var statusDiv = document.createElement('div');
+                      const statusDiv = document.createElement('div');
                       statusDiv.className = 'participant-status';
                       statusDiv.style.cssText = 'margin-left: 8px; padding: 2px 6px; border-radius: 12px; font-size: 0.8em; font-weight: bold;';
                       
-                      var status = participant.status || 'assigned';
-                      var statusText = status === 'assigned' ? '参加' : (status === 'cancelled' ? '欠席' : status);
+                      const status = participant.status || 'assigned';
+                      const statusText = status === 'assigned' ? '参加' : (status === 'cancelled' ? '欠席' : status);
                       statusDiv.textContent = statusText;
                       
                       // ステータスに応じて色を設定
@@ -873,7 +873,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                       participantsList.appendChild(item);
                     });
                   } else {
-                    var noParticipants = document.createElement('div');
+                    const noParticipants = document.createElement('div');
                     noParticipants.className = 'no-participants';
                     noParticipants.style.cssText = 'color: #999;';
                     noParticipants.textContent = '参加者なし';
@@ -886,14 +886,14 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               setTimeout(function() {
                 try {
                   if (window.ko && !bindingApplied) {
-                    var root = document.getElementById('shift-detail-root') || document.body;
+                    const root = document.getElementById('shift-detail-root') || document.body;
                     ko.applyBindings(vm, root);
                     bindingApplied = true;
                     console.log('Knockout binding applied after data load');
                   }
                   
                   // モーダルを強制的に閉じる
-                  var modal = document.getElementById('comment-modal-view');
+                  const modal = document.getElementById('comment-modal-view');
                   if (modal) {
                     console.log('Closing modal after data load');
                     modal.classList.remove('show');
@@ -903,7 +903,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   }
                   
                   // ボタンの状態を強制的に更新
-                  var participateBtn = document.querySelector('.btn-participate');
+                  const participateBtn = document.querySelector('.btn-participate');
                   if (participateBtn) {
                     console.log('Force updating button state after data load');
                     participateBtn.style.display = 'block';
@@ -924,7 +924,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                       console.log('Adding additional fallback listener after data load');
                       participateBtn.addEventListener('click', function(e) {
                         console.log('=== Additional fallback click handler triggered ===');
-                        var vm = window.__shiftVM;
+                        const vm = window.__shiftVM;
                         if (vm && vm.joinShift) {
                           console.log('Calling vm.joinShift() from additional fallback handler');
                           try {
@@ -944,10 +944,10 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
               
               // 手動でDOMを更新
               setTimeout(function() {
-                var root = document.getElementById('shift-detail-root');
+                const root = document.getElementById('shift-detail-root');
                 if (root) {
-                  var loadingDiv = root.querySelector('.loading');
-                  var mainContent = root.querySelector('.main-content');
+                  const loadingDiv = root.querySelector('.loading');
+                  const mainContent = root.querySelector('.main-content');
                   
                   if (loadingDiv) {
                     loadingDiv.style.display = 'none';
@@ -964,32 +964,32 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   self.isReady(true);
                   
                   // シフト詳細を手動で更新
-                  var shiftTitleElement = root.querySelector('.shift-title');
-                  var shiftDateElement = root.querySelector('.shift-date');
-                  var shiftTimeElement = root.querySelector('.shift-time');
-                  var shiftNoteElement = root.querySelector('.shift-note');
-                  var slotInfoElement = root.querySelector('.slot-info');
+                  const shiftTitleElement = root.querySelector('.shift-title');
+                  const shiftDateElement = root.querySelector('.shift-date');
+                  const shiftTimeElement = root.querySelector('.shift-time');
+                  const shiftNoteElement = root.querySelector('.shift-note');
+                  const slotInfoElement = root.querySelector('.slot-info');
                   
                   // 募集中の時刻セクションの要素
-                  var startTimeElement = root.querySelector('.recruitment-details li:nth-child(1) span');
-                  var endTimeElement = root.querySelector('.recruitment-details li:nth-child(2) span');
+                  const startTimeElement = root.querySelector('.recruitment-details li:nth-child(1) span');
+                  const endTimeElement = root.querySelector('.recruitment-details li:nth-child(2) span');
                   
                   if (shiftTitleElement) {
-                    var shift = self.shift();
-                    var title = 'シフト詳細';
+                    const shift = self.shift();
+                    let title = 'シフト詳細';
                     if (shift) {
                       // データベースのtitleフィールドを使用
                       if (shift.title) {
                         title = shift.title;
                       } else {
                         // フォールバック：日付と時間から生成
-                        var dateStr = '';
+                        let dateStr = '';
                         if (shift.shift_date) {
-                          var date = new Date(shift.shift_date);
+                          const date = new Date(shift.shift_date);
                           dateStr = (date.getMonth() + 1) + '月' + date.getDate() + '日のシフト';
                         }
                         
-                        var timeStr = '';
+                        let timeStr = '';
                         if (shift.start_time && shift.end_time) {
                           timeStr = shift.start_time.substring(0,5) + '〜' + shift.end_time.substring(0,5);
                         }
@@ -1002,14 +1002,14 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   }
                   
                   if (shiftDateElement) {
-                    var shift = self.shift();
-                    var date = '';
+                    const shift = self.shift();
+                    let date = '';
                     if (shift && shift.shift_date) {
-                      var dateObj = new Date(shift.shift_date);
-                      var year = dateObj.getFullYear();
-                      var month = dateObj.getMonth() + 1;
-                      var day = dateObj.getDate();
-                      var dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
+                      const dateObj = new Date(shift.shift_date);
+                      const year = dateObj.getFullYear();
+                      const month = dateObj.getMonth() + 1;
+                      const day = dateObj.getDate();
+                      const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
                       date = year + '年' + month + '月' + day + '日(' + dayOfWeek + ')';
                     }
                     shiftDateElement.textContent = date;
@@ -1017,8 +1017,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   }
                   
                   if (shiftTimeElement) {
-                    var shift = self.shift();
-                    var time = '';
+                    const shift = self.shift();
+                    let time = '';
                     if (shift && shift.start_time && shift.end_time) {
                       time = shift.start_time.substring(0,5) + '〜' + shift.end_time.substring(0,5);
                     }
@@ -1027,18 +1027,18 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   }
                   
                   if (shiftNoteElement) {
-                    var shift = self.shift();
-                    var note = shift ? (shift.note || '備考なし') : '';
+                    const shift = self.shift();
+                    const note = shift ? (shift.note || '備考なし') : '';
                     shiftNoteElement.textContent = note;
                     console.log('Manual update - shift note:', note);
                   }
                   
                   if (slotInfoElement) {
-                    var shift = self.shift();
-                    var slotInfo = '';
+                    const shift = self.shift();
+                    let slotInfo = '';
                     if (shift) {
-                      var assigned = shift.assigned_users ? shift.assigned_users.length : 0;
-                      var total = shift.recruit_count || 0;
+                      const assigned = shift.assigned_users ? shift.assigned_users.length : 0;
+                      const total = shift.recruit_count || 0;
                       slotInfo = assigned + '/' + total + '人';
                     }
                     slotInfoElement.textContent = slotInfo;
@@ -1047,8 +1047,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   
                   // 募集中の時刻を手動で更新
                   if (startTimeElement) {
-                    var shift = self.shift();
-                    var startTime = '';
+                    const shift = self.shift();
+                    let startTime = '';
                     if (shift && shift.start_time) {
                       startTime = shift.start_time.substring(0,5);
                     }
@@ -1057,8 +1057,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   }
                   
                   if (endTimeElement) {
-                    var shift = self.shift();
-                    var endTime = '';
+                    const shift = self.shift();
+                    let endTime = '';
                     if (shift && shift.end_time) {
                       endTime = shift.end_time.substring(0,5);
                     }
@@ -1075,26 +1075,26 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                      console.log('Final state - isReady:', self.isReady());
                      console.log('Final state - shift:', self.shift());
                      
-                     var root = document.getElementById('shift-detail-root') || document.body;
+                     const root = document.getElementById('shift-detail-root') || document.body;
                      
                      // デバッグ情報を即座に手動更新
-                     var debugDiv = root.querySelector('.debug-info');
+                     const debugDiv = root.querySelector('.debug-info');
                      if (debugDiv) {
-                       var shiftExistsSpan = debugDiv.querySelector('span[data-bind*="shift存在"]');
-                       var shiftIdSpan = debugDiv.querySelector('span[data-bind*="シフトID"]');
-                       var isParticipatingSpan = debugDiv.querySelector('span[data-bind*="参加状況"]');
-                       var canParticipateSpan = debugDiv.querySelector('span[data-bind*="参加可能"]');
-                       var slotInfoSpan = debugDiv.querySelector('span[data-bind*="定員状況"]');
-                       var currentUserIdSpan = debugDiv.querySelector('span[data-bind*="現在のユーザーID"]');
-                       var participantsCountSpan = debugDiv.querySelector('span[data-bind*="参加者数"]');
+                       const shiftExistsSpan = debugDiv.querySelector('span[data-bind*="shift存在"]');
+                       const shiftIdSpan = debugDiv.querySelector('span[data-bind*="シフトID"]');
+                       const isParticipatingSpan = debugDiv.querySelector('span[data-bind*="参加状況"]');
+                       const canParticipateSpan = debugDiv.querySelector('span[data-bind*="参加可能"]');
+                       const slotInfoSpan = debugDiv.querySelector('span[data-bind*="定員状況"]');
+                       const currentUserIdSpan = debugDiv.querySelector('span[data-bind*="現在のユーザーID"]');
+                       const participantsCountSpan = debugDiv.querySelector('span[data-bind*="参加者数"]');
                        
                        if (shiftExistsSpan) shiftExistsSpan.textContent = self.shift() ? 'あり' : 'なし';
                        if (shiftIdSpan) shiftIdSpan.textContent = self.shift() && self.shift().id || 'なし';
                        if (isParticipatingSpan) isParticipatingSpan.textContent = self.isParticipating() ? '参加中' : '未参加';
                        if (canParticipateSpan) canParticipateSpan.textContent = self.canParticipate() ? '可能' : '不可能';
                        if (slotInfoSpan) {
-                         var shift = self.shift();
-                         var slotInfo = shift ? (shift.assigned_users ? shift.assigned_users.length : 0) + '/' + (shift.recruit_count || 0) : 'なし';
+                         const shift = self.shift();
+                         const slotInfo = shift ? (shift.assigned_users ? shift.assigned_users.length : 0) + '/' + (shift.recruit_count || 0) : 'なし';
                          slotInfoSpan.textContent = slotInfo;
                        }
                        if (currentUserIdSpan) currentUserIdSpan.textContent = window.CURRENT_USER_ID || 'なし';
@@ -1104,8 +1104,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                      }
                 
                 // ボタンの表示状態をデバッグ
-                var participateBtn = root.querySelector('.btn-participate');
-                var cancelBtn = root.querySelector('.btn-cancel');
+                const participateBtn = root.querySelector('.btn-participate');
+                const cancelBtn = root.querySelector('.btn-cancel');
                 
                 console.log('Button elements found:', {
                   participateBtn: !!participateBtn,
@@ -1113,26 +1113,26 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                 });
                 
                 // 手動で参加状況を計算
-                var shift = self.shift();
-                var isParticipating = false;
-                var canParticipate = false;
+                const shift = self.shift();
+                let isParticipating = false;
+                let canParticipate = false;
                 
                 if (shift) {
                   // 参加状況の手動計算（現在のユーザーIDを使用）
-                  var currentUserId = window.CURRENT_USER_ID || 0;
+                  const currentUserId = window.CURRENT_USER_ID || 0;
                   console.log('Manual calculation - currentUserId:', currentUserId);
                   
                   if (Array.isArray(shift.assigned_users)) {
                     isParticipating = shift.assigned_users.some(function(user) {
-                      var match = user.user_id == currentUserId || user.id == currentUserId;
+                      const match = user.user_id == currentUserId || user.id == currentUserId;
                       console.log('Manual check - user:', user, 'match:', match);
                       return match;
                     });
                   }
                   
                   // 参加可能かの手動計算
-                  var assigned = Array.isArray(shift.assigned_users) ? shift.assigned_users.length : 0;
-                  var total = shift.recruit_count || 0;
+                  const assigned = Array.isArray(shift.assigned_users) ? shift.assigned_users.length : 0;
+                  const total = shift.recruit_count || 0;
                   canParticipate = assigned < total;
                   
                   console.log('Manual calculation:', {
@@ -1146,7 +1146,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                 }
                 
                 if (participateBtn) {
-                  var shouldShowParticipate = shift && !isParticipating && canParticipate;
+                  const shouldShowParticipate = shift && !isParticipating && canParticipate;
                   console.log('Participate button should show:', shouldShowParticipate);
                   console.log('  - shift exists:', !!shift);
                   console.log('  - isParticipating:', isParticipating);
@@ -1161,7 +1161,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                 }
                 
                 if (cancelBtn) {
-                  var shouldShowCancel = shift && isParticipating;
+                  const shouldShowCancel = shift && isParticipating;
                   console.log('Cancel button should show:', shouldShowCancel);
                   console.log('  - shift exists:', !!shift);
                   console.log('  - isParticipating:', isParticipating);
@@ -1171,7 +1171,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   });
                   
                   // テスト用：取消ボタンを強制的に表示（参加ボタンが非表示の場合）
-                  var shouldShowCancelForTest = !shouldShowParticipate || true; // テスト用に常に表示
+                  const shouldShowCancelForTest = !shouldShowParticipate || true; // テスト用に常に表示
                   
                   if (shouldShowCancelForTest) {
                     cancelBtn.style.display = 'block';
@@ -1186,28 +1186,28 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                 }
                 
                 // アクションボタンエリアのデバッグ情報も手動更新
-                var actionDebugDiv = root.querySelector('[style*="background: #f0f0f0"]');
+                const actionDebugDiv = root.querySelector('[style*="background: #f0f0f0"]');
                 if (actionDebugDiv) {
-                  var isParticipatingSpan = actionDebugDiv.querySelector('span[data-bind*="isParticipating"]');
-                  var canParticipateSpan = actionDebugDiv.querySelector('span[data-bind*="canParticipate"]');
-                  var shiftExistsSpan = actionDebugDiv.querySelector('span[data-bind*="shift存在"]');
-                  var participantsCountSpan = actionDebugDiv.querySelector('span[data-bind*="参加者数"]');
-                  var slotCountSpan = actionDebugDiv.querySelector('span[data-bind*="定員"]');
+                  const isParticipatingSpan = actionDebugDiv.querySelector('span[data-bind*="isParticipating"]');
+                  const canParticipateSpan = actionDebugDiv.querySelector('span[data-bind*="canParticipate"]');
+                  const shiftExistsSpan = actionDebugDiv.querySelector('span[data-bind*="shift存在"]');
+                  const participantsCountSpan = actionDebugDiv.querySelector('span[data-bind*="参加者数"]');
+                  const slotCountSpan = actionDebugDiv.querySelector('span[data-bind*="定員"]');
                   
                   // 手動で値を計算
-                  var shift = self.shift();
-                  var isParticipating = false;
-                  var canParticipate = false;
+                  const shift = self.shift();
+                  let isParticipating = false;
+                  let canParticipate = false;
                   
                   if (shift) {
                       // 参加状況の判定（デバッグ用に1を固定）
-                      var currentUserId = 1;
+                      const currentUserId = 1;
                       isParticipating = shift.assigned_users && shift.assigned_users.some(function(user) {
                           return user.id === currentUserId || user.name === 'Alice';
                       });
                       
                       // 参加可能かの判定
-                      var assigned = shift.assigned_users ? shift.assigned_users.length : 0;
+                      const assigned = shift.assigned_users ? shift.assigned_users.length : 0;
                       canParticipate = assigned < shift.recruit_count;
                   }
                   
@@ -1238,11 +1238,11 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       
       // 参加/取消の切り替え
       vm.toggleParticipation = function() {
-          var shift = vm.shift();
+          const shift = vm.shift();
           if (!shift) return;
           
           // 既に参加しているかチェック
-          var isParticipating = vm.participants().some(function(p) {
+          const isParticipating = vm.participants().some(function(p) {
               return p.user_id === 1; // 仮のユーザーID
           });
           
@@ -1262,7 +1262,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
         console.log('Can participate:', vm.canParticipate());
         
         // 現在のシフトを取得
-        var shift = vm.shift();
+        const shift = vm.shift();
         console.log('Using current shift:', shift);
         
         if (!shift) {
@@ -1284,7 +1284,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
         console.log('All arguments:', Array.from(arguments));
         
         // 現在のシフトを取得
-        var shift = vm.shift();
+        const shift = vm.shift();
         console.log('Using current shift:', shift);
         console.log('Shift ID:', shift ? shift.id : 'no shift');
         console.log('Current user ID:', vm.currentUserId());
@@ -1318,7 +1318,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
             },
             success: function(response, status, xhr) {
                 try {
-                    var data = typeof response === 'string' ? JSON.parse(response) : response;
+                    const data = typeof response === 'string' ? JSON.parse(response) : response;
                     
                     if (data.success) {
                         vm.showAlert('シフトの参加を取り消しました', 'success');
@@ -1332,8 +1332,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                             console.log('=== 取消後のUI更新開始 ===');
                             
                             // 現在の状態を確認
-                            var currentShift = vm.shift();
-                            var currentParticipants = vm.participants();
+                            const currentShift = vm.shift();
+                            const currentParticipants = vm.participants();
                             console.log('取消後の状態:', {
                                 shift: currentShift,
                                 participants: currentParticipants,
@@ -1342,8 +1342,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                             });
                             
                             // 参加ボタンを表示、取消ボタンを非表示
-                            var participateBtn = document.querySelector('.btn-participate');
-                            var cancelBtn = document.querySelector('.btn-cancel');
+                            const participateBtn = document.querySelector('.btn-participate');
+                            const cancelBtn = document.querySelector('.btn-cancel');
                             
                             if (participateBtn) {
                                 participateBtn.style.display = 'block';
@@ -1379,7 +1379,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                 }
             },
             error: function(xhr, status, error) {
-                var errorMessage = 'シフトの取消に失敗しました';
+                const errorMessage = 'シフトの取消に失敗しました';
                 
                 if (xhr.status === 404) {
                     errorMessage = 'このシフトに参加していません';
@@ -1400,11 +1400,11 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           console.log('=== showCommentModal 開始 ===');
           console.log('showCommentModal called with shift:', shift);
           
-          var modal = document.getElementById('comment-modal-view');
+          const modal = document.getElementById('comment-modal-view');
           console.log('モーダル要素取得結果:', modal);
-          var textarea = document.getElementById('comment-textarea-view');
-          var cancelBtn = document.getElementById('comment-cancel-btn-view');
-          var okBtn = document.getElementById('comment-ok-btn-view');
+          const textarea = document.getElementById('comment-textarea-view');
+          const cancelBtn = document.getElementById('comment-cancel-btn-view');
+          const okBtn = document.getElementById('comment-ok-btn-view');
           
           console.log('Modal elements found:', {
               modal: !!modal,
@@ -1460,7 +1460,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           
           // OKボタンのイベント
           okBtn.onclick = function() {
-              var comment = textarea.value.trim();
+              const comment = textarea.value.trim();
               vm.submitJoinShift(shift, comment);
               modal.classList.remove('show');
           };
@@ -1483,7 +1483,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       // モーダルを閉じる
       vm.hideCommentModal = function() {
           console.log('=== hideCommentModal called ===');
-          var modal = document.getElementById('comment-modal-view');
+          const modal = document.getElementById('comment-modal-view');
           if (modal) {
               console.log('Closing modal');
               modal.style.display = 'none';
@@ -1498,7 +1498,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           console.log('Joining shift:', shift.id, 'with comment:', comment);
           
           // 現在のユーザーIDを取得（セッションから）
-          var currentUserId = window.CURRENT_USER_ID || 1;
+          const currentUserId = window.CURRENT_USER_ID || 1;
           
           const API = window.API_BASE || '/api';
           fetch(`${API}/shifts/${shift.id}/join`, {
@@ -1550,7 +1550,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   // 詳細ページに留まる（自動遷移を削除）
               } else {
                   // エラーメッセージを詳細に処理
-                  var errorMessage = '参加に失敗しました';
+                  let errorMessage = '参加に失敗しました';
                   if (data.message) {
                       errorMessage = data.message;
                   } else if (data.error) {
@@ -1645,7 +1645,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           console.log('=== showEditModal called ===');
           console.log('showEditModal called with shift:', shift);
           
-          var modal = document.getElementById('edit-shift-modal');
+          const modal = document.getElementById('edit-shift-modal');
           console.log('Edit modal element found:', !!modal);
           
           if (!modal) {
@@ -1664,9 +1664,9 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           modal.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background: rgba(0,0,0,0.8) !important; z-index: 99999 !important; display: flex !important; align-items: center !important; justify-content: center !important;';
           
           // イベントリスナーを設定
-          var cancelBtn = document.getElementById('edit-shift-cancel-btn');
-          var submitBtn = document.getElementById('edit-shift-submit-btn');
-          var form = document.getElementById('edit-shift-form');
+          const cancelBtn = document.getElementById('edit-shift-cancel-btn');
+          const submitBtn = document.getElementById('edit-shift-submit-btn');
+          const form = document.getElementById('edit-shift-form');
           
           // キャンセルボタンのイベント
           cancelBtn.onclick = function() {
@@ -1680,7 +1680,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           };
           
           // エスケープキーでモーダルを閉じる
-          var escapeHandler = function(e) {
+          const escapeHandler = function(e) {
               if (e.key === 'Escape') {
                   vm.hideEditModal();
                   document.removeEventListener('keydown', escapeHandler);
@@ -1701,7 +1701,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       // 編集モーダルを閉じる
       vm.hideEditModal = function() {
           console.log('=== hideEditModal called ===');
-          var modal = document.getElementById('edit-shift-modal');
+          const modal = document.getElementById('edit-shift-modal');
           if (modal) {
               modal.style.display = 'none';
               console.log('Edit modal closed');
@@ -1712,12 +1712,12 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       vm.submitEditShift = function(shift) {
           console.log('=== submitEditShift called ===');
           
-          var form = document.getElementById('edit-shift-form');
-          var formData = new FormData(form);
+          const form = document.getElementById('edit-shift-form');
+          const formData = new FormData(form);
           
           // 時刻の妥当性チェック
-          var startTime = formData.get('start_time');
-          var endTime = formData.get('end_time');
+          const startTime = formData.get('start_time');
+          const endTime = formData.get('end_time');
           
           if (startTime && endTime && startTime >= endTime) {
               alert('終了時刻は開始時刻より後に設定してください');
@@ -1725,17 +1725,17 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           }
           
           // 送信ボタンを無効化
-          var submitBtn = document.getElementById('edit-shift-submit-btn');
-          var originalText = submitBtn.textContent;
+          const submitBtn = document.getElementById('edit-shift-submit-btn');
+          const originalText = submitBtn.textContent;
           submitBtn.disabled = true;
           submitBtn.textContent = '更新中...';
           
           // APIエンドポイントを構築
           const API = window.API_BASE || '/api';
-          var url = `${API}/shifts/${shift.id}`;
+          const url = `${API}/shifts/${shift.id}`;
           
           // フォームデータをJSONに変換
-          var jsonData = {
+          const jsonData = {
               shift_date: formData.get('shift_date'),
               start_time: formData.get('start_time'),
               end_time: formData.get('end_time'),
@@ -1769,7 +1769,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   }, 1500); // 成功メッセージを表示してからリダイレクト
                   
               } else {
-                  var errorMessage = 'シフト情報の更新に失敗しました';
+                  let errorMessage = 'シフト情報の更新に失敗しました';
                   if (data.message) {
                       errorMessage = data.message;
                   } else if (data.error) {
@@ -1809,7 +1809,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
   
   // Knockout.jsのバインディングを適用
   document.addEventListener('DOMContentLoaded', function() {
-    var root = document.getElementById('shift-detail-root');
+    const root = document.getElementById('shift-detail-root');
     if (root && window.ko) {
       try {
         ko.applyBindings(window.__shiftVM, root);
@@ -1824,7 +1824,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
     
     // フォールバック：Knockout.jsのバインディングが失敗した場合の直接イベントリスナー
     setTimeout(function() {
-      var participateBtn = document.querySelector('.btn-participate');
+      const participateBtn = document.querySelector('.btn-participate');
       console.log('Looking for participate button:', participateBtn);
       
       if (participateBtn) {
@@ -1834,8 +1834,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           console.log('Adding fallback click listener to participate button');
           
           // ボタンの詳細な状態を確認
-          var rect = participateBtn.getBoundingClientRect();
-          var computedStyle = getComputedStyle(participateBtn);
+          const rect = participateBtn.getBoundingClientRect();
+          const computedStyle = getComputedStyle(participateBtn);
           console.log('Button detailed state:', {
             element: participateBtn,
             rect: rect,
@@ -1860,9 +1860,9 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           });
           
           // ボタンの親要素もチェック
-          var parent = participateBtn.parentElement;
+          const parent = participateBtn.parentElement;
           while (parent && parent !== document.body) {
-            var parentStyle = getComputedStyle(parent);
+            const parentStyle = getComputedStyle(parent);
             console.log('Parent element:', {
               tag: parent.tagName,
               class: parent.className,
@@ -1882,7 +1882,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
             console.log('Target element:', e.target);
             console.log('Current target:', e.currentTarget);
             
-            var vm = window.__shiftVM;
+            const vm = window.__shiftVM;
             console.log('ViewModel available:', !!vm);
             console.log('joinShift method available:', !!(vm && vm.joinShift));
             
@@ -1915,7 +1915,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
           // 既に処理済みでも追加のリスナーを設定
           participateBtn.addEventListener('click', function(e) {
             console.log('=== Additional click handler (already processed) ===');
-            var vm = window.__shiftVM;
+            const vm = window.__shiftVM;
             if (vm && vm.joinShift) {
               console.log('Calling vm.joinShift() from additional handler');
               try {
@@ -1933,30 +1933,30 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
       }
     }, 500);
   });
-  var vm = window.__shiftVM;
+  const vm = window.__shiftVM;
   
   // ===== Helper: Resolve Shift ID from multiple URL patterns or data attribute =====
   function resolveShiftId() {
     // 1) data-id on root: <div id="shift-detail-root" data-shift-id="123">
-    var rootEl = document.getElementById('shift-detail-root');
-    var dataId = rootEl && rootEl.getAttribute('data-shift-id');
+    const rootEl = document.getElementById('shift-detail-root');
+    const dataId = rootEl && rootEl.getAttribute('data-shift-id');
     if (dataId && /^\d+$/.test(dataId)) return dataId;
   
     // 2) /shifts/123 or /shifts/view/123 or /shift/123
-    var m = location.pathname.match(/\/shifts?(?:\/view)?\/(\d+)\b/);
+    const m = location.pathname.match(/\/shifts?(?:\/view)?\/(\d+)\b/);
     if (m) return m[1];
   
     // 3) query param ?id=123
-    var sp = new URLSearchParams(location.search);
-    var qid = sp.get('id');
+    const sp = new URLSearchParams(location.search);
+    const qid = sp.get('id');
     if (qid && /^\d+$/.test(qid)) return qid;
   
     return null;
   }
   
   // ===== Helper: API URL builder with fallback (/api/shifts/:id or /api/v1/shifts/:id) =====
-  var SHIFT_API_BASE = (window.API_BASE || '/api') + '/shifts/';
-  var SHIFT_API_FALLBACK = (window.API_BASE || '/api') + '/shifts/';
+  const SHIFT_API_BASE = (window.API_BASE || '/api') + '/shifts/';
+  const SHIFT_API_FALLBACK = (window.API_BASE || '/api') + '/shifts/';
   function apiUrlFor(id) {
     return SHIFT_API_BASE.replace(/\/+$/,'/') + encodeURIComponent(id);
   }
@@ -1965,9 +1965,9 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
   }
   
   // 3) バインディングを適用（データ読み込み後に遅延）
-  var bindingApplied = false;
+  let bindingApplied = false;
   (function bindOnce() {
-    var root = document.getElementById('shift-detail-root') || document.body;
+    const root = document.getElementById('shift-detail-root') || document.body;
     function bind() {
       try {
         if (window.ko && !bindingApplied) {
@@ -1999,7 +1999,7 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
   // 4) ID を取って "同じ vm" にロードする
   (function initLoad() {
     console.log('initLoad function called');
-    var id = resolveShiftId();
+    const id = resolveShiftId();
     console.log('Resolved shift ID:', id);
     console.log('Initial state - loading:', vm.loading());
     console.log('Initial state - isReady:', vm.isReady());

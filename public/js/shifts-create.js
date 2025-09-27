@@ -3,12 +3,12 @@
 // 未ログインガード（即リダイレクトは削除）
 // 代わりに、DOM後に"操作を無効化"するだけ
 document.addEventListener('DOMContentLoaded', function () {
-  var uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
+  const uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
   console.log('CURRENT_USER_ID (create):', uid);
   if (!uid) {
     console.warn('未ログイン：操作を無効化');
     // フォーム送信ボタンを無効化（存在すれば）
-    var submitBtn = document.querySelector('input[type="submit"], button[type="submit"]');
+    const submitBtn = document.querySelector('input[type="submit"], button[type="submit"]');
     if (submitBtn) { 
       submitBtn.disabled = true; 
       submitBtn.title = 'ログインが必要です'; 
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
   } else {
     console.log('ログイン済み：ボタンを有効化');
     // ログイン済みの場合はボタンを有効化
-    var submitBtn = document.querySelector('input[type="submit"], button[type="submit"]');
+    const submitBtn = document.querySelector('input[type="submit"], button[type="submit"]');
     if (submitBtn) { 
       submitBtn.disabled = false; 
       submitBtn.title = ''; 
@@ -27,8 +27,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 $(document).ready(function() {
     // URLパラメータから日付を取得
-    var urlParams = new URLSearchParams(window.location.search);
-    var dateParam = urlParams.get('date');
+    const urlParams = new URLSearchParams(window.location.search);
+    const dateParam = urlParams.get('date');
     
     if (dateParam) {
         $('#shift_date').val(dateParam);
@@ -38,7 +38,7 @@ $(document).ready(function() {
     $('#shift-form').on('submit', function(e) {
         e.preventDefault();
         
-        var formData = {
+        const formData = {
             shift_date: $('#shift_date').val(),
             start_time: $('#start_time').val(),
             end_time: $('#end_time').val(),
@@ -90,15 +90,15 @@ $(document).ready(function() {
                         window.location.href = '/shifts';
                     }, 2000);
                 } else {
-                    var errorMsg = response.message || response.error || '不明なエラー';
+                    const errorMsg = response.message || response.error || '不明なエラー';
                     showAlert('シフトの作成に失敗しました: ' + errorMsg, 'error');
                 }
             },
             error: function(xhr, status, error) {
-                var errorMessage = 'シフトの作成に失敗しました';
+                let errorMessage = 'シフトの作成に失敗しました';
                 
                 try {
-                    var response = JSON.parse(xhr.responseText);
+                    const response = JSON.parse(xhr.responseText);
                     console.log('Error response:', response);
                     if (response.message) {
                         errorMessage = response.message;
@@ -106,8 +106,8 @@ $(document).ready(function() {
                         errorMessage = response.error;
                     } else if (response.errors) {
                         // バリデーションエラーの場合
-                        var errorList = [];
-                        for (var field in response.errors) {
+                        const errorList = [];
+                        for (const field in response.errors) {
                             errorList.push(field + ': ' + response.errors[field]);
                         }
                         errorMessage = errorList.join(', ');
@@ -131,8 +131,8 @@ $(document).ready(function() {
     
     // アラート表示関数
     function showAlert(message, type) {
-        var alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-        var alertId = type === 'success' ? 'success-alert' : 'error-alert';
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+        const alertId = type === 'success' ? 'success-alert' : 'error-alert';
         
         $('#' + alertId).text(message).show();
         

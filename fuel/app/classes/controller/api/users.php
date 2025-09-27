@@ -1,4 +1,7 @@
 <?php
+
+use Fuel\Core\DB;
+
 class Controller_Api_Users extends \Fuel\Core\Controller_Rest
 {
     protected $format = 'json';
@@ -13,7 +16,13 @@ class Controller_Api_Users extends \Fuel\Core\Controller_Rest
     // GET /api/users
     public function get_index()
     {
-        $users = \Model_User::find('all');
+        // DB::selectを使用して効率的にユーザー一覧を取得
+        $users = DB::select('id', 'name', 'color', 'created_at', 'updated_at')
+            ->from('users')
+            ->order_by('name', 'asc')
+            ->execute()
+            ->as_array();
+            
         return $this->response([
             'ok' => true,
             'users' => $users,
@@ -23,10 +32,8 @@ class Controller_Api_Users extends \Fuel\Core\Controller_Rest
     // POST /api/users
     public function post_index()
     {
-        // JSON を安全に読む（x-www-form-urlencoded にもフォールバック）
-        $raw  = file_get_contents('php://input');
-        $json = json_decode($raw, true);
-        $in   = is_array($json) ? $json : \Fuel\Core\Input::post();
+        // Input::json()を使用してJSONを安全に受信
+        $in = \Fuel\Core\Input::json() ?: \Fuel\Core\Input::post();
 
         // ---- Validation ----
         $val = \Fuel\Core\Validation::forge();

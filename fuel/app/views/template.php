@@ -1,4 +1,4 @@
-<?php use Fuel\Core\Uri; ?>
+<?php use Fuel\Core\Uri; use Fuel\Core\Session; ?>
 <!doctype html>
 <html lang="ja">
 <head>
@@ -8,7 +8,7 @@
     </head>
 <body style="font-family: system-ui, sans-serif; padding: 24px">
     <?php
-        $user_id = \Fuel\Core\Session::get('user_id');
+        $user_id = Session::get('user_id');
         $user = $user_id ? \Model_User::find($user_id) : null;
     ?>
 
