@@ -3,6 +3,7 @@
 use Fuel\Core\Session;
 use Fuel\Core\Response;
 use Fuel\Core\View;
+use Fuel\Core\DB;
 
 class Controller_Shifts extends \Fuel\Core\Controller
 {
@@ -34,12 +35,13 @@ class Controller_Shifts extends \Fuel\Core\Controller
         if (!$uid) {
             error_log('shifts/index - 未ログインのためログイン画面にリダイレクト');
             
-            // 既存のユーザー一覧を取得
+            // 既存のユーザー一覧を取得（DB::selectで最適化）
             try {
-                $users = \Model_User::query()->order_by('name', 'asc')->get();
-                if (!$users) {
-                    $users = array();
-                }
+                $users = DB::select('id', 'name', 'color', 'created_at')
+                    ->from('users')
+                    ->order_by('name', 'asc')
+                    ->execute()
+                    ->as_array();
             } catch (Exception $e) {
                 error_log('Error fetching users in shifts/index: ' . $e->getMessage());
                 $users = array();
@@ -74,11 +76,11 @@ class Controller_Shifts extends \Fuel\Core\Controller
 
     public function action_my() //自分のシフト
     {
-        if ( ! \Fuel\Core\Session::get('user_id')) {
+        if ( ! Session::get('user_id')) {
             \Fuel\Core\Response::redirect('users/login');
         }
         $v = \Fuel\Core\View::forge('shifts/my');
-        $v->set('current_user_id', (int)\Fuel\Core\Session::get('user_id'), false);
+        $v->set('current_user_id', (int)Session::get('user_id'), false);
         return \Fuel\Core\Response::forge($v);
     }
 

@@ -4,6 +4,7 @@ use Fuel\Core\Input;
 use Fuel\Core\Response;
 use Fuel\Core\Session;
 use Fuel\Core\View;
+use Fuel\Core\DB;
 
 class Controller_Users extends \Fuel\Core\Controller
 {
@@ -43,12 +44,13 @@ class Controller_Users extends \Fuel\Core\Controller
         }
 
         // GET: フォーム表示
-        // 既存のユーザー一覧を取得
+        // 既存のユーザー一覧を取得（DB::selectで最適化）
         try {
-            $users = \Model_User::query()->order_by('name', 'asc')->get();
-            if (!$users) {
-                $users = array();
-            }
+            $query = DB::select('id', 'name', 'color', 'created_at')
+                ->from('users');
+            $query->order_by('name', 'asc');
+            $result = $query->execute();
+            $users = $result->as_array();
         } catch (Exception $e) {
             error_log('Error fetching users: ' . $e->getMessage());
             $users = array();
@@ -73,12 +75,13 @@ class Controller_Users extends \Fuel\Core\Controller
             }
         }
         
-        // 既存のユーザー一覧を取得
+        // 既存のユーザー一覧を取得（DB::selectで最適化）
         try {
-            $users = \Model_User::query()->order_by('name', 'asc')->get();
-            if (!$users) {
-                $users = array();
-            }
+            $query = DB::select('id', 'name', 'color', 'created_at')
+                ->from('users');
+            $query->order_by('name', 'asc');
+            $result = $query->execute();
+            $users = $result->as_array();
         } catch (Exception $e) {
             error_log('Error fetching users in login: ' . $e->getMessage());
             $users = array();
@@ -123,7 +126,7 @@ class Controller_Users extends \Fuel\Core\Controller
 
     public function action_logout()
     {
-        \Fuel\Core\Session::destroy(); // セッションを完全削除
+        Session::destroy(); // セッションを完全削除
         \Fuel\Core\Response::redirect('users/login'); // ログイン画面へ戻す
     }
 
@@ -131,46 +134,65 @@ class Controller_Users extends \Fuel\Core\Controller
     {
         error_log('action_delete called, user_id: ' . ($user_id ?: 'null'));
         
-        if (!$user_id) {
-            error_log('action_delete - ユーザーIDが指定されていません');
-            return Response::forge('ユーザーIDが指定されていません', 400);
+        // 入力値の検証とサニタイズ
+        if (!$user_id || !is_numeric($user_id)) {
+            error_log('action_delete - 無効なユーザーID: ' . $user_id);
+            return Response::forge('無効なユーザーIDです', 400);
         }
+        
+        $user_id = (int)$user_id; // 整数にキャストしてサニタイズ
 
         try {
-            // ユーザーを取得
-            $user = \Model_User::query()->where('id', $user_id)->get_one();
+            // クエリビルダーを使用してユーザーを安全に取得
+            $user = DB::select('id', 'name')
+                ->from('users')
+                ->where('id', $user_id)
+                ->execute()
+                ->current();
+                
             if (!$user) {
                 error_log('action_delete - ユーザーが見つかりません: ' . $user_id);
                 return Response::forge('ユーザーが見つかりません', 404);
             }
 
-            $user_name = $user->name;
+            $user_name = $user['name'];
             error_log('action_delete - 削除対象ユーザー: ' . $user_name . ' (ID: ' . $user_id . ')');
 
             // トランザクション開始
-            \Fuel\Core\DB::start_transaction();
+            DB::start_transaction();
 
             try {
-                // ユーザーが作成したシフトを削除（関連するshift_assignmentsも自動削除される）
-                $created_shifts = \Model_Shift::query()->where('created_by', $user_id)->get();
-                foreach ($created_shifts as $shift) {
-                    error_log('action_delete - シフト削除: ' . $shift->id);
-                    $shift->delete();
-                }
+                // クエリビルダーを使用して関連データを安全に削除
+                
+                // 1. ユーザーが作成したシフトの関連するshift_assignmentsを削除
+                DB::delete('shift_assignments')
+                    ->where('shift_id', 'IN', 
+                        DB::select('id')
+                            ->from('shifts')
+                            ->where('created_by', $user_id)
+                    )
+                    ->execute();
+                
+                // 2. ユーザーが作成したシフトを削除
+                $deleted_shifts = DB::delete('shifts')
+                    ->where('created_by', $user_id)
+                    ->execute();
+                error_log('action_delete - 削除されたシフト数: ' . $deleted_shifts);
 
-                // ユーザーが参加しているシフト参加を削除
-                $assignments = \Model_Shift_Assignment::query()->where('user_id', $user_id)->get();
-                foreach ($assignments as $assignment) {
-                    error_log('action_delete - シフト参加削除: ' . $assignment->id);
-                    $assignment->delete();
-                }
+                // 3. ユーザーが参加しているシフト参加を削除
+                $deleted_assignments = DB::delete('shift_assignments')
+                    ->where('user_id', $user_id)
+                    ->execute();
+                error_log('action_delete - 削除された参加数: ' . $deleted_assignments);
 
-                // ユーザーを削除
-                error_log('action_delete - ユーザー削除実行: ' . $user_id);
-                $user->delete();
+                // 4. ユーザーを削除
+                $deleted_users = DB::delete('users')
+                    ->where('id', $user_id)
+                    ->execute();
+                error_log('action_delete - 削除されたユーザー数: ' . $deleted_users);
 
                 // トランザクションコミット
-                \Fuel\Core\DB::commit_transaction();
+                DB::commit_transaction();
                 
                 error_log('action_delete - 削除完了: ' . $user_name);
                 
@@ -179,7 +201,7 @@ class Controller_Users extends \Fuel\Core\Controller
                 
             } catch (Exception $e) {
                 // トランザクションロールバック
-                \Fuel\Core\DB::rollback_transaction();
+                DB::rollback_transaction();
                 error_log('action_delete - トランザクションエラー: ' . $e->getMessage());
                 throw $e;
             }

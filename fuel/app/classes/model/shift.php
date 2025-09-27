@@ -1,5 +1,7 @@
 <?php
 
+use Fuel\Core\DB;
+
 class Model_Shift extends \Orm\Model
 {
     protected static $_table_name = 'shifts';
@@ -52,11 +54,14 @@ class Model_Shift extends \Orm\Model
 
     public function joined_count(): int
     {
-        // ORMのクエリビルダーを使用して効率的にカウント
-        return \Model_Shift_Assignment::query()
+        // DB::selectを使用して効率的にカウント
+        $result = DB::select(DB::expr('COUNT(*) as count'))
+            ->from('shift_assignments')
             ->where('shift_id', $this->id)
             ->where('status', '!=', 'cancelled')
-            ->count();
+            ->execute();
+        
+        return (int)$result->get('count', 0);
     }
 
     /**

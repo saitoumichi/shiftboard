@@ -1,37 +1,79 @@
 <?php
 
+use Fuel\Core\Session;
+use Fuel\Core\DB;
+
 class Controller_Shift_Assignment extends \Fuel\Core\Controller
 {
     // 自分の割り当て一覧ページ
     public function action_my_assignments()
     {
         // 自分の割り当て一覧ページ
-        $user_id = \Fuel\Core\Session::get('user_id'); // 認証ユーザーのIDを使用
+        $user_id = Session::get('user_id'); // 認証ユーザーのIDを使用
         if (!$user_id) {
-            \Fuel\Core\Session::set_flash('error', 'ログインしてください');
+            Session::set_flash('error', 'ログインしてください');
             return \Fuel\Core\Response::redirect('users/login');
         }
         
-        // 自分の参加中シフト一覧（必要に応じて並び替え）
-        $assignments = \Model_Shift_Assignment::query()
-            ->where('user_id', $user_id)
-            ->where('status', 'assigned') // 取消分を除外したい場合
-            ->related('shift')            // 関連シフトも一緒に
-            ->order_by('id', 'desc')
-            ->get();
+        // JOINクエリで一括取得してN+1問題を解決
+        $query = DB::select(
+            'sa.id as assignment_id',
+            'sa.shift_id',
+            'sa.user_id',
+            'sa.status as assignment_status',
+            'sa.self_word',
+            'sa.created_at as assignment_created_at',
+            's.id as shift_id',
+            's.shift_date',
+            's.start_time',
+            's.end_time',
+            's.recruit_count',
+            's.free_text',
+            's.created_by',
+            's.created_at as shift_created_at',
+            's.updated_at as shift_updated_at',
+            DB::expr('COUNT(sa2.id) as joined_count')
+        )
+        ->from(['shift_assignments', 'sa'])
+        ->join(['shifts', 's'], 'INNER')
+            ->on('sa.shift_id', '=', 's.id')
+        ->join(['shift_assignments', 'sa2'], 'LEFT')
+            ->on('s.id', '=', 'sa2.shift_id')
+            ->on('sa2.status', '!=', DB::expr("'cancelled'"))
+        ->where('sa.user_id', $user_id)
+        ->where('sa.status', 'assigned')
+        ->group_by('sa.id', 's.id')
+        ->order_by('sa.id', 'desc');
+        $assignments_data = $query->execute();
         
-        // 各割り当ての参加状況を計算
+        // データを整形
         $assignments_with_status = array();
-        foreach ($assignments as $assignment) {
-            $shift = $assignment->shift;
-            $joined_count = $shift->joined_count();
-            $recruit_count = (int)$shift->recruit_count;
-            $remaining = $shift->remaining();
+        foreach ($assignments_data as $row) {
+            $joined_count = (int)$row['joined_count'];
+            $recruit_count = (int)$row['recruit_count'];
+            $remaining = max(0, $recruit_count - $joined_count);
             $is_full = ($joined_count >= $recruit_count);
             
             $assignments_with_status[] = array(
-                'assignment' => $assignment,
-                'shift' => $shift,
+                'assignment' => (object)array(
+                    'id' => $row['assignment_id'],
+                    'shift_id' => $row['shift_id'],
+                    'user_id' => $row['user_id'],
+                    'status' => $row['assignment_status'],
+                    'self_word' => $row['self_word'],
+                    'created_at' => $row['assignment_created_at']
+                ),
+                'shift' => (object)array(
+                    'id' => $row['shift_id'],
+                    'shift_date' => $row['shift_date'],
+                    'start_time' => $row['start_time'],
+                    'end_time' => $row['end_time'],
+                    'recruit_count' => $row['recruit_count'],
+                    'free_text' => $row['free_text'],
+                    'created_by' => $row['created_by'],
+                    'created_at' => $row['shift_created_at'],
+                    'updated_at' => $row['shift_updated_at']
+                ),
                 'joined_count' => $joined_count,
                 'recruit_count' => $recruit_count,
                 'remaining' => $remaining,
@@ -42,7 +84,6 @@ class Controller_Shift_Assignment extends \Fuel\Core\Controller
         
         $data = array();
         $data['current_user_id'] = $user_id;
-        $data['assignments'] = $assignments;
         $data['assignments_with_status'] = $assignments_with_status;
         
         // ビューをレンダリング
@@ -55,9 +96,9 @@ class Controller_Shift_Assignment extends \Fuel\Core\Controller
         $data = array();
         
         // セッションからユーザー情報を取得
-        $user_id = \Fuel\Core\Session::get('user_id'); // 認証ユーザーのIDを使用
+        $user_id = Session::get('user_id'); // 認証ユーザーのIDを使用
         if (!$user_id) {
-            \Fuel\Core\Session::set_flash('error', 'ログインしてください');
+            Session::set_flash('error', 'ログインしてください');
             return \Fuel\Core\Response::redirect('users/login');
         }
         $data['current_user_id'] = $user_id;
@@ -77,9 +118,9 @@ class Controller_Shift_Assignment extends \Fuel\Core\Controller
         $data['shift_id'] = $shift_id;
         
         // セッションからユーザー情報を取得
-        $user_id = \Fuel\Core\Session::get('user_id'); // 認証ユーザーのIDを使用
+        $user_id = Session::get('user_id'); // 認証ユーザーのIDを使用
         if (!$user_id) {
-            \Fuel\Core\Session::set_flash('error', 'ログインしてください');
+            Session::set_flash('error', 'ログインしてください');
             return \Fuel\Core\Response::redirect('users/login');
         }
         $data['current_user_id'] = $user_id;
@@ -94,9 +135,9 @@ class Controller_Shift_Assignment extends \Fuel\Core\Controller
         $data = array();
         
         // セッションからユーザー情報を取得
-        $user_id = \Fuel\Core\Session::get('user_id'); // 認証ユーザーのIDを使用
+        $user_id = Session::get('user_id'); // 認証ユーザーのIDを使用
         if (!$user_id) {
-            \Fuel\Core\Session::set_flash('error', 'ログインしてください');
+            Session::set_flash('error', 'ログインしてください');
             return \Fuel\Core\Response::redirect('users/login');
         }
         $data['current_user_id'] = $user_id;
@@ -184,14 +225,14 @@ class Controller_Shift_Assignment extends \Fuel\Core\Controller
     public function action_participants($shift_id = null)
     {
         if (!$shift_id || !is_numeric($shift_id)) {
-            \Fuel\Core\Session::set_flash('error', '無効なシフトIDです');
+            Session::set_flash('error', '無効なシフトIDです');
             return \Fuel\Core\Response::redirect('shifts');
         }
         
         // シフトの存在確認
         $shift = \Model_Shift::find($shift_id);
         if (!$shift) {
-            \Fuel\Core\Session::set_flash('error', 'シフトが見つかりません');
+            Session::set_flash('error', 'シフトが見つかりません');
             return \Fuel\Core\Response::redirect('shifts');
         }
         

@@ -1,14 +1,14 @@
 // シフト一覧ページ用JavaScript - キャッシュ無効化 v2
 
 // 参照専用。再代入や再宣言はしない！
-var uid = window.CURRENT_USER_ID;
+const uid = window.CURRENT_USER_ID;
 
 // API_BASEとCURRENT_USER_IDはビューファイルで設定済み
 
 // 未ログインガード（即リダイレクトは削除）
 // 代わりに、DOM後に"操作を無効化"するだけ
 document.addEventListener('DOMContentLoaded', function () {
-  var uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
+  const uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
   console.log('CURRENT_USER_ID:', uid);
   console.log('window.CURRENT_USER_ID:', window.CURRENT_USER_ID);
   console.log('meta content:', document.querySelector('meta[name="current-user-id"]')?.content);
@@ -16,14 +16,14 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!uid) {
     console.warn('未ログイン：操作を無効化');
     // 参加・取消ボタンを無効化（存在すれば）
-    var btns = document.querySelectorAll('.action-btn.btn-participate, .action-btn.btn-cancel, .btn-join, .btn-cancel-shift, .btn.my-shifts-btn, .nav-btn, .view-btn');
+    const btns = document.querySelectorAll('.action-btn.btn-participate, .action-btn.btn-cancel, .btn-join, .btn-cancel-shift, .btn.my-shifts-btn, .nav-btn, .view-btn');
     console.log('無効化するボタン数:', btns.length);
     btns.forEach(b => { b.disabled = true; b.title = 'ログインが必要です'; });
     // ここで location.href に飛ばさない
   } else {
     console.log('ログイン済み：ボタンを有効化');
     // ログイン済みの場合はボタンを有効化
-    var btns = document.querySelectorAll('.action-btn.btn-participate, .action-btn.btn-cancel, .btn-join, .btn-cancel-shift, .btn.my-shifts-btn, .nav-btn, .view-btn');
+    const btns = document.querySelectorAll('.action-btn.btn-participate, .action-btn.btn-cancel, .btn-join, .btn-cancel-shift, .btn.my-shifts-btn, .nav-btn, .view-btn');
     console.log('有効化するボタン数:', btns.length);
     btns.forEach(b => { b.disabled = false; b.title = ''; });
   }
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // ShiftViewModelクラス
 function ShiftViewModel() {
-    var self = this;
+    const self = this;
     
     // データ
     self.filter = ko.observable('all'); // 'all', 'open', 'full', 'mine'
@@ -46,8 +46,8 @@ function ShiftViewModel() {
     
     // 計算プロパティ：フィルタリングされたシフト一覧
     self.filteredShifts = ko.computed(function() {
-        var allShifts = self.shifts();
-        var currentFilter = self.filter();
+        const allShifts = self.shifts();
+        const currentFilter = self.filter();
 
         if (currentFilter === 'open') {
             return allShifts.filter(function(shift) {
@@ -72,15 +72,15 @@ function ShiftViewModel() {
     
     // 計算プロパティ
     self.currentMonth = ko.computed(function() {
-        var date = self.currentDate();
+        const date = self.currentDate();
         return date.getFullYear() + '年' + (date.getMonth() + 1) + '月';
     });
     
     self.currentWeek = ko.computed(function() {
-        var date = new Date(self.currentDate());
-        var startOfWeek = new Date(date);
+        const date = new Date(self.currentDate());
+        const startOfWeek = new Date(date);
         startOfWeek.setDate(date.getDate() - date.getDay());
-        var endOfWeek = new Date(startOfWeek);
+        const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
         
         return (startOfWeek.getMonth() + 1) + '/' + startOfWeek.getDate() + ' - ' + 
@@ -88,7 +88,7 @@ function ShiftViewModel() {
     });
     
     self.currentDay = ko.computed(function() {
-        var date = self.currentDate();
+        const date = self.currentDate();
         return (date.getMonth() + 1) + '月' + date.getDate() + '日';
     });
     
@@ -115,7 +115,7 @@ function ShiftViewModel() {
         }
         
         // すべてのビューコンテンツを非表示
-        var viewContents = document.querySelectorAll('.view-content');
+        const viewContents = document.querySelectorAll('.view-content');
         console.log('Found view-content elements:', viewContents.length);
         viewContents.forEach(function(element) {
             element.classList.remove('active');
@@ -123,25 +123,25 @@ function ShiftViewModel() {
         
         // 選択されたビューを表示
         if (view === 'month') {
-            var monthView = document.querySelector('.month-view');
+            const monthView = document.querySelector('.month-view');
             if (monthView) {
                 monthView.classList.add('active');
                 console.log('Added active to month-view');
             }
         } else if (view === 'week') {
-            var weekView = document.querySelector('.week-view');
+            const weekView = document.querySelector('.week-view');
             if (weekView) {
                 weekView.classList.add('active');
                 console.log('Added active to week-view');
             }
         } else if (view === 'day') {
-            var dayView = document.querySelector('.day-view');
+            const dayView = document.querySelector('.day-view');
             if (dayView) {
                 dayView.classList.add('active');
                 console.log('Added active to day-view');
             }
         } else if (view === 'list') {
-            var listView = document.querySelector('.list-view');
+            const listView = document.querySelector('.list-view');
             if (listView) {
                 listView.classList.add('active');
                 console.log('Added active to list-view');
@@ -153,7 +153,7 @@ function ShiftViewModel() {
                 listView.style.setProperty('opacity', '1', 'important');
                 
                 // 他のビューを非表示にする
-                var otherViews = document.querySelectorAll('.day-recruitment-section, .week-recruitment-section, .month-recruitment-section');
+                const otherViews = document.querySelectorAll('.day-recruitment-section, .week-recruitment-section, .month-recruitment-section');
                 console.log('Other views found:', otherViews.length);
                 otherViews.forEach(function(view) {
                     view.style.display = 'none';
@@ -165,7 +165,7 @@ function ShiftViewModel() {
         }
         
         // ボタンのアクティブ状態を更新
-        var viewBtns = document.querySelectorAll('.view-btn');
+        const viewBtns = document.querySelectorAll('.view-btn');
         viewBtns.forEach(function(btn) {
             btn.classList.remove('active');
             if (btn.textContent.trim() === self.getViewText(view)) {
@@ -192,7 +192,7 @@ function ShiftViewModel() {
     // 前の月
     self.previousMonth = function() {
         console.log('=== PREVIOUS MONTH ===');
-        var date = new Date(self.currentDate());
+        let date = new Date(self.currentDate());
         console.log('Before change:', date.getFullYear(), '年', date.getMonth() + 1, '月');
         
         // 月の1日に設定してから月を変更（月末問題を回避）
@@ -203,9 +203,9 @@ function ShiftViewModel() {
         self.currentDate(date);
         
         // 手動で日付表示を更新
-        var monthDisplay = document.querySelector('.current-month');
+        const monthDisplay = document.querySelector('.current-month');
         if (monthDisplay) {
-            var newDateText = self.currentDay();
+            const newDateText = self.currentDay();
             console.log('Setting display to:', newDateText);
             monthDisplay.textContent = newDateText;
         }
@@ -218,7 +218,7 @@ function ShiftViewModel() {
     // 次の月
     self.nextMonth = function() {
         console.log('=== NEXT MONTH ===');
-        var date = new Date(self.currentDate());
+        let date = new Date(self.currentDate());
         console.log('Before change:', date.getFullYear(), '年', date.getMonth() + 1, '月');
         
         // 月の1日に設定してから月を変更（月末問題を回避）
@@ -229,9 +229,9 @@ function ShiftViewModel() {
         self.currentDate(date);
         
         // 手動で日付表示を更新
-        var monthDisplay = document.querySelector('.current-month');
+        const monthDisplay = document.querySelector('.current-month');
         if (monthDisplay) {
-            var newDateText = self.currentDay();
+            const newDateText = self.currentDay();
             console.log('Setting display to:', newDateText);
             monthDisplay.textContent = newDateText;
         }
@@ -243,7 +243,7 @@ function ShiftViewModel() {
     
     // 前の週
     self.previousWeek = function() {
-        var date = new Date(self.currentDate());
+        let date = new Date(self.currentDate());
         date.setDate(date.getDate() - 7);
         self.currentDate(date);
         self.generateCalendar();
@@ -252,7 +252,7 @@ function ShiftViewModel() {
     
     // 次の週
     self.nextWeek = function() {
-        var date = new Date(self.currentDate());
+        let date = new Date(self.currentDate());
         date.setDate(date.getDate() + 7);
         self.currentDate(date);
         self.generateCalendar();
@@ -261,7 +261,7 @@ function ShiftViewModel() {
     
     // 前の日
     self.previousDay = function() {
-        var date = new Date(self.currentDate());
+        let date = new Date(self.currentDate());
         date.setDate(date.getDate() - 1);
         self.currentDate(date);
         self.generateCalendar();
@@ -270,7 +270,7 @@ function ShiftViewModel() {
     
     // 次の日
     self.nextDay = function() {
-        var date = new Date(self.currentDate());
+        let date = new Date(self.currentDate());
         date.setDate(date.getDate() + 1);
         self.currentDate(date);
         self.generateCalendar();
@@ -279,7 +279,7 @@ function ShiftViewModel() {
     
     // カレンダー生成
     self.generateCalendar = function() {
-        var view = self.currentView();
+        const view = self.currentView();
         
         if (view === 'month') {
             self.generateMonthView();
@@ -292,25 +292,25 @@ function ShiftViewModel() {
     
     // 月表示生成
     self.generateMonthView = function() {
-        var date = new Date(self.currentDate());
-        var year = date.getFullYear();
-        var month = date.getMonth();
+        let date = new Date(self.currentDate());
+        const year = date.getFullYear();
+        const month = date.getMonth();
         
         // 月の最初の日
-        var firstDay = new Date(year, month, 1);
-        var lastDay = new Date(year, month + 1, 0);
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
         
         // カレンダーの開始日（前月の日付も含む）
-        var startDate = new Date(firstDay);
+        const startDate = new Date(firstDay);
         startDate.setDate(startDate.getDate() - firstDay.getDay());
         
-        var days = [];
-        var currentDate = new Date(startDate);
+        const days = [];
+        let currentDate = new Date(startDate);
         
         // 6週間分の日付を生成
-        for (var i = 0; i < 42; i++) {
-            var dayShifts = self.shifts().filter(function(shift) {
-                var shiftDate = new Date(shift.shift_date);
+        for (let i = 0; i < 42; i++) {
+            const dayShifts = self.shifts().filter(function(shift) {
+                const shiftDate = new Date(shift.shift_date);
                 return shiftDate.toDateString() === currentDate.toDateString();
             });
             
@@ -333,17 +333,17 @@ function ShiftViewModel() {
     
     // 週表示生成
     self.generateWeekView = function() {
-        var date = new Date(self.currentDate());
-        var startOfWeek = new Date(date);
+        let date = new Date(self.currentDate());
+        const startOfWeek = new Date(date);
         startOfWeek.setDate(date.getDate() - date.getDay());
         
-        var weekDays = [];
-        for (var i = 0; i < 7; i++) {
-            var currentDate = new Date(startOfWeek);
+        const weekDays = [];
+        for (let i = 0; i < 7; i++) {
+            const currentDate = new Date(startOfWeek);
             currentDate.setDate(startOfWeek.getDate() + i);
             
-            var dayShifts = self.shifts().filter(function(shift) {
-                var shiftDate = new Date(shift.shift_date);
+            const dayShifts = self.shifts().filter(function(shift) {
+                const shiftDate = new Date(shift.shift_date);
                 return shiftDate.toDateString() === currentDate.toDateString();
             });
             
@@ -362,9 +362,9 @@ function ShiftViewModel() {
     
     // 日表示生成
     self.generateDayView = function() {
-        var date = new Date(self.currentDate());
-        var dayShifts = self.shifts().filter(function(shift) {
-            var shiftDate = new Date(shift.shift_date);
+        let date = new Date(self.currentDate());
+        const dayShifts = self.shifts().filter(function(shift) {
+            const shiftDate = new Date(shift.shift_date);
             return shiftDate.toDateString() === date.toDateString();
         });
         
@@ -373,7 +373,7 @@ function ShiftViewModel() {
     
     // カレンダー日付をレンダリング（テーブル形式）
     self.renderCalendarDays = function(days) {
-        var container = document.getElementById('calendar-days-container');
+        const container = document.getElementById('calendar-days-container');
         console.log('renderCalendarDays called, container found:', !!container);
         if (!container) {
             console.error('calendar-days-container not found!');
@@ -383,14 +383,14 @@ function ShiftViewModel() {
         container.innerHTML = '';
         
         // 6週間分の行を作成
-        var weeks = [];
-        for (var i = 0; i < 6; i++) {
+        const weeks = [];
+        for (let i = 0; i < 6; i++) {
             weeks.push([]);
         }
         
         // 日付を週ごとにグループ化
         days.forEach(function(day, index) {
-            var weekIndex = Math.floor(index / 7);
+            const weekIndex = Math.floor(index / 7);
             if (weekIndex < 6) {
                 weeks[weekIndex].push(day);
             }
@@ -398,11 +398,11 @@ function ShiftViewModel() {
         
         // 各行（週）を作成
         weeks.forEach(function(week) {
-            var row = document.createElement('tr');
+            const row = document.createElement('tr');
             
             week.forEach(function(day) {
-                var cell = document.createElement('td');
-                var dayElement = document.createElement('div');
+                const cell = document.createElement('td');
+                const dayElement = document.createElement('div');
                 dayElement.className = 'calendar-day';
                 
                 if (day.date.getMonth() !== self.currentDate().getMonth()) {
@@ -413,12 +413,12 @@ function ShiftViewModel() {
                     dayElement.classList.add('weekend');
                 }
                 
-                var today = new Date();
+                const today = new Date();
                 if (day.date.toDateString() === today.toDateString()) {
                     dayElement.classList.add('today');
                 }
                 
-                var dayNumber = document.createElement('div');
+                const dayNumber = document.createElement('div');
                 dayNumber.className = 'day-number';
                 dayNumber.textContent = day.day;
                 dayElement.appendChild(dayNumber);
@@ -430,7 +430,7 @@ function ShiftViewModel() {
                         self.viewShift(day.shifts[0]);
                     } else {
                         // シフトがない場合はその日の日付でシフト作成ページに遷移
-                        var dateStr = day.date.getFullYear() + '-' + 
+                        const dateStr = day.date.getFullYear() + '-' + 
                                     String(day.date.getMonth() + 1).padStart(2, '0') + '-' + 
                                     String(day.date.getDate()).padStart(2, '0');
                         window.location.href = '/shifts/create?date=' + dateStr;
@@ -442,18 +442,18 @@ function ShiftViewModel() {
                 
                 // シフトブロックを追加
                 day.shifts.forEach(function(shift) {
-                    var shiftBlock = document.createElement('div');
+                    const shiftBlock = document.createElement('div');
                     shiftBlock.className = 'shift-block';
                     if (shift.available_slots === 0) {
                         shiftBlock.classList.add('full');
                     }
                     
-                    var timeDiv = document.createElement('div');
+                    const timeDiv = document.createElement('div');
                     timeDiv.className = 'shift-time';
                     timeDiv.textContent = shift.start_time + '-' + shift.end_time;
                     shiftBlock.appendChild(timeDiv);
                     
-                    var countDiv = document.createElement('div');
+                    const countDiv = document.createElement('div');
                     countDiv.className = 'shift-count';
                     countDiv.textContent = shift.assigned_users.length + '/' + shift.slot_count;
                     shiftBlock.appendChild(countDiv);
@@ -477,23 +477,23 @@ function ShiftViewModel() {
     
     // 週表示をレンダリング（テーブル形式）
     self.renderWeekView = function(weekDays) {
-        var container = document.getElementById('week-grid-container');
+        const container = document.getElementById('week-grid-container');
         if (!container) return;
         
         container.innerHTML = '';
         
         // 1行のテーブルを作成
-        var row = document.createElement('tr');
+        const row = document.createElement('tr');
         
         weekDays.forEach(function(day) {
-            var cell = document.createElement('td');
-            var dayElement = document.createElement('div');
+            const cell = document.createElement('td');
+            const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day';
             
             if (day.isToday) dayElement.classList.add('today');
             if (day.isWeekend) dayElement.classList.add('weekend');
             
-            var dayNumber = document.createElement('div');
+            const dayNumber = document.createElement('div');
             dayNumber.className = 'day-number';
             dayNumber.textContent = day.day;
             dayElement.appendChild(dayNumber);
@@ -505,7 +505,7 @@ function ShiftViewModel() {
                     self.viewShift(day.shifts[0]);
                 } else {
                     // シフトがない場合はその日の日付でシフト作成ページに遷移
-                    var dateStr = day.date.getFullYear() + '-' + 
+                    const dateStr = day.date.getFullYear() + '-' + 
                                 String(day.date.getMonth() + 1).padStart(2, '0') + '-' + 
                                 String(day.date.getDate()).padStart(2, '0');
                     window.location.href = '/shifts/create?date=' + dateStr;
@@ -517,18 +517,18 @@ function ShiftViewModel() {
             
             // シフトブロックを追加
             day.shifts.forEach(function(shift) {
-                var shiftBlock = document.createElement('div');
+                const shiftBlock = document.createElement('div');
                 shiftBlock.className = 'shift-block';
                 if (shift.available_slots === 0) {
                     shiftBlock.classList.add('full');
                 }
                 
-                var timeDiv = document.createElement('div');
+                const timeDiv = document.createElement('div');
                 timeDiv.className = 'shift-time';
                 timeDiv.textContent = shift.start_time + '-' + shift.end_time;
                 shiftBlock.appendChild(timeDiv);
                 
-                var countDiv = document.createElement('div');
+                const countDiv = document.createElement('div');
                 countDiv.className = 'shift-count';
                 countDiv.textContent = shift.assigned_users.length + '/' + shift.slot_count;
                 shiftBlock.appendChild(countDiv);
@@ -536,7 +536,7 @@ function ShiftViewModel() {
                 // ツールチップ機能を追加
                 shiftBlock.addEventListener('mouseover', function(e) {
                     // ツールチップ要素を作成
-                    var tooltip = document.createElement('div');
+                    const tooltip = document.createElement('div');
                     tooltip.className = 'shift-tooltip';
                     tooltip.style.position = 'absolute';
                     tooltip.style.zIndex = '100';
@@ -564,7 +564,7 @@ function ShiftViewModel() {
 
                 shiftBlock.addEventListener('mouseout', function() {
                     // ツールチップを非表示にする
-                    var tooltip = document.querySelector('.shift-tooltip');
+                    const tooltip = document.querySelector('.shift-tooltip');
                     if (tooltip) {
                         document.body.removeChild(tooltip);
                     }
@@ -582,7 +582,7 @@ function ShiftViewModel() {
     
     // 日表示をレンダリング（テーブル形式）
     self.renderDayView = function(date, dayShifts) {
-        var shiftsContainer = document.getElementById('day-shifts-container');
+        const shiftsContainer = document.getElementById('day-shifts-container');
         
         if (!shiftsContainer) return;
         
@@ -590,8 +590,8 @@ function ShiftViewModel() {
         shiftsContainer.innerHTML = '';
         
         if (dayShifts.length === 0) {
-            var row = document.createElement('tr');
-            var cell = document.createElement('td');
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
             cell.colSpan = 5;
             cell.style.textAlign = 'center';
             cell.style.color = '#999';
@@ -601,22 +601,22 @@ function ShiftViewModel() {
             shiftsContainer.appendChild(row);
         } else {
             dayShifts.forEach(function(shift) {
-                var row = document.createElement('tr');
+                const row = document.createElement('tr');
                 row.className = 'day-shift-row';
                 if (shift.assigned_users.length >= shift.slot_count) {
                     row.classList.add('full');
                 }
                 
                 // 時間列
-                var timeCell = document.createElement('td');
+                const timeCell = document.createElement('td');
                 timeCell.className = 'day-shift-time';
                 timeCell.textContent = shift.start_time + '-' + shift.end_time;
                 row.appendChild(timeCell);
                 
                 // シフト情報列
-                var infoCell = document.createElement('td');
+                const infoCell = document.createElement('td');
                 infoCell.className = 'day-shift-info';
-                var infoHtml = '';
+                let infoHtml = '';
                 if (shift.note) {
                     infoHtml += '<div class="day-shift-note">' + shift.note + '</div>';
                 }
@@ -625,12 +625,12 @@ function ShiftViewModel() {
                 row.appendChild(infoCell);
                 
                 // 参加者一覧列
-                var participantsCell = document.createElement('td');
+                const participantsCell = document.createElement('td');
                 participantsCell.className = 'day-shift-participants';
                 if (shift.assigned_users.length === 0) {
                     participantsCell.innerHTML = '<span style="color: #999;">参加者なし</span>';
                 } else {
-                    var participantsHtml = '';
+                    let participantsHtml = '';
                     shift.assigned_users.forEach(function(user) {
                         participantsHtml += '<div class="participant-item">';
                         participantsHtml += '<div class="participant-name">' + user.name + ' (' + user.status + ')</div>';
@@ -644,10 +644,10 @@ function ShiftViewModel() {
                 row.appendChild(participantsCell);
                 
                 // 定員状況列
-                var statusCell = document.createElement('td');
+                const statusCell = document.createElement('td');
                 statusCell.className = 'day-shift-status';
-                var availableSlots = shift.slot_count - shift.assigned_users.length;
-                var statusText = shift.assigned_users.length + '/' + shift.slot_count + '人';
+                const availableSlots = shift.slot_count - shift.assigned_users.length;
+                let statusText = shift.assigned_users.length + '/' + shift.slot_count + '人';
                 if (availableSlots === 0) {
                     statusText += ' (満員)';
                     statusCell.style.color = '#d32f2f';
@@ -660,11 +660,11 @@ function ShiftViewModel() {
                 row.appendChild(statusCell);
                 
                 // 操作列
-                var actionCell = document.createElement('td');
+                const actionCell = document.createElement('td');
                 actionCell.className = 'day-shift-actions';
                 
                 // 詳細ボタン
-                var detailBtn = document.createElement('button');
+                const detailBtn = document.createElement('button');
                 detailBtn.className = 'action-btn detail';
                 detailBtn.textContent = '詳細';
                 detailBtn.addEventListener('click', function() {
@@ -674,7 +674,7 @@ function ShiftViewModel() {
                 
                 // 編集ボタン（作成者のみ）
                 if (shift.created_by === uid) {
-                    var editBtn = document.createElement('button');
+                    const editBtn = document.createElement('button');
                     editBtn.className = 'action-btn edit';
                     editBtn.textContent = '編集';
                     editBtn.style.marginLeft = '5px';
@@ -687,7 +687,7 @@ function ShiftViewModel() {
                 
                 // 参加ボタン（空きがある場合）
                 if (availableSlots > 0) {
-                    var joinBtn = document.createElement('button');
+                    const joinBtn = document.createElement('button');
                     joinBtn.className = 'action-btn join';
                     joinBtn.textContent = '参加';
                     joinBtn.style.marginLeft = '5px';
@@ -706,13 +706,13 @@ function ShiftViewModel() {
     // 募集中のシフトをレンダリング
     self.renderAvailableShifts = function() {
         try {
-            var view = self.currentView();
-            var map = {
+            const view = self.currentView();
+            const map = {
                 month: { container: 'available-shifts-container',      msg: 'no-shifts-message' },
                 week:  { container: 'available-shifts-container-week', msg: 'no-shifts-message-week' },
                 day:   { container: 'available-shifts-container-day',  msg: 'no-shifts-message-day' }
             };
-            var target = map[view] || map.month;
+            const target = map[view] || map.month;
             self.renderAvailableShiftsForView(view, target.container, target.msg);
         } catch (error) {
             console.error('Error in renderAvailableShifts:', error);
@@ -724,8 +724,8 @@ function ShiftViewModel() {
         console.log('=== renderAvailableShiftsForView ===');
         console.log('view:', view, 'containerId:', containerId, 'messageId:', messageId);
         
-        var container = document.getElementById(containerId);
-        var noShiftsMessage = document.getElementById(messageId);
+        const container = document.getElementById(containerId);
+        const noShiftsMessage = document.getElementById(messageId);
         
         if (!container) {
             console.log('Container not found:', containerId);
@@ -735,24 +735,24 @@ function ShiftViewModel() {
         console.log('Container found:', container);
         container.innerHTML = '';
         
-        var availableShifts = self.availableShifts();
+        const availableShifts = self.availableShifts();
         console.log('Available shifts from observable:', availableShifts);
         console.log('Available shifts length:', availableShifts.length);
         
         // 週表記の場合は、その週のシフトのみをフィルタリング
-        var filteredShifts = availableShifts;
+        let filteredShifts = availableShifts;
         if (view === 'week') {
-            var base = new Date(self.currentDate());
-            var weekStart = new Date(base);
+            const base = new Date(self.currentDate());
+            const weekStart = new Date(base);
             weekStart.setHours(0,0,0,0);
             weekStart.setDate(base.getDate() - base.getDay()); // Sun
-            var weekEnd = new Date(weekStart);
+            const weekEnd = new Date(weekStart);
             weekEnd.setDate(weekStart.getDate() + 6); // Sat
             weekEnd.setHours(23,59,59,999);
             console.log('Week view - filtering shifts for week:', weekStart, 'to', weekEnd);
 
             filteredShifts = availableShifts.filter(function(shift) {
-                var sd = new Date(shift.shift_date); // ローカル日付
+                const sd = new Date(shift.shift_date); // ローカル日付
                 return sd && sd >= weekStart && sd <= weekEnd;
             });
             console.log('Filtered shifts for week (count):', filteredShifts.length);
@@ -760,13 +760,13 @@ function ShiftViewModel() {
 
         // 日表示の場合は、その日のシフトのみをフィルタリング
         if (view === 'day') {
-            var cur = new Date(self.currentDate());
+            const cur = new Date(self.currentDate());
             cur.setHours(0,0,0,0);
-            var next = new Date(cur);
+            const next = new Date(cur);
             next.setDate(cur.getDate() + 1);
             next.setMilliseconds(-1);
             filteredShifts = availableShifts.filter(function(shift) {
-                var sd = new Date(shift.shift_date);
+                const sd = new Date(shift.shift_date);
                 return sd && sd >= cur && sd <= next;
             });
         }
@@ -783,7 +783,7 @@ function ShiftViewModel() {
             }
             
             filteredShifts.forEach(function(shift, index) {
-                var itemElement = document.createElement('div');
+                const itemElement = document.createElement('div');
                 itemElement.className = 'recruitment-item';
                 itemElement.style.cssText = 'cursor: pointer;';
                 
@@ -797,23 +797,23 @@ function ShiftViewModel() {
                 });
                 
                 // シフト情報とボタンを横並びにするコンテナ
-                var infoContainer = document.createElement('div');
+                const infoContainer = document.createElement('div');
                 infoContainer.style.cssText = 'display: flex; justify-content: space-between; align-items: center; width: 100%;';
                 
                 // 左側のシフト情報
-                var shiftInfo = document.createElement('div');
+                const shiftInfo = document.createElement('div');
                 shiftInfo.style.cssText = 'flex: 1;';
                 
-                var dateDiv = document.createElement('div');
+                const dateDiv = document.createElement('div');
                 dateDiv.className = 'recruitment-date';
                 // 秒数表記を削除（HH:MM:SS → HH:MM）
-                var startTime = shift.start_time.substring(0, 5);
-                var endTime = shift.end_time.substring(0, 5);
+                const startTime = shift.start_time.substring(0, 5);
+                const endTime = shift.end_time.substring(0, 5);
                 dateDiv.textContent = shift.shift_date + '  ' + startTime + '-' + endTime;
                 dateDiv.style.cssText = 'font-weight: bold; margin-bottom: 4px;';
                 shiftInfo.appendChild(dateDiv);
                 
-                var slotsDiv = document.createElement('div');
+                const slotsDiv = document.createElement('div');
                 slotsDiv.className = 'recruitment-slots';
                 slotsDiv.textContent = '空き: ' + shift.available_slots + '人 / 定員: ' + shift.slot_count + '人';
                 slotsDiv.style.cssText = 'font-size: 12px; color: #666;';
@@ -822,13 +822,13 @@ function ShiftViewModel() {
                 infoContainer.appendChild(shiftInfo);
                 
                 // 右側のボタン
-                var actionsDiv = document.createElement('div');
+                const actionsDiv = document.createElement('div');
                 actionsDiv.className = 'recruitment-actions';
                 actionsDiv.style.cssText = 'display: flex; gap: 5px; flex-shrink: 0;';
                 
 
         // 参加・取消ボタンはそのまま
-                var joinBtn = document.createElement('button');
+                const joinBtn = document.createElement('button');
                 joinBtn.className = 'action-btn join';
                 joinBtn.textContent = '参加';
                 joinBtn.addEventListener('click', function() {
@@ -836,7 +836,7 @@ function ShiftViewModel() {
                 });
                 actionsDiv.appendChild(joinBtn);
                 
-                var cancelBtn = document.createElement('button');
+                const cancelBtn = document.createElement('button');
                 cancelBtn.className = 'action-btn cancel';
                 cancelBtn.textContent = '取消';
                 cancelBtn.addEventListener('click', function() {
@@ -871,16 +871,16 @@ function ShiftViewModel() {
         self.loading(true);
         // 取得レンジを指定（APIが期間必須でも動くように）
         (function(){
-            var base = new Date(self.currentDate());
+            const base = new Date(self.currentDate());
             console.log('[loadShifts] currentDate:', base);
-            var y = base.getFullYear(), m = base.getMonth();
+            const y = base.getFullYear(), m = base.getMonth();
             console.log('[loadShifts] year:', y, 'month:', m);
-            var first = new Date(y, m, 1);
-            var last  = new Date(y, m + 1, 0);
+            const first = new Date(y, m, 1);
+            const last  = new Date(y, m + 1, 0);
             // 前後1週間バッファ
             first.setDate(first.getDate() - 7);
             last.setDate(last.getDate() + 7);
-            function fmt(d){ var z=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate()); }
+            function fmt(d){ const z=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate()); }
             self._from = fmt(first);
             self._to   = fmt(last);
             console.log('[loadShifts] range', self._from, '→', self._to);
@@ -900,17 +900,17 @@ function ShiftViewModel() {
                     console.log('Total shifts:', response.data.length);
 
                     // 正規化：型を数値に統一し、available_slots を算出
-                    var data = response.data || [];
+                    const data = response.data || [];
                     // 配列でない場合は配列に変換
                     if (!Array.isArray(data)) {
                         data = Array.from(data);
                     }
-                    var normalized = data.map(function(shift) {
-                        var assignedCount = Array.isArray(shift.assigned_users)
+                    const normalized = data.map(function(shift) {
+                        const assignedCount = Array.isArray(shift.assigned_users)
                             ? shift.assigned_users.length
                             : Number(shift.assigned_count ?? 0);
-                        var slotCount = Number((shift.slot_count ?? shift.capacity ?? 0));
-                        var available = (shift.available_slots != null)
+                        const slotCount = Number((shift.slot_count ?? shift.capacity ?? 0));
+                        const available = (shift.available_slots != null)
                             ? Number(shift.available_slots)
                             : Math.max(slotCount - assignedCount, 0);
                         return Object.assign({}, shift, {
@@ -924,7 +924,7 @@ function ShiftViewModel() {
                     self.shifts(normalized);
 
                     // 募集中のみ抽出（available_slots > 0）
-                    var availableShifts = normalized.filter(function(shift) {
+                    const availableShifts = normalized.filter(function(shift) {
                         console.log('Checking shift ID:', shift.id, 'available_slots:', shift.available_slots);
                         return shift.available_slots > 0;
                     });
@@ -965,7 +965,7 @@ function ShiftViewModel() {
         console.log('🚨 緊急コメントモーダル表示開始！');
         
         // 既存のモーダルをすべて削除
-        var existingModals = document.querySelectorAll('#comment-modal, .modal-overlay');
+        const existingModals = document.querySelectorAll('#comment-modal, .modal-overlay');
         existingModals.forEach(function(modal) {
             modal.remove();
         });
@@ -977,7 +977,7 @@ function ShiftViewModel() {
         window.shiftVM = self;
         
         // 緊急ボタン仕様でモーダルを作成
-        var modal = document.createElement('div');
+        const modal = document.createElement('div');
         modal.id = 'comment-modal';
         modal.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background: rgba(0,0,0,0.8) !important; z-index: 99999 !important; display: flex !important; align-items: center !important; justify-content: center !important;';
         
@@ -999,14 +999,14 @@ function ShiftViewModel() {
         
         // テキストエリアにフォーカス
         setTimeout(function() {
-            var textarea = document.getElementById('comment-textarea');
+            const textarea = document.getElementById('comment-textarea');
             if (textarea) {
                 textarea.focus();
             }
         }, 100);
         
         // ESCキーで閉じる
-        var escHandler = function(e) {
+        const escHandler = function(e) {
             if (e.key === 'Escape') {
                 self.hideCommentModal();
                 document.removeEventListener('keydown', escHandler);
@@ -1025,7 +1025,7 @@ function ShiftViewModel() {
     // コメントモーダルを非表示
     self.hideCommentModal = function() {
         console.log('🚨 緊急コメントモーダル非表示！');
-        var modal = document.getElementById('comment-modal');
+        const modal = document.getElementById('comment-modal');
         if (modal) {
             modal.remove();
         }
@@ -1039,7 +1039,7 @@ function ShiftViewModel() {
         self.hideCommentModal();
         
         // 現在のユーザーIDを取得（セッションから）
-        var currentUserId = window.CURRENT_USER_ID || 1;
+        const currentUserId = window.CURRENT_USER_ID || 1;
         
         const API = window.API_BASE || '/api';
         fetch(`${API}/shifts/${shift.id}/join`, {
@@ -1060,7 +1060,7 @@ function ShiftViewModel() {
         })
         .then(function(data) {
             if (data.ok) {
-                var message = 'シフトに参加しました！';
+                let message = 'シフトに参加しました！';
                 if (comment && comment.trim()) {
                     message += '\nコメント: ' + comment;
                 }
@@ -1098,7 +1098,7 @@ function ShiftViewModel() {
             success: function(response, status, xhr) {
                 // レスポンスを手動でJSONパース
                 try {
-                    var data = typeof response === 'string' ? JSON.parse(response) : response;
+                    const data = typeof response === 'string' ? JSON.parse(response) : response;
                     
                     if (data.success) {
                         self.showAlert('シフトの参加を取り消しました', 'success');
@@ -1122,7 +1122,7 @@ function ShiftViewModel() {
                 }
             },
             error: function(xhr, status, error) {
-                var errorMessage = 'シフトの取消に失敗しました';
+                const errorMessage = 'シフトの取消に失敗しました';
                 
                 if (xhr.status === 404) {
                     errorMessage = 'このシフトに参加していません';
@@ -1140,8 +1140,8 @@ function ShiftViewModel() {
     self.renderListShifts = function() {
         console.log('Rendering list shifts...');
         
-        var container = document.getElementById('available-shifts-container-list');
-        var noShiftsMessage = document.getElementById('no-shifts-message-list');
+        const container = document.getElementById('available-shifts-container-list');
+        const noShiftsMessage = document.getElementById('no-shifts-message-list');
         
         console.log('Container found:', !!container);
         console.log('No shifts message found:', !!noShiftsMessage);
@@ -1173,7 +1173,7 @@ function ShiftViewModel() {
                 console.log('All shifts API response:', response);
                 
                 if (response.ok && response.data) {
-                    var shifts = response.data;
+                    const shifts = response.data;
                     console.log('All shifts loaded:', shifts.length);
                     self.renderShiftsList(shifts);
                 } else {
@@ -1190,8 +1190,8 @@ function ShiftViewModel() {
     
     // シフトリストをレンダリング
     self.renderShiftsList = function(shifts) {
-        var container = document.getElementById('available-shifts-container-list');
-        var noShiftsMessage = document.getElementById('no-shifts-message-list');
+        const container = document.getElementById('available-shifts-container-list');
+        const noShiftsMessage = document.getElementById('no-shifts-message-list');
         
         console.log('renderShiftsList called with:', shifts ? shifts.length : 'null', 'shifts');
         console.log('Container found:', !!container);
@@ -1207,27 +1207,27 @@ function ShiftViewModel() {
         
         // シフトをリスト形式で表示
         shifts.forEach(function(shift) {
-            var shiftItem = document.createElement('div');
+            const shiftItem = document.createElement('div');
             shiftItem.className = 'shift-list-item';
             
-            var shiftInfo = document.createElement('div');
+            const shiftInfo = document.createElement('div');
             shiftInfo.className = 'shift-list-info';
             
-            var title = document.createElement('div');
+            const title = document.createElement('div');
             title.className = 'shift-list-title';
             title.textContent = shift.title || 'シフト';
             
-            var details = document.createElement('div');
+            const details = document.createElement('div');
             details.className = 'shift-list-details';
             details.textContent = shift.shift_date + ' ' + shift.start_time + '〜' + shift.end_time;
             
             // 参加人数を表示
-            var status = document.createElement('div');
+            const status = document.createElement('div');
             status.className = 'shift-list-status';
-            var joinedCount = shift.assigned_users ? shift.assigned_users.length : 0;
-            var slotCount = shift.slot_count || 0;
-            var availableSlots = slotCount - joinedCount;
-            var statusText = joinedCount + '/' + slotCount + '人';
+            const joinedCount = shift.assigned_users ? shift.assigned_users.length : 0;
+            const slotCount = shift.slot_count || 0;
+            const availableSlots = slotCount - joinedCount;
+            let statusText = joinedCount + '/' + slotCount + '人';
             
             if (availableSlots === 0) {
                 statusText += ' (満員)';
@@ -1243,17 +1243,17 @@ function ShiftViewModel() {
             shiftInfo.appendChild(details);
             shiftInfo.appendChild(status);
             
-            var actions = document.createElement('div');
+            const actions = document.createElement('div');
             actions.className = 'shift-list-actions';
             
-            var viewBtn = document.createElement('button');
+            const viewBtn = document.createElement('button');
             viewBtn.className = 'shift-list-btn primary';
             viewBtn.textContent = '詳細';
             viewBtn.onclick = function() {
                 window.location.href = '/shifts/' + shift.id;
             };
             
-            var joinBtn = document.createElement('button');
+            const joinBtn = document.createElement('button');
             joinBtn.className = 'shift-list-btn secondary';
             joinBtn.textContent = '参加';
             joinBtn.onclick = function() {
@@ -1273,7 +1273,7 @@ function ShiftViewModel() {
         console.log('List rendering complete. Container children count:', container.children.length);
         
         // リストビューの表示状態を確認
-        var listView = document.querySelector('.list-recruitment-section');
+        const listView = document.querySelector('.list-recruitment-section');
         if (listView) {
             console.log('List view display style:', listView.style.display);
             console.log('List view computed display:', window.getComputedStyle(listView).display);
@@ -1293,7 +1293,7 @@ function ShiftViewModel() {
     
     // シフトなしメッセージを表示
     self.showNoShiftsMessage = function() {
-        var noShiftsMessage = document.getElementById('no-shifts-message-list');
+        const noShiftsMessage = document.getElementById('no-shifts-message-list');
         if (noShiftsMessage) {
             noShiftsMessage.style.display = 'block';
         }
@@ -1312,8 +1312,8 @@ function ShiftViewModel() {
     
     // 手動でナビゲーションボタンのイベントリスナーを追加
     setTimeout(function() {
-        var prevBtn = document.querySelector('.nav-btn[data-bind*="previousMonth"]');
-        var nextBtn = document.querySelector('.nav-btn[data-bind*="nextMonth"]');
+        const prevBtn = document.querySelector('.nav-btn[data-bind*="previousMonth"]');
+        const nextBtn = document.querySelector('.nav-btn[data-bind*="nextMonth"]');
         
         if (prevBtn) {
             prevBtn.addEventListener('click', function(e) {
@@ -1358,7 +1358,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded: Knockout.jsバインディング開始');
     
     try {
-        var viewModel = new ShiftViewModel();
+        const viewModel = new ShiftViewModel();
         console.log('ShiftViewModel作成完了');
         
         ko.applyBindings(viewModel);
@@ -1366,12 +1366,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // バインディング後にボタンの状態を再確認
         setTimeout(function() {
-            var uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
+            const uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
             console.log('バインディング後のCURRENT_USER_ID:', uid);
             
             if (uid) {
                 console.log('バインディング後：ボタンを有効化');
-                var btns = document.querySelectorAll('.action-btn.btn-participate, .action-btn.btn-cancel, .btn-join, .btn-cancel-shift, .btn-add-shift, .btn.my-shifts-btn, .nav-btn, .view-btn');
+                const btns = document.querySelectorAll('.action-btn.btn-participate, .action-btn.btn-cancel, .btn-join, .btn-cancel-shift, .btn-add-shift, .btn.my-shifts-btn, .nav-btn, .view-btn');
                 console.log('バインディング後有効化するボタン数:', btns.length);
                 btns.forEach(b => { 
                     b.disabled = false; 
@@ -1380,7 +1380,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 
                 // 直接イベントリスナーを追加（Knockout.jsのバインディングが動作しない場合のフォールバック）
-                var myShiftsBtn = document.querySelector('.btn.my-shifts-btn');
+                const myShiftsBtn = document.querySelector('.btn.my-shifts-btn');
                 console.log('自分のシフトボタン検索結果:', myShiftsBtn);
                 
                 if (myShiftsBtn) {
@@ -1396,8 +1396,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // ナビゲーションボタンにも直接イベントリスナーを追加
-                var prevBtn = document.querySelector('.nav-btn');
-                var nextBtn = document.querySelectorAll('.nav-btn')[1];
+                const prevBtn = document.querySelector('.nav-btn');
+                const nextBtn = document.querySelectorAll('.nav-btn')[1];
                 
                 console.log('前月ボタン検索結果:', prevBtn);
                 console.log('次月ボタン検索結果:', nextBtn);
