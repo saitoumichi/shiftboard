@@ -17,8 +17,17 @@ class Controller_Users extends \Fuel\Core\Controller
             error_log('POST data - name: ' . $name . ', color: ' . $color);
 
             if ($name === '') {
-                // 超簡易バリデーション
-                $users = \Model_User::query()->order_by('name', 'asc')->get();
+            // 超簡易バリデーション
+            try {
+                $query = DB::select('id', 'name', 'color', 'created_at')
+                    ->from('users');
+                $query->order_by('name', 'asc');
+                $result = $query->execute();
+                $users = $result->as_array();
+            } catch (Exception $e) {
+                error_log('Error fetching users: ' . $e->getMessage());
+                $users = array();
+            }
                 $v = View::forge('users/login');
                 $v->set('error', '名前は必須です', false);
                 $v->set('users', $users);
@@ -99,7 +108,16 @@ class Controller_Users extends \Fuel\Core\Controller
         $color = trim(Input::post('color', '#000000'));
 
         if ($name === '') {
-            $users = \Model_User::query()->order_by('name', 'asc')->get();
+            try {
+                $query = DB::select('id', 'name', 'color', 'created_at')
+                    ->from('users');
+                $query->order_by('name', 'asc');
+                $result = $query->execute();
+                $users = $result->as_array();
+            } catch (Exception $e) {
+                error_log('Error fetching users: ' . $e->getMessage());
+                $users = array();
+            }
             $view = View::forge('users/login');
             $view->set('error', '名前は必須です', false);
             $view->set('users', $users);
