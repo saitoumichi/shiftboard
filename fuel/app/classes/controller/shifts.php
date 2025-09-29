@@ -67,10 +67,12 @@ class Controller_Shifts extends \Fuel\Core\Controller
 
     public function action_view($id)  //詳細画面
     {
+        error_log('action_view called with id: ' . $id);
         $this->require_login();
         $v = View::forge('shifts/view');
         $v->set('current_user_id', (int)Session::get('user_id'), false);
         $v->set('shift_id', (int)$id, false);
+        error_log('shift_id set to: ' . (int)$id);
         return Response::forge($v);
     }
 

@@ -22,12 +22,15 @@
     
     <!-- ユーザーIDとAPIベースURL設定 -->
     <meta name="current-user-id" content="<?= (int)($current_user_id ?? 0) ?>">
+    <meta name="shift-id" content="<?= (int)($shift_id ?? 0) ?>">
     <meta name="api-base" content="/api">
     <script>
         window.API_BASE = '/api';
         window.CURRENT_USER_ID = Number(
             document.querySelector('meta[name="current-user-id"]')?.content || 0
         );
+        window.SHIFT_ID = <?= (int)($shift_id ?? 0) ?>;
+        console.log('SHIFT_ID set to:', window.SHIFT_ID);
     </script>
     
     <!-- 共通JavaScript -->

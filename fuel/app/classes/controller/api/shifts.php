@@ -63,7 +63,8 @@ class Controller_Api_Shifts extends \Fuel\Core\Controller_Rest
             $query->where('sa.user_id', $user_id);
         }
 
-        $rows = $query->execute()->as_array();
+        $result = $query->execute();
+        $rows = $result->as_array();
 
         // フロント（shifts.js）が期待する形に整形
         $data = array_map(function($s) use ($mine, $user_id) {

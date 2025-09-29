@@ -737,6 +737,12 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   slot_count: shift.slot_count,
                   assigned_users: shift.assigned_users ? shift.assigned_users.length : 0
                 });
+                
+                // デバッグ要素を更新
+                const debugRawShift = document.getElementById('debug-raw-shift');
+                if (debugRawShift) {
+                  debugRawShift.textContent = JSON.stringify(shift);
+                }
                 console.log('Capacity info:', self.capacityInfo());
               } else {
                 console.error('Shift is null after data load!');
@@ -1809,12 +1815,91 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
   
   // Knockout.jsのバインディングを適用
   document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== DOMContentLoaded event fired ===');
+    console.log('window.ko exists:', !!window.ko);
+    console.log('window.__shiftVM exists:', !!window.__shiftVM);
+    
     const root = document.getElementById('shift-detail-root');
+    console.log('Root element found:', !!root);
+    
     if (root && window.ko) {
       try {
         ko.applyBindings(window.__shiftVM, root);
         bindingApplied = true;
         console.log('Knockout binding applied successfully');
+        
+        // シフトIDを取得してデータを読み込む
+        let shiftId = window.SHIFT_ID || 0;
+        console.log('Initial shiftId from window.SHIFT_ID:', shiftId);
+        
+        // HTMLのdata属性からシフトIDを取得
+        if (!shiftId && root) {
+          const dataShiftId = root.getAttribute('data-shift-id');
+          if (dataShiftId) {
+            shiftId = parseInt(dataShiftId);
+            console.log('Extracted shift ID from data attribute:', shiftId);
+          }
+        }
+        
+        // URLからシフトIDを取得（フォールバック）
+        if (!shiftId) {
+          const pathParts = window.location.pathname.split('/');
+          console.log('URL path parts:', pathParts);
+          console.log('Current URL:', window.location.href);
+          
+          // /shifts/1 のような形式からIDを取得
+          const shiftsIndex = pathParts.indexOf('shifts');
+          if (shiftsIndex !== -1 && pathParts[shiftsIndex + 1]) {
+            shiftId = parseInt(pathParts[shiftsIndex + 1]);
+            console.log('Extracted shift ID from URL:', shiftId);
+          }
+          
+          // /shifts/view/1 のような形式からIDを取得（フォールバック）
+          const viewIndex = pathParts.indexOf('view');
+          if (viewIndex !== -1 && pathParts[viewIndex + 1]) {
+            shiftId = parseInt(pathParts[viewIndex + 1]);
+            console.log('Extracted shift ID from URL (view):', shiftId);
+          }
+          
+          // URLパラメータからも取得を試行
+          const urlParams = new URLSearchParams(window.location.search);
+          const paramShiftId = urlParams.get('shift_id') || urlParams.get('id');
+          if (paramShiftId) {
+            shiftId = parseInt(paramShiftId);
+            console.log('Extracted shift ID from URL params:', shiftId);
+          }
+        }
+        
+        // 最終的なフォールバック：URLの最後の数値を取得
+        if (!shiftId) {
+          const pathParts = window.location.pathname.split('/');
+          const lastPart = pathParts[pathParts.length - 1];
+          if (lastPart && !isNaN(lastPart)) {
+            shiftId = parseInt(lastPart);
+            console.log('Extracted shift ID from last URL part:', shiftId);
+          }
+        }
+        
+        console.log('Loading shift data for ID:', shiftId);
+        
+        // デバッグ要素にシフトIDを表示
+        const debugShiftId = document.getElementById('debug-shift-id');
+        if (debugShiftId) {
+          debugShiftId.textContent = shiftId;
+        }
+        
+        // デバッグ要素に生のシフトデータを表示
+        const debugRawShift = document.getElementById('debug-raw-shift');
+        if (debugRawShift) {
+          debugRawShift.textContent = JSON.stringify(window.__shiftVM.shift());
+        }
+        
+        if (shiftId > 0) {
+          window.__shiftVM.load(shiftId);
+        } else {
+          console.error('No shift ID provided');
+          window.__shiftVM.error('シフトIDが設定されていません');
+        }
         
         
       } catch (e) {

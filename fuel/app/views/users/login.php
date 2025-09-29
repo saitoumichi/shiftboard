@@ -335,15 +335,15 @@ if (!isset($users)) {
           <?php if (is_array($users) && !empty($users)): ?>
             <?php foreach ($users as $u): ?>
               <div class="user-item">
-                <div class="user-info" onclick="loginUser(<?= (int)$u->id ?>)">
-                  <span class="user-color" style="background-color: <?= e($u->color) ?>;"></span>
-                  <?= e($u->name) ?>
+                <div class="user-info" onclick="loginUser(<?= (int)$u['id'] ?>)">
+                  <span class="user-color" style="background-color: <?= e($u['color']) ?>;"></span>
+                  <?= e($u['name']) ?>
                 </div>
                 <div class="action-buttons">
-                  <button class="edit-btn" onclick="event.stopPropagation(); editUser(<?= (int)$u->id ?>);" title="ユーザーを編集">
+                  <button class="edit-btn" onclick="event.stopPropagation(); editUser(<?= (int)$u['id'] ?>);" title="ユーザーを編集">
                     編集
                   </button>
-                  <button class="delete-btn" onclick="event.stopPropagation(); deleteUser(<?= (int)$u->id ?>, '<?= e($u->name) ?>');" title="ユーザーを削除">
+                  <button class="delete-btn" onclick="event.stopPropagation(); deleteUser(<?= (int)$u['id'] ?>, '<?= e($u['name']) ?>');" title="ユーザーを削除">
                     削除
                   </button>
                 </div>
