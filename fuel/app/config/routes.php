@@ -5,6 +5,7 @@ return [
   'users/login'       => 'users/login',        // ログイン画面
   'shifts'            => 'shifts/index',
   'shifts/create'     => 'shifts/create',
+  'shifts/view/(:num)' => 'shifts/view/$1',
   'shifts/(:num)'     => 'shifts/view/$1',
   'users/create'      => 'users/create',
   'users/edit/(:num)' => 'users/edit/$1',      // ユーザー編集画面
