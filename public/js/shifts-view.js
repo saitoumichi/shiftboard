@@ -801,6 +801,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   
                   // shift.assigned_usersから参加者を取得して手動で更新
                   const shift = self.shift();
+                  let updatedParticipants = null;
+                  
                   if (shift && shift.assigned_users && shift.assigned_users.length > 0) {
                     console.log('Found assigned_users in shift, updating participants manually');
                     self.participants.removeAll();
@@ -808,8 +810,8 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                       self.participants.push(participant);
                       console.log('Manually added participant:', participant);
                     });
-                    participants = self.participants(); // 更新された参加者を取得
-                    console.log('Participants after manual update:', participants);
+                    updatedParticipants = self.participants(); // 更新された参加者を取得
+                    console.log('Participants after manual update:', updatedParticipants);
                   }
                   
                   // 既存の参加者アイテムと「参加者なし」表示をクリア（デバッグ情報以外）
@@ -819,8 +821,9 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   });
                   
                   // 参加者を手動で追加
-                  if (participants && participants.length > 0) {
-                    participants.forEach(function(participant) {
+                  const finalParticipants = updatedParticipants || participants;
+                  if (finalParticipants && finalParticipants.length > 0) {
+                    finalParticipants.forEach(function(participant) {
                       console.log('Manually adding participant:', participant);
                       const item = document.createElement('div');
                       item.className = 'participant-item';
@@ -908,22 +911,26 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                     modal.style.opacity = '0';
                   }
                   
-                  // ボタンの状態を強制的に更新
+                  // ボタンの状態を参加状況に応じて更新
                   const participateBtn = document.querySelector('.btn-participate');
+                  const cancelBtn = document.querySelector('.btn-cancel');
+                  
+                  // 参加状況を確認
+                  const isParticipating = vm.isParticipating();
+                  const canParticipate = vm.canParticipate();
+                  
+                  console.log('Button state update - isParticipating:', isParticipating, 'canParticipate:', canParticipate);
+                  
                   if (participateBtn) {
-                    console.log('Force updating button state after data load');
-                    participateBtn.style.display = 'block';
-                    participateBtn.style.visibility = 'visible';
-                    participateBtn.style.opacity = '1';
-                    participateBtn.style.pointerEvents = 'auto';
-                    participateBtn.style.position = 'relative';
-                    participateBtn.style.zIndex = '1000';
-                    console.log('Button state updated:', {
-                      display: participateBtn.style.display,
-                      visibility: participateBtn.style.visibility,
-                      opacity: participateBtn.style.opacity,
-                      pointerEvents: participateBtn.style.pointerEvents
-                    });
+                    if (!isParticipating && canParticipate) {
+                      participateBtn.style.display = 'block';
+                      participateBtn.style.visibility = 'visible';
+                      participateBtn.style.opacity = '1';
+                      console.log('参加ボタンを表示しました');
+                    } else {
+                      participateBtn.style.display = 'none';
+                      console.log('参加ボタンを非表示にしました');
+                    }
                     
                     // データ読み込み後にもフォールバックリスナーを追加（重複チェック付き）
                     if (!participateBtn.hasAttribute('data-bind-processed')) {
@@ -942,6 +949,23 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                       });
                       participateBtn.setAttribute('data-bind-processed', 'true');
                     }
+                  }
+                  
+                  if (cancelBtn) {
+                    if (isParticipating) {
+                      cancelBtn.style.display = 'block';
+                      cancelBtn.style.visibility = 'visible';
+                      cancelBtn.style.opacity = '1';
+                      console.log('取消ボタンを表示しました');
+                    } else {
+                      cancelBtn.style.display = 'none';
+                      console.log('取消ボタンを非表示にしました');
+                    }
+                  }
+                  
+                  // Knockout.jsのバインディングを強制的に更新
+                  if (window.ko && window.ko.processAllDeferredBindingUpdates) {
+                    window.ko.processAllDeferredBindingUpdates();
                   }
                 } catch (e) {
                   console.error('Rebinding error:', e);
@@ -1161,8 +1185,11 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                   if (shouldShowParticipate) {
                     participateBtn.style.display = 'block';
                     participateBtn.style.visibility = 'visible';
+                    participateBtn.style.opacity = '1';
+                    console.log('参加ボタンを表示しました（手動更新）');
                   } else {
                     participateBtn.style.display = 'none';
+                    console.log('参加ボタンを非表示にしました（手動更新）');
                   }
                 }
                 
@@ -1176,16 +1203,14 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                     visibility: cancelBtn.style.visibility
                   });
                   
-                  // テスト用：取消ボタンを強制的に表示（参加ボタンが非表示の場合）
-                  const shouldShowCancelForTest = !shouldShowParticipate || true; // テスト用に常に表示
-                  
-                  if (shouldShowCancelForTest) {
+                  if (shouldShowCancel) {
                     cancelBtn.style.display = 'block';
                     cancelBtn.style.visibility = 'visible';
-                    console.log('Cancel button shown manually (test mode)');
+                    cancelBtn.style.opacity = '1';
+                    console.log('取消ボタンを表示しました（手動更新）');
                   } else {
                     cancelBtn.style.display = 'none';
-                    console.log('Cancel button hidden manually');
+                    console.log('取消ボタンを非表示にしました（手動更新）');
                   }
                 } else {
                   console.log('Cancel button not found in DOM');
@@ -1361,6 +1386,11 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                             if (cancelBtn) {
                                 cancelBtn.style.display = 'none';
                                 console.log('取消ボタンを非表示にしました');
+                            }
+                            
+                            // Knockout.jsのバインディングを強制的に更新
+                            if (window.ko && window.ko.processAllDeferredBindingUpdates) {
+                                window.ko.processAllDeferredBindingUpdates();
                             }
                             
                             // 強制的にデバッグ情報を更新
@@ -1541,6 +1571,30 @@ if (window.ko && typeof ko.pureComputed !== 'function') {
                       console.log('=== 参加後のデータ再読み込み完了 ===');
                       console.log('isParticipating after join:', vm.isParticipating());
                       console.log('participants after join:', vm.participants());
+                      
+                      // 参加後にボタンの表示状態を強制的に更新
+                      setTimeout(function() {
+                          console.log('=== 参加後のボタン状態更新 ===');
+                          const participateBtn = document.querySelector('.btn-participate');
+                          const cancelBtn = document.querySelector('.btn-cancel');
+                          
+                          if (participateBtn) {
+                              participateBtn.style.display = 'none';
+                              console.log('参加ボタンを非表示にしました');
+                          }
+                          
+                          if (cancelBtn) {
+                              cancelBtn.style.display = 'block';
+                              cancelBtn.style.visibility = 'visible';
+                              cancelBtn.style.opacity = '1';
+                              console.log('取消ボタンを表示しました');
+                          }
+                          
+                          // Knockout.jsのバインディングを強制的に更新
+                          if (window.ko && window.ko.processAllDeferredBindingUpdates) {
+                              window.ko.processAllDeferredBindingUpdates();
+                          }
+                      }, 200);
                   }, 500);
                   
                   // シフト一覧ページのデータも更新
