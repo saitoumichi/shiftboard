@@ -5,11 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="current-user-id" content="<?= (int)($current_user_id ?? 0) ?>">
     <title>自分のシフト - Shiftboard</title>
+    <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/shifts.css">
     <script src="/js/knockout-3.5.1.js"></script>
 </head>
-<body>
-    <?php echo View::forge('template'); ?>
+<body style="font-family: system-ui, sans-serif; padding: 24px">
+    <?php
+        use Fuel\Core\Uri;
+        use Fuel\Core\Session;
+        $user_id = Session::get('user_id');
+        $user = $user_id ? \Model_User::find($user_id) : null;
+    ?>
+
+    <div class="header">
+        <div class="header-left">
+            <h1>シフトボード</h1>
+            <?php if ($user): ?>
+                <a href="<?= Uri::create('users/logout') ?>" class="logout-btn">ログアウト</a>
+            <?php endif; ?>
+        </div>
+        <div class="nav-links">
+            <a href="<?= Uri::create('shifts') ?>">シフト一覧</a>
+            <?php if ($user): ?>
+                <a href="<?= Uri::create('shifts/create') ?>">シフト作成</a>
+                <a href="<?= Uri::create('shifts/my') ?>" style="font-weight: bold;">自分のシフト</a>
+            <?php endif; ?>
+        </div>
+        <div class="user-info">
+            <?php if ($user): ?>
+                <span class="username"><?= htmlspecialchars($user->name) ?> さん</span>
+            <?php else: ?>
+                <a href="<?= Uri::create('users/create') ?>" class="login-btn">ユーザー登録・ログイン</a>
+            <?php endif; ?>
+        </div>
+    </div>
     
     <div id="my-shifts-root" class="container">
         <h1 style="margin: 20px 0; color: #333;">📅 自分のシフト</h1>
