@@ -1,123 +1,202 @@
+<?php use Fuel\Core\Uri; ?>
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <title>自分のシフト - ShiftBoard</title>
+    
+    <!-- ユーザーIDとAPIベースURL設定 -->
     <meta name="current-user-id" content="<?= (int)($current_user_id ?? 0) ?>">
-    <title>自分のシフト - Shiftboard</title>
-    <link rel="stylesheet" href="/css/common.css">
-    <link rel="stylesheet" href="/css/shifts.css">
-    <script src="/js/knockout-3.5.1.js"></script>
-</head>
-<body style="font-family: system-ui, sans-serif; padding: 24px">
-    <?php
-        use Fuel\Core\Uri;
-        use Fuel\Core\Session;
-        $user_id = Session::get('user_id');
-        $user = $user_id ? \Model_User::find($user_id) : null;
-    ?>
+    <meta name="api-base" content="/api">
+    <script>
+        window.API_BASE = '/api';
+        window.CURRENT_USER_ID = Number(
+            document.querySelector('meta[name="current-user-id"]')?.content || 0
+        );
+    </script>
+    
+    <!-- 共通CSS -->
+    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>">
+    <link rel="stylesheet" href="<?= Uri::create('css/myshifts.css') ?>">
+    
+    <!-- jQuery -->
+    <script src="<?= Uri::create('js/jquery-3.6.0.min.js') ?>" defer></script>
+    
+    <script src="<?= Uri::create('js/knockout-min.js') ?>" defer></script>
 
-    <div class="header">
+    <!-- 共通JavaScript -->
+    <script src="<?= Uri::create('js/common.js') ?>" defer></script>
+</head>
+<body>
+    <!-- ヘッダー -->
+    <div class="myshifts-header">
         <div class="header-left">
-            <h1>シフトボード</h1>
-            <?php if ($user): ?>
-                <a href="<?= Uri::create('users/logout') ?>" class="logout-btn">ログアウト</a>
-            <?php endif; ?>
+            <span class="header-id">自分のシフト</span>
         </div>
-        <div class="nav-links">
-            <a href="<?= Uri::create('shifts') ?>">シフト一覧</a>
-            <?php if ($user): ?>
-                <a href="<?= Uri::create('shifts/create') ?>">シフト作成</a>
-                <a href="<?= Uri::create('shifts/my') ?>" style="font-weight: bold;">自分のシフト</a>
-            <?php endif; ?>
+        <!-- <div class="header-right">
+            <button class="csv-export-btn">CSV000000</button>
+        </div> -->
+    </div>
+
+    <!-- コントロールパネル -->
+    <div class="myshifts-controls">
+        <div class="controls-left">
+        <span class="current-month" id="current-date-display"><?php echo date('Y年n月j日'); ?></span>
+                <div class="filter-tags">
+                <span class="filter-tag">日</span>
+                <span class="filter-tag">週</span>
+                <span class="filter-tag">月</span>
+            </div>
         </div>
-        <div class="user-info">
-            <?php if ($user): ?>
-                <span class="username"><?= htmlspecialchars($user->name) ?> さん</span>
-            <?php else: ?>
-                <a href="<?= Uri::create('users/create') ?>" class="login-btn">ユーザー登録・ログイン</a>
-            <?php endif; ?>
+        <div class="controls-right">
+            <button onclick="window.location.href='/shifts'">戻る</button>
         </div>
     </div>
-    
-    <div id="my-shifts-root" class="container">
-        <h1 style="margin: 20px 0; color: #333;">📅 自分のシフト</h1>
-        
-        <!-- ローディング表示 -->
-        <div data-bind="visible: loading" style="text-align: center; padding: 40px;">
-            <p style="font-size: 18px; color: #666;">読み込み中...</p>
-        </div>
-        
-        <!-- エラー表示 -->
-        <div data-bind="visible: error() !== '', text: error" style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin: 20px 0;"></div>
-        
-        <!-- 自分が参加しているシフト一覧 -->
-        <div data-bind="visible: !loading() && error() === ''">
-            <div data-bind="if: myShifts().length === 0" style="text-align: center; padding: 40px; color: #666;">
-                <p style="font-size: 18px;">参加しているシフトはありません</p>
-                <a href="/shifts" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px;">シフト一覧へ</a>
-            </div>
-            
-            <div data-bind="foreach: myShifts" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; padding: 20px 0;">
-                <div class="shift-card" style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" data-bind="click: function() { window.location.href = '/shifts/' + id; }">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
-                        <div>
-                            <div style="font-size: 14px; color: #666; margin-bottom: 5px;" data-bind="text: shift_date"></div>
-                            <div style="font-size: 18px; font-weight: bold; color: #333;" data-bind="text: start_time.substring(0,5) + ' 〜 ' + end_time.substring(0,5)"></div>
-                        </div>
-                        <div style="padding: 6px 12px; background: #e8f5e8; color: #2d5a2d; border-radius: 12px; font-size: 12px; font-weight: bold;">
-                            参加中
-                        </div>
-                    </div>
-                    
-                    <div style="margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 6px;">
-                        <div style="font-size: 14px; color: #555;" data-bind="text: free_text || '詳細なし'"></div>
-                    </div>
-                    
-                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                        <div style="font-size: 14px; color: #666;">
-                            <span style="font-weight: bold; color: #333;" data-bind="text: assigned_count"></span> / <span data-bind="text: recruit_count"></span> 人
-                        </div>
-                        <div style="flex: 1;"></div>
-                        <button onclick="event.stopPropagation(); if(confirm('このシフトの参加を取り消しますか？')) { cancelShift(this); }" data-bind="attr: { 'data-shift-id': id }" style="padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; transition: background 0.2s;">
-                            取消
-                        </button>
-                    </div>
+
+    <!-- メインコンテンツ -->
+    <div class="myshifts-main">
+        <div class="main-content-wrapper">
+            <!-- 左側：参加予定シフト一覧 -->
+            <div class="shifts-list-section">
+                <h3 class="section-title">参加予定シフト一覧</h3>
+                <div id="my-shifts-container">
+                    <!-- 自分のシフト一覧がここに表示されます -->
+                </div>
+                
+                <div id="no-shifts-message" class="no-data" style="display: none;">
+                    <p>参加中のシフトはありません</p>
                 </div>
             </div>
+
         </div>
     </div>
-    
-    <script src="/js/shifts-my.js"></script>
+
+    <!-- ページタイトル -->
+  
+  <!-- <div class="myshifts-title">
+        <h1>自分のシフト</h1>
+    </div> -->
     <script>
-        function cancelShift(button) {
-            const shiftId = button.getAttribute('data-shift-id');
-            if (!shiftId) return;
-            
-            fetch('/api/shifts/' + shiftId + '/cancel', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+        // 未ログインガード
+        if (!window.CURRENT_USER_ID) {
+            alert('ログインが必要です');
+            location.href = '/';
+        }
+
+        // 自分のシフト一覧を読み込み
+        function loadMyShifts() {
+            $.ajax({
+                url: window.API_BASE + '/shifts',
+                type: 'GET',
+                data: {
+                    mine: 1,
+                    user_id: window.CURRENT_USER_ID
                 },
-                body: JSON.stringify({})
-            })
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                if (data.success || data.ok) {
-                    alert('シフトの参加を取り消しました');
-                    location.reload();
-                } else {
-                    alert('取消に失敗しました: ' + (data.message || '不明なエラー'));
+                dataType: 'json',
+                success: function(response) {
+                    if (response.ok && response.data) {
+                        renderMyShifts(response.data);
+                    } else {
+                        showNoShiftsMessage();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading my shifts:', error);
+                    showNoShiftsMessage();
                 }
-            })
-            .catch(function(error) {
-                console.error('Cancel error:', error);
-                alert('取消に失敗しました');
             });
         }
+
+        // 自分のシフト一覧をレンダリング
+        function renderMyShifts(shifts) {
+            var container = document.getElementById('my-shifts-container');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (shifts && shifts.length > 0) {
+                shifts.forEach(function(shift) {
+                    var shiftItem = document.createElement('div');
+                    shiftItem.className = 'shift-item';
+                    
+                    // 日付をフォーマット
+                    var shiftDate = new Date(shift.shift_date);
+                    var formattedDate = shiftDate.getFullYear() + '/' + 
+                        String(shiftDate.getMonth() + 1).padStart(2, '0') + '/' + 
+                        String(shiftDate.getDate()).padStart(2, '0');
+                    
+                    // 時間をフォーマット
+                    var startTime = shift.start_time.substring(0, 5);
+                    var endTime = shift.end_time.substring(0, 5);
+                    var timeRange = startTime + '-' + endTime;
+                    
+                    // コメントまたはフリーテキスト
+                    var comment = shift.self_word || shift.free_text || '00000/000';
+                    
+                    shiftItem.innerHTML = `
+                        <div class="shift-date">${formattedDate}</div>
+                        <div class="shift-time">${timeRange}</div>
+                        <div class="shift-comment">${comment}</div>
+                    `;
+                    
+                    // クリック時にコメントを表示
+                    shiftItem.addEventListener('click', function() {
+                        displayComment(comment);
+                    });
+                    
+                    container.appendChild(shiftItem);
+                });
+            } else {
+                showNoShiftsMessage();
+            }
+        }
+
+        // コメントを表示
+        function displayComment(comment) {
+            var commentDisplay = document.getElementById('comment-display');
+            if (commentDisplay) {
+                commentDisplay.value = comment;
+            }
+        }
+
+        // シフトなしメッセージを表示
+        function showNoShiftsMessage() {
+            var container = document.getElementById('my-shifts-container');
+            var noShiftsMessage = document.getElementById('no-shifts-message');
+            
+            if (!container) return;
+            
+            container.style.display = 'none';
+            if (noShiftsMessage) {
+                noShiftsMessage.style.display = 'block';
+        }}
+
+        // ページ読み込み時に自分のシフトを読み込み
+        // 今日の日付を表示
+        function displayCurrentDate() {
+            var today = new Date();
+            var year = today.getFullYear();
+            var month = today.getMonth() + 1;
+            var day = today.getDate();
+            var dateString = year + '年' + month + '月' + day + '日';
+            
+            var dateElement = document.getElementById('current-date-display');
+            if (dateElement) {
+                dateElement.textContent = dateString;
+                console.log('日付を表示しました:', dateString);
+            } else {
+                console.error('current-date-display要素が見つかりません');
+            }
+        }
+        
+        // DOMContentLoadedイベントで実行
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded実行');
+            displayCurrentDate();
+            if (typeof loadMyShifts === 'function') {
+                loadMyShifts();
+            }
+        });
     </script>
 </body>
 </html>
