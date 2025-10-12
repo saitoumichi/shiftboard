@@ -1,5 +1,4 @@
 // 自分のシフトページ用JavaScript
-console.log('shifts-my.js loaded');
 
 // Knockout.js ViewModel
 function MyShiftsViewModel() {
@@ -12,11 +11,9 @@ function MyShiftsViewModel() {
     
     // 現在のユーザーID
     const currentUserId = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
-    console.log('Current user ID:', currentUserId);
     
     // 自分のシフトを取得
     vm.load = function() {
-        console.log('Loading my shifts...');
         vm.loading(true);
         vm.error('');
         
@@ -35,10 +32,7 @@ function MyShiftsViewModel() {
             return response.json();
         })
         .then(function(data) {
-            console.log('API Response:', data);
-            
             const shifts = data.data || data.shifts || [];
-            console.log('Shifts:', shifts);
             
             // 自分が参加しているシフトのみをフィルター
             const myShifts = shifts.filter(function(shift) {
@@ -62,13 +56,10 @@ function MyShiftsViewModel() {
                 return false;
             });
             
-            console.log('My shifts:', myShifts);
-            
             vm.myShifts(myShifts);
             vm.loading(false);
         })
         .catch(function(error) {
-            console.error('Load error:', error);
             vm.error('シフトの取得に失敗しました');
             vm.loading(false);
         });
@@ -83,11 +74,9 @@ window.__myShiftsVM = new MyShiftsViewModel();
 
 // Knockout.js バインディングを適用
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOMContentLoaded - applying bindings');
     const root = document.getElementById('my-shifts-root');
     if (root && window.ko) {
         ko.applyBindings(window.__myShiftsVM, root);
-        console.log('Knockout bindings applied to my-shifts-root');
     }
 });
 

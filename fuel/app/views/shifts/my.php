@@ -101,7 +101,7 @@
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Error loading my shifts:', error);
+
                     showNoShiftsMessage();
                 }
             });
@@ -183,15 +183,11 @@
             var dateElement = document.getElementById('current-date-display');
             if (dateElement) {
                 dateElement.textContent = dateString;
-                console.log('日付を表示しました:', dateString);
-            } else {
-                console.error('current-date-display要素が見つかりません');
             }
         }
         
         // DOMContentLoadedイベントで実行
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOMContentLoaded実行');
             displayCurrentDate();
             if (typeof loadMyShifts === 'function') {
                 loadMyShifts();

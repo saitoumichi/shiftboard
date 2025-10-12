@@ -4,9 +4,9 @@
 // 代わりに、DOM後に"操作を無効化"するだけ
 document.addEventListener('DOMContentLoaded', function () {
   const uid = Number(window.CURRENT_USER_ID || document.querySelector('meta[name="current-user-id"]')?.content || 0);
-  console.log('CURRENT_USER_ID (create):', uid);
+
   if (!uid) {
-    console.warn('未ログイン：操作を無効化');
+
     // フォーム送信ボタンを無効化（存在すれば）
     const submitBtn = document.querySelector('input[type="submit"], button[type="submit"]');
     if (submitBtn) { 
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     // ここで location.href に飛ばさない
   } else {
-    console.log('ログイン済み：ボタンを有効化');
+
     // ログイン済みの場合はボタンを有効化
     const submitBtn = document.querySelector('input[type="submit"], button[type="submit"]');
     if (submitBtn) { 
@@ -47,9 +47,7 @@ $(document).ready(function() {
         };
         
         // デバッグ用：送信データをコンソールに出力
-        console.log('Form data being sent:', formData);
-        console.log('CURRENT_USER_ID:', window.CURRENT_USER_ID);
-        
+
         // バリデーション
         if (!formData.shift_date || !formData.start_time || !formData.end_time) {
             showAlert('すべての必須項目を入力してください。', 'error');
@@ -81,12 +79,12 @@ $(document).ready(function() {
             }),
             dataType: 'json',
             success: function(response) {
-                console.log('Shift creation response:', response);
+
                 if (response.ok || response.ok) {
                     showAlert('シフトが正常に作成されました。', 'success');
-                    console.log('Redirecting to /shifts in 2 seconds...');
+
                     setTimeout(function() {
-                        console.log('Redirecting now...');
+
                         window.location.href = '/shifts';
                     }, 2000);
                 } else {
@@ -99,7 +97,7 @@ $(document).ready(function() {
                 
                 try {
                     const response = JSON.parse(xhr.responseText);
-                    console.log('Error response:', response);
+
                     if (response.message) {
                         errorMessage = response.message;
                     } else if (response.error) {
@@ -113,7 +111,7 @@ $(document).ready(function() {
                         errorMessage = errorList.join(', ');
                     }
                 } catch (e) {
-                    console.log('JSON parse error:', e);
+
                     // JSON解析に失敗した場合はデフォルトメッセージを使用
                 }
                 
@@ -124,7 +122,7 @@ $(document).ready(function() {
                 }
                 
                 showAlert(errorMessage, 'error');
-                console.error('AJAX Error:', error, xhr.responseText);
+
             }
         });
     });

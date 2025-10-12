@@ -137,7 +137,7 @@ class Route
 	 * @param	\Request	$request  The URI object
 	 * @return	array
 	 */
-	public function parse(\Request $request)
+	public function parse($request)
 	{
 		$uri = $request->uri->get();
 		$method = $request->get_method();

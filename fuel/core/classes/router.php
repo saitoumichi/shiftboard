@@ -207,7 +207,7 @@ class Router
 	 * @param   bool      $use_routes   whether to use the defined routes or not
 	 * @return  mixed  the match array or false
 	 */
-	public static function process(\Request $request, $use_routes = true)
+	public static function process($request, $use_routes = true)
 	{
 		static $stack = array();
 

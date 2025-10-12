@@ -290,7 +290,7 @@ window.ShiftBoard = {
                     return response.json();
                 })
                 .catch(error => {
-                    console.error('API request failed:', error);
+
                     ShiftBoard.alert.show('通信エラーが発生しました', 'danger');
                     throw error;
                 });
@@ -490,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
             parentSelector: '.day-recruitment-section'
           });
         }
-      } catch(e) { console.warn(e); }
+      } catch(e) { }
     document.head.appendChild(style);
     
     // スムーススクロール
@@ -560,11 +560,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     window.addEventListener('error', function(e) {
-        console.error('JavaScript error:', e.error || e.message || e);
+
         safeAlert('予期しないエラーが発生しました', 'danger');
     });
     window.addEventListener('unhandledrejection', function(e) {
-        console.error('Unhandled promise rejection:', e.reason);
+
         safeAlert('通信エラーが発生しました', 'danger');
     });
 })();

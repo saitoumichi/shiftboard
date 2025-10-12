@@ -30,7 +30,6 @@
             document.querySelector('meta[name="current-user-id"]')?.content || 0
         );
         window.SHIFT_ID = <?= (int)($shift_id ?? 0) ?>;
-        console.log('SHIFT_ID set to:', window.SHIFT_ID);
     </script>
     
     <!-- 共通JavaScript -->

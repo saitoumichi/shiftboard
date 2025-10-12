@@ -346,7 +346,7 @@
                     },
                     error: function(xhr, status, error) {
                             self.showAlert('ユーザー一覧の取得に失敗しました', 'error');
-                        console.error('Error:', error);
+
                     },
                     complete: function() {
                         self.loading(false);
@@ -495,7 +495,7 @@
                     },
                     error: function(xhr, status, error) {
                         self.showAlert('ユーザーの更新に失敗しました', 'error');
-                        console.error('Error:', error);
+
                     }
                 });
             };
@@ -523,7 +523,7 @@
                     },
                     error: function(xhr, status, error) {
                         self.showAlert('ユーザーの削除に失敗しました', 'error');
-                        console.error('Error:', error);
+
                     }
                 });
             };

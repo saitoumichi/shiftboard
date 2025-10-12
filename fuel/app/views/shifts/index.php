@@ -12,10 +12,6 @@
   window.CURRENT_USER_ID = Number(
     document.querySelector('meta[name="current-user-id"]')?.content || 0
   );
-  
-  // デバッグ用ログ
-  console.log('shifts/index.php - CURRENT_USER_ID:', window.CURRENT_USER_ID);
-  console.log('meta content:', document.querySelector('meta[name="current-user-id"]')?.content);
 </script>
     <meta name="api-base" content="/api">
 

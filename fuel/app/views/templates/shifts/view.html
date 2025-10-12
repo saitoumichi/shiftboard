@@ -88,8 +88,7 @@
                 <button type="button" class="action-btn btn-participate" 
                         data-bind="visible: shift() && canParticipate(), 
                                    click: joinShift"
-                        style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;"
-                        onclick="console.log('参加ボタンクリック！');">
+                        style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
                     参加
                 </button>
                 
@@ -99,14 +98,8 @@
                                    click: cancelShift"
                         style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;"
                         onclick="
-                            console.log('=== 取消ボタン直接クリック ===');
-                            console.log('ViewModel exists:', !!window.__shiftVM);
-                            console.log('cancelShift function exists:', !!(window.__shiftVM && window.__shiftVM.cancelShift));
                             if (window.__shiftVM && window.__shiftVM.cancelShift) {
-                                console.log('Calling cancelShift directly...');
                                 window.__shiftVM.cancelShift();
-                            } else {
-                                console.error('cancelShift function not found');
                             }
                         ">
                     取消
