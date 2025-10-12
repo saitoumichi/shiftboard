@@ -16,18 +16,19 @@
     <meta name="api-base" content="/api">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>">
-    <link rel="stylesheet" href="/css/shifts.css">
+    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>?v=<?= time() ?>">
+    <link rel="stylesheet" href="/css/shifts.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= Uri::create('css/transparent-override.css') ?>?v=<?= time() ?>">
 
     <!-- ライブラリ（defer 推奨） -->
     <script src="/js/jquery-3.6.0.min.js" defer></script>
     <script src="/js/knockout-min.js" defer></script>
 
     <!-- 共通JS（ここで CURRENT_USER_ID を"読むだけ"にする） -->
-    <script src="/js/common.js" defer></script>
+    <script src="/js/common.js?v=<?= time() ?>" defer></script>
 
     <!-- ページ専用JS（ShiftViewModelの定義＆applyBindingsをここで実行） -->
-    <script src="/js/shifts.js" defer></script>
+    <script src="/js/shifts.js?v=<?= time() . rand(1000, 9999) ?>" defer></script>
 
     <!-- 追加：ベースURL（必要なら） -->
     <script>
@@ -36,6 +37,18 @@
     </script>
 </head>
 <body>
+    <!-- 自然の要素 -->
+    <div class="sakura-petals">
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌿</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌱</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌿</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌱</div>
+    </div>
+    
     <?php include APPPATH.'views/templates/shifts/index.html'; ?>
 </body>
 </html>

@@ -16,8 +16,11 @@
     </script>
     
     <!-- 共通CSS -->
-    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>">
-    <link rel="stylesheet" href="<?= Uri::create('css/myshifts.css') ?>">
+    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= Uri::create('css/myshifts.css') ?>?v=<?= time() ?>">
+    
+    <!-- 半透明効果CSS -->
+    <link rel="stylesheet" href="<?= Uri::create('css/transparent-override.css') ?>?v=<?= time() ?>">
     
     <!-- jQuery -->
     <script src="<?= Uri::create('js/jquery-3.6.0.min.js') ?>" defer></script>
@@ -28,6 +31,18 @@
     <script src="<?= Uri::create('js/common.js') ?>" defer></script>
 </head>
 <body>
+    <!-- 自然の要素 -->
+    <div class="sakura-petals">
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌿</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌱</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌿</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌱</div>
+    </div>
+    
     <!-- ヘッダー -->
     <div class="myshifts-header">
         <div class="header-left">

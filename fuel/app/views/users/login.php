@@ -13,21 +13,71 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc8 50%, #f1f8e9 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 葉っぱのアニメーション */
+        .sakura-petals {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        .sakura-petal {
+            position: absolute;
+            font-size: 24px;
+            opacity: 0.7;
+            animation: fall linear infinite;
+        }
+        
+        .sakura-petal:nth-child(1) { left: 10%; animation-duration: 15s; animation-delay: 0s; }
+        .sakura-petal:nth-child(2) { left: 25%; animation-duration: 18s; animation-delay: 3s; font-size: 28px; }
+        .sakura-petal:nth-child(3) { left: 40%; animation-duration: 20s; animation-delay: 6s; }
+        .sakura-petal:nth-child(4) { left: 55%; animation-duration: 16s; animation-delay: 9s; font-size: 32px; }
+        .sakura-petal:nth-child(5) { left: 70%; animation-duration: 19s; animation-delay: 12s; }
+        .sakura-petal:nth-child(6) { left: 85%; animation-duration: 21s; animation-delay: 15s; font-size: 26px; }
+        
+        @keyframes fall {
+            0% {
+                top: -10%;
+                transform: translateX(0) rotate(0deg);
+            }
+            25% {
+                transform: translateX(40px) rotate(90deg);
+            }
+            50% {
+                transform: translateX(-40px) rotate(180deg);
+            }
+            75% {
+                transform: translateX(30px) rotate(270deg);
+            }
+            100% {
+                top: 110%;
+                transform: translateX(-30px) rotate(360deg);
+            }
         }
         
         .container {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(76, 175, 80, 0.3);
             padding: 40px;
             max-width: 600px;
             width: 100%;
+            position: relative;
+            z-index: 10;
         }
         
         h1 {
@@ -47,11 +97,11 @@
         }
         
         .form-section h2 {
-            color: #444;
+            color: #1b5e20;
             font-size: 18px;
             margin-bottom: 15px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid #4caf50;
         }
         
         .form-group {
@@ -79,7 +129,8 @@
         input[type="text"]:focus,
         input[type="color"]:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #4caf50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
         }
         
         input[type="color"] {
@@ -88,20 +139,23 @@
         }
         
         .btn {
-            background: #667eea;
+            background: linear-gradient(135deg, #66bb6a, #4caf50);
             color: white;
             border: none;
             padding: 14px 30px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
-            transition: background 0.3s, transform 0.1s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
         }
         
         .btn:hover {
-            background: #5568d3;
+            background: linear-gradient(135deg, #4caf50, #388e3c);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
         }
         
         .btn:active {
@@ -113,11 +167,11 @@
         }
         
         .users-list h2 {
-            color: #444;
+            color: #1b5e20;
             font-size: 18px;
             margin-bottom: 15px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid #4caf50;
         }
         
         .user-item {
@@ -204,6 +258,16 @@
     </style>
 </head>
 <body>
+    <!-- 葉っぱのアニメーション -->
+    <div class="sakura-petals">
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌿</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌱</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌿</div>
+    </div>
+    
     <div class="container">
         <h1>🗓️ Shiftboard</h1>
         <p class="subtitle">シフト管理システム</p>
@@ -230,7 +294,7 @@
                 
                 <div class="form-group">
                     <label for="color">カラー（識別用）</label>
-                    <input type="color" id="color" name="color" value="#667eea">
+                    <input type="color" id="color" name="color" value="#4caf50">
                 </div>
                 
                 <button type="submit" class="btn">ログイン / 登録</button>

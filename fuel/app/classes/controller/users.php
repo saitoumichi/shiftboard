@@ -104,6 +104,18 @@ class Controller_Users extends \Fuel\Core\Controller
 
     public function post_login()    // POST 送信先
     {
+        // 既存ユーザーでのログイン（user_idが送信された場合）
+        $user_id = Input::post('user_id');
+        if ($user_id) {
+            $user = \Model_User::find($user_id);
+            if ($user) {
+                Session::set('user_id', (int)$user->id);
+                error_log('既存ユーザーでログイン成功 - ユーザーID: ' . (int)$user->id);
+                return Response::redirect('shifts');
+            }
+        }
+        
+        // 新規登録またはログイン
         $name  = trim(Input::post('name', ''));
         $color = trim(Input::post('color', '#000000'));
 
@@ -127,8 +139,13 @@ class Controller_Users extends \Fuel\Core\Controller
         // 既存 or 新規
         $user = \Model_User::query()->where('name', $name)->get_one();
         if (!$user) {
-            $user = \Model_User::forge(['name'=>$name, 'color'=>$color]);
+            $user = \Model_User::forge([
+                'name' => $name,
+                'color' => $color,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
             $user->save();
+            error_log('新規ユーザー作成: ' . $name . ' (ID: ' . $user->id . ')');
         }
 
         Session::set('user_id', (int)$user->id);
@@ -136,7 +153,6 @@ class Controller_Users extends \Fuel\Core\Controller
         // デバッグ用ログ
         error_log('ログイン成功 - ユーザーID: ' . (int)$user->id);
         error_log('セッション設定後 - user_id: ' . Session::get('user_id'));
-        error_log('セッションID: ' . Session::key());
 
         // ログイン後は一覧へ
         return Response::redirect('shifts');

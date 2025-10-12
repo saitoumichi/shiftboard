@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>キャッシュクリア</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+<body style="padding: 40px; font-family: sans-serif;">
+    <h1>🔄 キャッシュをクリアしました</h1>
+    <p>5秒後にシフト一覧にリダイレクトします...</p>
+    <script>
+        // Service Workerをクリア
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+        
+        // キャッシュをクリア
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                for (let name of names) caches.delete(name);
+            });
+        }
+        
+        // 5秒後にリダイレクト
+        setTimeout(function() {
+            window.location.href = '/shifts?nocache=' + Date.now();
+        }, 5000);
+    </script>
+</body>
+</html>

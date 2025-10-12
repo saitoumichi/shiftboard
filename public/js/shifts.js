@@ -67,7 +67,7 @@ function ShiftViewModel() {
         return allShifts; // 'all'の場合はすべて返す
     });
     
-    // 計算プロパティ
+    // 計算プロパティ - 月表示
     self.currentMonth = ko.computed(function() {
         const date = self.currentDate();
         return date.getFullYear() + '年' + (date.getMonth() + 1) + '月';
@@ -184,52 +184,48 @@ function ShiftViewModel() {
         }
     };
     
-    // 前の月
+    // 前の月（実行回数を制限）
+    let isChangingMonthPrev = false;
     self.previousMonth = function() {
-
+        if (isChangingMonthPrev) return;
+        isChangingMonthPrev = true;
+        
         let date = new Date(self.currentDate());
-
-        // 月の1日に設定してから月を変更（月末問題を回避）
         date.setDate(1);
         date.setMonth(date.getMonth() - 1);
-
         self.currentDate(date);
         
-        // 手動で日付表示を更新
-        const monthDisplay = document.querySelector('.current-month');
-        if (monthDisplay) {
-            const newDateText = self.currentDay();
-
-            monthDisplay.textContent = newDateText;
+        // DOM直接更新
+        const monthEl = document.querySelector('.current-month');
+        if (monthEl) {
+            monthEl.textContent = date.getFullYear() + '年' + (date.getMonth() + 1) + '月';
         }
         
-        self.generateCalendar();
-        self.loadShifts(); // シフトを再読み込み
-        self.renderAvailableShifts();
+        self.loadShifts();
+        
+        setTimeout(() => { isChangingMonthPrev = false; }, 300);
     };
     
-    // 次の月
+    // 次の月（実行回数を制限）
+    let isChangingMonth = false;
     self.nextMonth = function() {
-
+        if (isChangingMonth) return;
+        isChangingMonth = true;
+        
         let date = new Date(self.currentDate());
-
-        // 月の1日に設定してから月を変更（月末問題を回避）
         date.setDate(1);
         date.setMonth(date.getMonth() + 1);
-
         self.currentDate(date);
         
-        // 手動で日付表示を更新
-        const monthDisplay = document.querySelector('.current-month');
-        if (monthDisplay) {
-            const newDateText = self.currentDay();
-
-            monthDisplay.textContent = newDateText;
+        // DOM直接更新
+        const monthEl = document.querySelector('.current-month');
+        if (monthEl) {
+            monthEl.textContent = date.getFullYear() + '年' + (date.getMonth() + 1) + '月';
         }
         
-        self.generateCalendar();
-        self.loadShifts(); // シフトを再読み込み
-        self.renderAvailableShifts();
+        self.loadShifts();
+        
+        setTimeout(() => { isChangingMonth = false; }, 300);
     };
     
     // 前の週
@@ -1305,6 +1301,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     try {
         const viewModel = new ShiftViewModel();
+        
+        // グローバルに保存（デバッグとフォールバック用）
+        window.shiftViewModel = viewModel;
 
         ko.applyBindings(viewModel);
 
@@ -1314,48 +1313,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (uid) {
 
-                const btns = document.querySelectorAll('.action-btn.btn-participate, .action-btn.btn-cancel, .btn-join, .btn-cancel-shift, .btn-add-shift, .btn.my-shifts-btn, .nav-btn, .view-btn');
+                const btns = document.querySelectorAll('.action-btn.btn-participate, .action-btn.btn-cancel, .btn-join, .btn-cancel-shift, .btn-add-shift, .btn.my-shifts-btn, .view-btn');
 
                 btns.forEach(b => { 
                     b.disabled = false; 
                     b.title = ''; 
-
                 });
                 
-                // 直接イベントリスナーを追加（Knockout.jsのバインディングが動作しない場合のフォールバック）
-                const myShiftsBtn = document.querySelector('.btn.my-shifts-btn');
-
-                if (myShiftsBtn) {
-
-                    myShiftsBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-
-                        window.location.href = '/my/shifts';
-                    });
-                } else {
-
-                }
-                
-                // ナビゲーションボタンにも直接イベントリスナーを追加
-                const prevBtn = document.querySelector('.nav-btn');
-                const nextBtn = document.querySelectorAll('.nav-btn')[1];
-
-                if (prevBtn) {
-                    prevBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-
-                        // ここで前月の処理を実行
-                    });
-                }
-                
-                if (nextBtn) {
-                    nextBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-
-                        // ここで次月の処理を実行
-                    });
-                }
+                // 月切り替えボタン（.nav-btn）は有効化しない
+                // Knockout.jsのバインディングだけを使用
             }
         }, 100);
         

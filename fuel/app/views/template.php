@@ -4,9 +4,22 @@
 <head>
     <meta charset="utf-8">
     <title><?= isset($title) ? $title : 'シフトボード' ?></title>
-    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>">
+    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= Uri::create('css/transparent-override.css') ?>?v=<?= time() ?>">
     </head>
 <body style="font-family: system-ui, sans-serif; padding: 24px">
+    <!-- 自然の要素 -->
+    <div class="sakura-petals">
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌿</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌱</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌿</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌱</div>
+    </div>
+    
     <?php
         $user_id = Session::get('user_id');
         $user = $user_id ? \Model_User::find($user_id) : null;

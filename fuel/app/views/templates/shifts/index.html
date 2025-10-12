@@ -14,9 +14,9 @@
     <div class="header-content">
         <div class="header-left">
             <div class="month-nav">
-                <button type="button" class="nav-btn" data-bind="click: $root.previousMonth"> ◀︎</button>
+                <button type="button" class="nav-btn prev-month-btn" data-bind="click: previousMonth, enable: true"> ◀︎</button>
                 <span class="current-month" data-bind="text: currentMonth"></span>
-                <button type="button" class="nav-btn" data-bind="click: $root.nextMonth">▶︎ </button>
+                <button type="button" class="nav-btn next-month-btn" data-bind="click: nextMonth, enable: true">▶︎ </button>
             </div>
             <div class="view-buttons">
                 <button type="button" class="view-btn active" data-bind="click: function() { $root.setView('month'); }">月</button>

@@ -6,10 +6,13 @@
     <title>シフト詳細 - ShiftBoard</title>
     
     <!-- 共通CSS -->
-    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>">
+    <link rel="stylesheet" href="<?= Uri::create('css/common.css') ?>?v=<?= time() ?>">
     
     <!-- シフト詳細ページ専用CSS -->
-    <link rel="stylesheet" href="<?= Uri::create('css/shifts-view.css') ?>">
+    <link rel="stylesheet" href="<?= Uri::create('css/shifts-view.css') ?>?v=<?= time() ?>">
+    
+    <!-- 半透明効果CSS -->
+    <link rel="stylesheet" href="<?= Uri::create('css/transparent-override.css') ?>?v=<?= time() ?>">
     
     <!-- jQuery -->
     <script src="<?= Uri::create('js/jquery-3.6.0.min.js') ?>"></script>
@@ -39,6 +42,18 @@
     <script src="<?= Uri::create('js/shifts-view.js') ?>" defer></script>
 </head>
 <body>
+    <!-- 自然の要素 -->
+    <div class="sakura-petals">
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌿</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌱</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌿</div>
+        <div class="sakura-petal">🍃</div>
+        <div class="sakura-petal">🌱</div>
+    </div>
+    
     <!-- HTMLテンプレートを読み込み -->
     <?php include APPPATH . 'views/templates/shifts/view.html'; ?>
 </body>

@@ -1,11 +1,5 @@
 /* 自分のシフトページのスタイル */
-
-body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    background-color: #ffffff;
-}
+/* body背景はcommon.cssで設定 */
 
 /* ヘッダー */
 .myshifts-header {
@@ -35,8 +29,9 @@ body {
 
 /* コントロールパネル */
 .myshifts-controls {
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.95);
     padding: 20px;
+    backdrop-filter: blur(10px);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -100,8 +95,9 @@ body {
 }
 
 .csv-export-btn {
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.95);
     color: #007bff;
+    backdrop-filter: blur(10px);
     border: 2px solid #007bff;
     padding: 8px 16px;
     border-radius: 4px;
@@ -117,8 +113,9 @@ body {
 
 /* メインコンテンツ */
 .myshifts-main {
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.95);
     min-height: 500px;
+    backdrop-filter: blur(10px);
     padding: 20px;
 }
 
@@ -131,8 +128,9 @@ body {
 /* 左側：参加予定シフト一覧 */
 .shifts-list-section {
     flex: 1;
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.95);
     border: 1px solid #e0e0e0;
+    backdrop-filter: blur(10px);
     border-radius: 8px;
     padding: 20px;
 }
@@ -161,8 +159,9 @@ body {
 
 /* シフトアイテム */
 .shift-item {
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.95);
     border: 1px solid #e0e0e0;
+    backdrop-filter: blur(10px);
     border-radius: 4px;
     padding: 15px;
     margin-bottom: 8px;
@@ -211,8 +210,9 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.95);
     padding: 20px;
+    backdrop-filter: blur(10px);
     text-align: center;
     border-top: 1px solid #e0e0e0;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
