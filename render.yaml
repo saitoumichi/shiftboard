@@ -1,0 +1,38 @@
+services:
+  # Webサービス（FuelPHPアプリケーション）
+  - type: web
+    name: shiftboard-app
+    env: docker
+    plan: free  # 無料プラン
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: FUEL_ENV
+        value: production
+      - key: DB_HOST
+        fromDatabase:
+          name: shiftboard-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: shiftboard-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: shiftboard-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: shiftboard-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: shiftboard-db
+          property: password
+
+databases:
+  # MySQLデータベース
+  - name: shiftboard-db
+    plan: free  # 無料プラン（90日後に削除される）
+    databaseName: shiftboard
+    user: app
+

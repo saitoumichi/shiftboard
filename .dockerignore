@@ -1,0 +1,21 @@
+# Git関連
+.git
+.gitignore
+
+# Docker関連
+docker-compose.yml
+docker/
+
+# 開発環境のみで使用するファイル
+.env.local
+.DS_Store
+*.log
+
+# キャッシュ
+fuel/app/cache/*
+fuel/app/logs/*
+
+# 依存関係（必要に応じて）
+node_modules/
+vendor/
+
