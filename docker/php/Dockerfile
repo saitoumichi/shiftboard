@@ -1,8 +1,15 @@
 # ./docker/php/Dockerfile
 FROM php:8.2-apache
 
+# システムパッケージのインストール
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libzip-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # 必要拡張
-RUN docker-php-ext-install mysqli pdo pdo_mysql
+RUN docker-php-ext-install mysqli pdo pdo_mysql zip
 
 # DocumentRoot を public/ に変更
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
