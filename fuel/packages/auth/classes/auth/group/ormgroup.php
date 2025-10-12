@@ -58,7 +58,7 @@ class Auth_Group_Ormgroup extends \Auth_Group_Driver
 	}
 
 	/*
-	 * check for group usership
+	 * check for group membership
 	 */
 	public function member($group_id, $user = null)
 	{
@@ -89,7 +89,7 @@ class Auth_Group_Ormgroup extends \Auth_Group_Driver
 				return false;
 			}
 
-			// check for usership
+			// check for membership
 			foreach($groups as $group)
 			{
 				if ($group[0] === $this->id and (int) $group_id === (int) $group[1]->id)

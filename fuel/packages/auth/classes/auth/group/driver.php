@@ -105,7 +105,7 @@ abstract class Auth_Group_Driver extends \Auth_Driver
 	// ------------------------------------------------------------------------
 
 	/**
-	 * Check usership of given users
+	 * Check membership of given users
 	 *
 	 * @param	mixed	condition to check for access
 	 * @param	array	user identifier in the form of array(driver_id, user_id), or null for logged in

@@ -108,9 +108,9 @@ abstract class Auth_Login_Driver extends \Auth_Driver
 	}
 
 	/**
-	 * Verify Group usership
+	 * Verify Group membership
 	 *
-	 * @param   mixed   group identifier to check for usership
+	 * @param   mixed   group identifier to check for membership
 	 * @param   string  group driver id or null to check all
 	 * @param   array   user identifier to check in form array(driver_id, user_id)
 	 * @return  bool

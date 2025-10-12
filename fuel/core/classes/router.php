@@ -203,11 +203,11 @@ class Router
 	/**
 	 * Processes the given request using the defined routes
 	 *
-	 * @param   \Fuel\Core\Request  $request     the given Request object
+	 * @param   \Request  $request     the given Request object
 	 * @param   bool      $use_routes   whether to use the defined routes or not
 	 * @return  mixed  the match array or false
 	 */
-	public static function process(\Fuel\Core\Request $request, $use_routes = true)
+	public static function process(\Request $request, $use_routes = true)
 	{
 		static $stack = array();
 

@@ -3,15 +3,17 @@ return [
   // UI（表示系）
   '_root_'            => 'users/login',        // トップ＝ログイン画面
   'users/login'       => 'users/login',        // ログイン画面
+  'users/logout'      => 'users/logout',       // ログアウト
   'shifts'            => 'shifts/index',
   'shifts/create'     => 'shifts/create',
+  'shifts/my'         => 'shifts/my',          // 自分のシフト一覧
+  'my/shifts'         => 'shifts/my',          // 自分のシフト一覧（エイリアス）
   'shifts/view/(:num)' => 'shifts/view/$1',
   'shifts/(:num)'     => 'shifts/view/$1',
   'users/create'      => 'users/create',
   'users/edit/(:num)' => 'users/edit/$1',      // ユーザー編集画面
   'users/update/(:num)' => 'users/update/$1',  // ユーザー更新
   'users/delete/(:num)' => 'users/delete/$1',  // ユーザー削除
-  'my/shifts'         => 'shifts/my',           // 自分のシフト一覧（必要なら）
 
   // API（JSON）
   'api/shifts'                    => 'api/shifts/index',       // GET一覧 / POST作成
